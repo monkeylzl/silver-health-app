@@ -602,6 +602,58 @@ silver-health-app/
 
 ---
 
+### 16. 建档接口校验收口：ValidationPipe + DTO 校验
+
+#### 背景
+虽然建档链路已支持“自动创建 elder 用户”，但接口层此前仍存在一个明显问题：
+- DTO 只有 TypeScript 类型，没有真正的运行时校验；
+- 非法字段、类型错误字段、越界数值在请求进入 API 时无法被稳妥拦截；
+- 这会让前后端联调时的问题暴露得太晚。
+
+#### 本轮实际完成内容
+1. 为 API 增加运行时参数校验依赖：
+   - `class-validator`
+   - `class-transformer`
+
+2. 在 `apps/api/src/main.ts` 中启用全局 `ValidationPipe`：
+   - `whitelist: true`
+   - `transform: true`
+   - `forbidNonWhitelisted: true`
+
+3. 为 `CreateElderProfileDto` 增加校验规则：
+   - `userId` / `nickname`：可选字符串
+   - `mobile`：中国大陆手机号格式校验
+   - `name`：必填字符串
+   - `gender`：枚举校验
+   - `age`：整数，1~120
+   - `heightCm`：可选整数，50~260
+   - `weightKg`：可选整数，20~300
+   - `chronicConditions` / `commonMedicines`：可选数组，长度限制 + 元素字符串校验
+   - `mobilityLevel` / `helperMode`：枚举校验
+
+4. 为 `UpdateElderProfileDto` 增加对应的可选字段校验。
+
+#### 本轮校验结果
+已实际执行：
+- `pnpm --filter @silver-health/api typecheck`
+- `pnpm --filter @silver-health/api build`
+
+结果：
+- 两者均通过
+
+#### 当前意义
+- API 已从“只有类型提示”升级到“具备运行时输入校验”；
+- 建档接口在联调时会更早暴露问题；
+- 后续前端表单校验、错误提示文案、接口收口会更容易做扎实。
+
+#### 下一步建议
+1. 实际启动 API / Web 做端到端访问验证
+2. 优化建档页的前端字段校验和错误提示
+3. 推进今日任务页（elder home）与指标录入页（elder metrics）
+4. 之后再补 family dashboard 的真实数据联调
+
+---
+
 ## 后续维护规则（新增）
 
 从本次开始，后续每完成一步开发工作，都应同步更新：
