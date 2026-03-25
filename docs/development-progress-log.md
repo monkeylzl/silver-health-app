@@ -924,6 +924,57 @@ silver-health-app/
 
 ---
 
+### 22. 今日任务链路收口：DTO 校验 + 完成任务接口
+
+#### 背景
+`elder/home` 页面此前已经能展示今日任务列表，但 `tasks` 模块后端仍有两个缺口：
+- 创建任务接口缺少运行时 DTO 校验；
+- 缺少“完成任务”操作接口，导致任务链路只能看、不能改状态。
+
+#### 本轮实际完成内容
+1. 为 `CreateDailyTaskDto` 增加运行时校验规则：
+   - `elderUserId`：必填字符串
+   - `taskDate`：合法日期字符串
+   - `taskType`：枚举校验
+   - `title`：必填字符串，最大长度 128
+   - `description`：可选字符串
+   - `priority`：枚举校验
+   - `status`：可选枚举
+   - `sourceType`：枚举校验
+   - `relatedContentId`：可选字符串
+   - `dueTime`：可选，`HH:mm` 格式校验
+
+2. 在 `TaskService` 中新增：
+   - `complete(taskId: string)`
+   - 若任务不存在则抛 `NotFoundException`
+   - 若存在则更新：
+     - `status = done`
+     - `completedAt = now()`
+
+3. 在 `TaskController` 中新增接口：
+   - `PATCH /api/tasks/:taskId/complete`
+
+#### 本轮校验结果
+已实际执行：
+- `pnpm --filter @silver-health/api typecheck`
+- `pnpm --filter @silver-health/api build`
+
+结果：
+- 两者均通过
+
+#### 当前意义
+- 今日任务链路已从“只能展示”推进到“后端已支持完成动作”；
+- `tasks` 模块现在也具备运行时 DTO 校验；
+- 后续可以回到 `elder/home` 页面，把“标记完成”交互真正接起来。
+
+#### 下一步建议
+1. 回到 `elder/home` 页面，补“完成任务”按钮与状态刷新
+2. 推进 `medication` 页面与提醒配置
+3. 再推进 `family/dashboard` 的摘要页
+4. 最后补更完整的本地联调验证
+
+---
+
 ## 后续维护规则（新增）
 
 从本次开始，后续每完成一步开发工作，都应同步更新：

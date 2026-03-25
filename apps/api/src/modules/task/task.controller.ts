@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { TaskService } from './task.service';
 import { CreateDailyTaskDto } from './dto/create-daily-task.dto';
 
@@ -14,5 +14,10 @@ export class TaskController {
   @Get('elder/:elderUserId')
   async findTodayByElderUserId(@Param('elderUserId') elderUserId: string, @Query('taskDate') taskDate?: string) {
     return { code: 0, message: 'ok', data: await this.taskService.findTodayByElderUserId(elderUserId, taskDate) };
+  }
+
+  @Patch(':taskId/complete')
+  async complete(@Param('taskId') taskId: string) {
+    return { code: 0, message: 'ok', data: await this.taskService.complete(taskId) };
   }
 }

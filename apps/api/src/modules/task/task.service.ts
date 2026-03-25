@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { TaskStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateDailyTaskDto } from './dto/create-daily-task.dto';
@@ -29,6 +29,24 @@ export class TaskService {
     return this.prisma.dailyTask.findMany({
       where: { elderUserId, taskDate: targetDate },
       orderBy: [{ priority: 'asc' }, { createdAt: 'desc' }],
+    });
+  }
+
+  async complete(taskId: string) {
+    const task = await this.prisma.dailyTask.findUnique({
+      where: { id: taskId },
+    });
+
+    if (!task) {
+      throw new NotFoundException(`task not found: ${taskId}`);
+    }
+
+    return this.prisma.dailyTask.update({
+      where: { id: taskId },
+      data: {
+        status: TaskStatus.done,
+        completedAt: new Date(),
+      },
     });
   }
 }
