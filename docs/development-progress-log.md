@@ -816,6 +816,70 @@ silver-health-app/
 
 ---
 
+### 20. 健康指标页第二版：录入表单 + 最近记录同页展示
+
+#### 本轮目标
+- 把 `elder/metrics` 从“只能看最近记录”推进到“能录 + 能看”的状态。
+
+#### 本轮实际完成内容
+1. 新增指标录入表单组件：
+   - `apps/web/app/elder/metrics/metric-form.tsx`
+
+2. 录入表单当前支持三类指标：
+   - 血压
+   - 血糖
+   - 体重
+
+3. 表单当前支持的字段包括：
+   - `elderUserId`
+   - `createdByUserId`
+   - `createdByRole`
+   - `metricType`
+   - `measuredAt`
+   - 以及随指标类型变化的数值字段
+
+4. 不同指标类型的录入逻辑：
+   - **血压**：收缩压 / 舒张压 / 脉搏
+   - **血糖**：血糖值 / 测量时段
+   - **体重**：体重值
+
+5. 当前表单已具备的前端校验：
+   - `elderUserId` 必填
+   - `createdByUserId` 必填
+   - `measuredAt` 必填
+   - 血压数值范围校验
+   - 血糖数值范围校验
+   - 体重数值范围校验
+
+6. 当前表单已直接对接：
+   - `POST /api/metrics`
+
+7. 页面结构已升级为：
+   - 上方：指标录入表单
+   - 下方：最近指标记录列表
+
+#### 本轮校验结果
+已实际执行：
+- `pnpm --filter @silver-health/web typecheck`
+- `pnpm --filter @silver-health/web build`
+
+结果：
+- 两者均通过
+- `elder/metrics` 页面构建成功
+
+#### 当前意义
+- MVP 第三条主链路已从“仅查看入口”推进到“具备录入能力”；
+- 前端页面已开始具备更完整的业务闭环结构；
+- 后续只要继续补 API 校验与真实数据验证，这条链路就能进一步稳定下来。
+
+#### 下一步建议
+1. 回头补 `metric` 模块 DTO 校验与后端运行时校验
+2. 补 `elder/home` 的任务完成操作
+3. 推进 `medication` 页面与提醒配置
+4. 然后开始收敛 `family/dashboard`
+
+---
+
 ## 后续维护规则（新增）
 
 从本次开始，后续每完成一步开发工作，都应同步更新：

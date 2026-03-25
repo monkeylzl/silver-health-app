@@ -1,4 +1,5 @@
 import { apiBaseUrl, defaultElderUserId } from '../../../lib/config';
+import { MetricForm } from './metric-form';
 
 type MetricRecord = {
   id: string;
@@ -103,11 +104,13 @@ export default async function Page() {
       <div style={{ marginBottom: 24 }}>
         <h1 style={{ marginBottom: 8 }}>健康指标录入</h1>
         <p style={{ color: '#667085', margin: 0 }}>
-          当前先推进 MVP 第三条主链路：指标查看与录入承接页。第一版先把最近指标记录展示出来，为后续补录入表单和趋势视图打基础。
+          当前先推进 MVP 第三条主链路：指标查看与录入。现在页面已经同时具备“录入表单”和“最近记录列表”两部分。
         </p>
       </div>
 
-      <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginBottom: 24 }}>
+      <MetricForm />
+
+      <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, margin: '24px 0' }}>
         <div style={{ background: '#ffffff', borderRadius: 16, padding: 20, boxShadow: '0 8px 24px rgba(15,23,42,0.06)' }}>
           <div style={{ color: '#667085', marginBottom: 8 }}>当前数据源</div>
           <strong>{source === 'api' ? '真实 API' : 'Mock 回退'}</strong>
@@ -140,7 +143,7 @@ export default async function Page() {
             </div>
 
             <p style={{ color: '#101828', margin: '0 0 8px', fontWeight: 600 }}>{formatMetricValue(metric)}</p>
-            <p style={{ color: '#475467', margin: 0 }}>后续这里会继续补充录入表单、图表趋势和异常提示。</p>
+            <p style={{ color: '#475467', margin: 0 }}>后续这里会继续补充趋势图表和异常提示。</p>
           </article>
         ))}
       </section>
