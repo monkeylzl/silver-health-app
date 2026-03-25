@@ -1,0 +1,229 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  elder
+  family
+  admin
+}
+
+enum UserStatus {
+  active
+  disabled
+}
+
+enum Gender {
+  male
+  female
+  other
+}
+
+enum MobilityLevel {
+  low
+  medium
+  high
+}
+
+enum HelperMode {
+  self
+  family_assisted
+}
+
+enum BindingRelationType {
+  son
+  daughter
+  spouse
+  other
+}
+
+enum BindingStatus {
+  pending
+  active
+  unbound
+}
+
+enum TaskType {
+  exercise
+  diet
+  medication
+  measurement
+}
+
+enum TaskPriority {
+  high
+  medium
+  low
+}
+
+enum TaskStatus {
+  todo
+  done
+  skipped
+  expired
+}
+
+enum TaskSourceType {
+  system_generated
+  manual_config
+}
+
+enum MetricType {
+  blood_pressure
+  blood_glucose
+  weight
+}
+
+enum MetricCreatedByRole {
+  elder
+  family
+}
+
+model User {
+  id            String           @id @default(cuid())
+  role          UserRole
+  nickname      String?          @db.VarChar(64)
+  avatar        String?          @db.VarChar(255)
+  mobile        String?          @unique @db.VarChar(32)
+  openId        String?          @unique @map("open_id") @db.VarChar(128)
+  unionId       String?          @map("union_id") @db.VarChar(128)
+  status        UserStatus       @default(active)
+  createdAt     DateTime         @default(now()) @map("created_at")
+  updatedAt     DateTime         @updatedAt @map("updated_at")
+
+  elderProfile        ElderProfile?
+  elderFamilyBindings FamilyBinding[]     @relation("ElderBindings")
+  familyBindings      FamilyBinding[]     @relation("FamilyBindings")
+  dailyTasks          DailyTask[]
+  healthMetrics       HealthMetric[]
+  medicationReminders MedicationReminder[]
+  weeklyReports       WeeklyReport[]
+
+  @@index([role], map: "idx_users_role")
+  @@map("users")
+}
+
+model ElderProfile {
+  id                String        @id @default(cuid())
+  userId            String        @unique @map("user_id")
+  name              String        @db.VarChar(64)
+  gender            Gender
+  age               Int
+  heightCm          Decimal?      @map("height_cm") @db.Decimal(5, 2)
+  weightKg          Decimal?      @map("weight_kg") @db.Decimal(5, 2)
+  chronicConditions Json?         @map("chronic_conditions")
+  commonMedicines   Json?         @map("common_medicines")
+  mobilityLevel     MobilityLevel @map("mobility_level")
+  helperMode        HelperMode    @map("helper_mode")
+  createdAt         DateTime      @default(now()) @map("created_at")
+  updatedAt         DateTime      @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([mobilityLevel], map: "idx_elder_profiles_mobility_level")
+  @@map("elder_profiles")
+}
+
+model FamilyBinding {
+  id           String              @id @default(cuid())
+  elderUserId  String              @map("elder_user_id")
+  familyUserId String              @map("family_user_id")
+  relationType BindingRelationType @map("relation_type")
+  status       BindingStatus       @default(pending)
+  createdAt    DateTime            @default(now()) @map("created_at")
+  updatedAt    DateTime            @updatedAt @map("updated_at")
+
+  elderUser  User @relation("ElderBindings", fields: [elderUserId], references: [id])
+  familyUser User @relation("FamilyBindings", fields: [familyUserId], references: [id])
+
+  @@unique([elderUserId, familyUserId])
+  @@index([elderUserId], map: "idx_binding_elder_user_id")
+  @@index([familyUserId], map: "idx_binding_family_user_id")
+  @@map("family_bindings")
+}
+
+model DailyTask {
+  id               String         @id @default(cuid())
+  elderUserId      String         @map("elder_user_id")
+  taskDate         DateTime       @map("task_date") @db.Date
+  taskType         TaskType       @map("task_type")
+  title            String         @db.VarChar(128)
+  description      String?
+  priority         TaskPriority
+  status           TaskStatus     @default(todo)
+  sourceType       TaskSourceType @map("source_type")
+  relatedContentId String?        @map("related_content_id")
+  dueTime          String?        @map("due_time") @db.VarChar(16)
+  completedAt      DateTime?      @map("completed_at")
+  createdAt        DateTime       @default(now()) @map("created_at")
+  updatedAt        DateTime       @updatedAt @map("updated_at")
+
+  elderUser User @relation(fields: [elderUserId], references: [id])
+
+  @@index([elderUserId, taskDate], map: "idx_daily_tasks_elder_user_id_task_date")
+  @@index([status], map: "idx_daily_tasks_status")
+  @@index([taskType], map: "idx_daily_tasks_task_type")
+  @@map("daily_tasks")
+}
+
+model HealthMetric {
+  id                String              @id @default(cuid())
+  elderUserId       String              @map("elder_user_id")
+  metricType        MetricType          @map("metric_type")
+  systolic          Decimal?            @db.Decimal(6, 2)
+  diastolic         Decimal?            @db.Decimal(6, 2)
+  pulse             Decimal?            @db.Decimal(6, 2)
+  glucoseValue      Decimal?            @map("glucose_value") @db.Decimal(6, 2)
+  glucosePeriodType String?             @map("glucose_period_type") @db.VarChar(16)
+  weightKg          Decimal?            @map("weight_kg") @db.Decimal(6, 2)
+  createdByRole     MetricCreatedByRole @map("created_by_role")
+  createdByUserId   String              @map("created_by_user_id")
+  measuredAt        DateTime            @map("measured_at")
+  createdAt         DateTime            @default(now()) @map("created_at")
+
+  elderUser User @relation(fields: [elderUserId], references: [id])
+
+  @@index([elderUserId, metricType], map: "idx_metrics_elder_user_id_metric_type")
+  @@index([measuredAt], map: "idx_metrics_measured_at")
+  @@map("health_metrics")
+}
+
+model MedicationReminder {
+  id           String   @id @default(cuid())
+  elderUserId  String   @map("elder_user_id")
+  medicineName String   @map("medicine_name") @db.VarChar(128)
+  dosageText   String   @map("dosage_text") @db.VarChar(64)
+  remindTime   String   @map("remind_time") @db.VarChar(16)
+  repeatRule   String   @map("repeat_rule") @db.VarChar(32)
+  enabled      Boolean  @default(true)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  elderUser User @relation(fields: [elderUserId], references: [id])
+
+  @@index([elderUserId], map: "idx_medication_reminders_elder_user_id")
+  @@map("medication_reminders")
+}
+
+model WeeklyReport {
+  id                        String   @id @default(cuid())
+  elderUserId               String   @map("elder_user_id")
+  weekStartDate             DateTime @map("week_start_date") @db.Date
+  weekEndDate               DateTime @map("week_end_date") @db.Date
+  exerciseCompletionRate    Decimal? @map("exercise_completion_rate") @db.Decimal(5, 2)
+  medicationCompletionRate  Decimal? @map("medication_completion_rate") @db.Decimal(5, 2)
+  metricRecordCount         Int      @default(0) @map("metric_record_count")
+  summaryText               String?  @map("summary_text")
+  suggestionList            Json?    @map("suggestion_list")
+  createdAt                 DateTime @default(now()) @map("created_at")
+
+  elderUser User @relation(fields: [elderUserId], references: [id])
+
+  @@unique([elderUserId, weekStartDate, weekEndDate])
+  @@map("weekly_reports")
+}
