@@ -1251,6 +1251,75 @@ silver-health-app/
 
 ---
 
+### 28. 家属绑定第一版：绑定申请表单 + 绑定列表
+
+#### 本轮目标
+- 把家属侧第三个主路径也补起来。
+- 让 `family/bind` 从占位页升级为“可发起绑定申请 + 可查看当前绑定状态”的页面。
+
+#### 本轮实际完成内容
+1. 新增前端表单组件：
+   - `apps/web/app/family/bind/bind-form.tsx`
+
+2. 表单当前支持的字段：
+   - `elderUserId`
+   - `familyUserId`
+   - `relationType`
+
+3. 当前表单已具备的前端校验：
+   - `elderUserId` 必填
+   - `familyUserId` 必填
+
+4. 当前表单已直接对接：
+   - `POST /api/family-bindings`
+
+5. 重写 `apps/web/app/family/bind/page.tsx`，当前支持两种数据模式：
+   - **真实 API 模式**：
+     - `GET /api/family-bindings/elder/:elderUserId`
+   - **Mock 回退模式**：
+     - 当未配置默认 elder userId，或 API 加载失败时，自动回退到页面内置 mock 绑定数据
+
+6. 页面当前展示的信息包括：
+   - 当前数据源（API / Mock）
+   - 绑定数量
+   - 绑定列表
+   - 关系类型
+   - 绑定状态
+   - 家属 userId
+   - 家属昵称 / 手机号（若有）
+
+7. 当前策略说明：
+   - 第一版优先做“申请 + 列表”；
+   - 暂不做确认流转；
+   - 暂不做扫码/邀请码；
+   - 暂不做解绑操作；
+   - 先让家属绑定链路有可视化入口。
+
+#### 本轮校验结果
+已实际执行：
+- `pnpm --filter @silver-health/web typecheck`
+- `pnpm --filter @silver-health/web build`
+
+结果：
+- 两者均通过
+- `family/bind` 页面已能正常构建
+
+#### 当前意义
+- 家属侧三条核心页面现在都已有真实入口：
+  1. `family/dashboard`
+  2. `family/report`
+  3. `family/bind`
+- 老人侧与家属侧的 MVP 页面骨架已经基本成型；
+- 项目下一阶段可以更偏向联调、收口、完善体验，而不再只是补空白页。
+
+#### 下一步建议
+1. 回头补更完整的本地联调验证
+2. 再逐步补各模块编辑、停用、解绑、刷新等细节交互
+3. 之后整理一条完整 demo 演示路径
+4. 再评估是否进入第一轮可演示版本收口
+
+---
+
 ## 后续维护规则（新增）
 
 从本次开始，后续每完成一步开发工作，都应同步更新：
