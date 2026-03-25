@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { UserRole } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateElderProfileDto } from './dto/create-elder-profile.dto';
 import { UpdateElderProfileDto } from './dto/update-elder-profile.dto';
@@ -8,8 +9,20 @@ export class ElderProfileService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(dto: CreateElderProfileDto) {
-    return this.prisma.elderProfile.upsert({
-      where: { userId: dto.userId },
+    const ensuredUserId = dto.userId?.trim()
+      ? dto.userId.trim()
+      : (
+          await this.prisma.user.create({
+            data: {
+              role: UserRole.elder,
+              nickname: dto.nickname?.trim() || dto.name,
+              mobile: dto.mobile?.trim() || undefined,
+            },
+          })
+        ).id;
+
+    const profile = await this.prisma.elderProfile.upsert({
+      where: { userId: ensuredUserId },
       update: {
         name: dto.name,
         gender: dto.gender,
@@ -22,7 +35,7 @@ export class ElderProfileService {
         helperMode: dto.helperMode,
       },
       create: {
-        userId: dto.userId,
+        userId: ensuredUserId,
         name: dto.name,
         gender: dto.gender,
         age: dto.age,
@@ -33,7 +46,15 @@ export class ElderProfileService {
         mobilityLevel: dto.mobilityLevel,
         helperMode: dto.helperMode,
       },
+      include: {
+        user: true,
+      },
     });
+
+    return {
+      ...profile,
+      createdUser: !dto.userId,
+    };
   }
 
   async findByUserId(userId: string) {

@@ -9,6 +9,8 @@ type HelperMode = 'self' | 'family_assisted';
 
 type ElderProfileFormState = {
   userId: string;
+  nickname: string;
+  mobile: string;
   name: string;
   gender: Gender;
   age: string;
@@ -22,6 +24,8 @@ type ElderProfileFormState = {
 
 const initialFormState: ElderProfileFormState = {
   userId: defaultElderUserId,
+  nickname: '',
+  mobile: '',
   name: '',
   gender: 'female',
   age: '68',
@@ -48,6 +52,7 @@ export function ElderProfileForm() {
   const [result, setResult] = useState<string>('');
 
   const canLoad = useMemo(() => form.userId.trim().length > 0, [form.userId]);
+  const isCreateMode = form.userId.trim().length === 0;
 
   const onChange = (key: keyof ElderProfileFormState, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -73,6 +78,8 @@ export function ElderProfileForm() {
       const data = payload.data;
       setForm((prev) => ({
         ...prev,
+        nickname: data.user?.nickname ?? '',
+        mobile: data.user?.mobile ?? '',
         name: data.name ?? '',
         gender: data.gender ?? 'female',
         age: String(data.age ?? ''),
@@ -100,7 +107,9 @@ export function ElderProfileForm() {
 
     try {
       const body = {
-        userId: form.userId.trim(),
+        userId: form.userId.trim() || undefined,
+        nickname: form.nickname.trim() || undefined,
+        mobile: form.mobile.trim() || undefined,
         name: form.name.trim(),
         gender: form.gender,
         age: Number(form.age),
@@ -125,7 +134,20 @@ export function ElderProfileForm() {
         throw new Error(payload.message || '保存档案失败');
       }
 
-      setMessage('建档/更新成功。');
+      if (payload.data?.userId) {
+        setForm((prev) => ({
+          ...prev,
+          userId: payload.data.userId,
+          nickname: payload.data.user?.nickname ?? prev.nickname,
+          mobile: payload.data.user?.mobile ?? prev.mobile,
+        }));
+      }
+
+      const successMessage = payload.data?.createdUser
+        ? `建档成功，已自动创建 elder 用户：${payload.data.userId}`
+        : '建档/更新成功。';
+
+      setMessage(successMessage);
       setResult(JSON.stringify(payload.data, null, 2));
     } catch (error) {
       setMessage(error instanceof Error ? error.message : '保存档案失败');
@@ -140,16 +162,24 @@ export function ElderProfileForm() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 16 }}>
           <div>
             <h2 style={{ margin: 0 }}>老人建档表单</h2>
-            <p style={{ color: '#667085', margin: '8px 0 0' }}>当前先直接对接 `POST /api/profile/elder` 和 `GET /api/profile/elder/:userId`。</p>
+            <p style={{ color: '#667085', margin: '8px 0 0' }}>
+              现在支持两种模式：填写现有 `userId` 更新档案，或留空 `userId` 由系统自动创建 elder 用户并完成建档。
+            </p>
           </div>
           <button type="button" onClick={loadProfile} disabled={loadingProfile || !canLoad} style={{ padding: '10px 16px' }}>
             {loadingProfile ? '加载中...' : '按 userId 加载'}
           </button>
         </div>
 
+        <div style={{ marginBottom: 16, padding: 12, borderRadius: 12, background: '#eff8ff', color: '#175cd3' }}>
+          当前模式：<strong>{isCreateMode ? '自动创建 elder 用户并建档' : '基于已有 userId 更新/查看档案'}</strong>
+        </div>
+
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
           {[
-            ['userId', '用户 ID *'],
+            ['userId', '用户 ID（可留空自动创建）'],
+            ['nickname', '昵称'],
+            ['mobile', '手机号'],
             ['name', '姓名 *'],
             ['age', '年龄 *'],
             ['heightCm', '身高(cm)'],
