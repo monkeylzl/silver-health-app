@@ -52,13 +52,26 @@ const createdByRoleLabelMap: Record<MetricRecord['createdByRole'], string> = {
   family: '家属录入',
 };
 
+const glucosePeriodLabelMap: Record<string, string> = {
+  before_breakfast: '早餐前',
+  after_breakfast: '早餐后',
+  before_lunch: '午餐前',
+  after_lunch: '午餐后',
+  before_dinner: '晚餐前',
+  after_dinner: '晚餐后',
+};
+
 function formatMetricValue(metric: MetricRecord) {
   if (metric.metricType === 'blood_pressure') {
     return `${metric.systolic ?? '-'} / ${metric.diastolic ?? '-'} mmHg · 脉搏 ${metric.pulse ?? '-'} 次/分`;
   }
 
   if (metric.metricType === 'blood_glucose') {
-    return `${metric.glucoseValue ?? '-'} mmol/L${metric.glucosePeriodType ? ` · ${metric.glucosePeriodType}` : ''}`;
+    const glucosePeriodLabel = metric.glucosePeriodType
+      ? glucosePeriodLabelMap[metric.glucosePeriodType] ?? metric.glucosePeriodType
+      : '';
+
+    return `${metric.glucoseValue ?? '-'} mmol/L${glucosePeriodLabel ? ` · ${glucosePeriodLabel}` : ''}`;
   }
 
   return `${metric.weightKg ?? '-'} kg`;

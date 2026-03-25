@@ -1,6 +1,7 @@
 'use client';
 
 import { FormEvent, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { apiBaseUrl, defaultElderUserId } from '../../../lib/config';
 
 type MetricType = 'blood_pressure' | 'blood_glucose' | 'weight';
@@ -112,6 +113,7 @@ function validateForm(form: MetricFormState): FormErrors {
 }
 
 export function MetricForm() {
+  const router = useRouter();
   const [form, setForm] = useState<MetricFormState>(initialFormState);
   const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState(false);
@@ -170,8 +172,9 @@ export function MetricForm() {
         throw new Error(getErrorMessage(payload, '保存指标失败'));
       }
 
-      setMessage('指标录入成功。');
+      setMessage('指标录入成功，列表已自动刷新。');
       setResult(JSON.stringify(payload.data, null, 2));
+      router.refresh();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : '保存指标失败');
     } finally {
