@@ -244,6 +244,8 @@ silver-health-app/
 #### 已推送提交
 1. `chore: initialize silver health app skeleton`
 2. `feat: scaffold web routes and api modules`
+3. `docs: add development progress log`
+4. `feat: add task metric medication and report modules`
 
 #### 说明
 这一步确保：
@@ -345,6 +347,133 @@ silver-health-app/
 2. 打通 `/elder/profile` 页面与 `POST/GET /api/profile/elder`
 3. 再推进今日任务与指标录入链路
 4. 最后再收敛家属看板与周报展示
+
+---
+
+### 11. 新增提交：任务 / 指标 / 用药 / 周报模块
+
+#### 本轮实际提交内容
+- 将此前已落地但尚未单独提交的以下模块整理并提交：
+  - `task`
+  - `metric`
+  - `medication`
+  - `report`
+- 同步包含：
+  - `apps/api/src/app.module.ts` 的模块接入更新
+
+#### 对应提交
+- `1c13c02 feat: add task metric medication and report modules`
+
+#### 当前意义
+- API 主链路模块已基本齐全
+- 后续可以直接围绕老人建档、今日任务、指标录入、用药提醒、家属周报继续联调
+
+---
+
+### 12. 当前应用形态判断（对齐用户问题）
+
+#### 当前正在开发的不是原生 Android / iOS，也不是微信小程序
+目前工程结构清晰表明：
+- `apps/web`：Next.js Web 应用
+- `apps/api`：NestJS 后端 API
+- `apps/admin`：后台预留目录（尚未开始）
+
+#### 当前最准确的表述
+这是一个：
+- **基于 Web 的老年健康管理应用**
+- 老人端与家属端当前先统一放在一个 `Next.js` Web/H5 应用里开发
+- 后端由 `NestJS + Prisma + PostgreSQL` 提供服务
+
+#### 这意味着什么
+当前阶段更接近：
+- H5 / Web 应用
+- 或未来可继续演进成 PWA / 容器壳应用
+
+但**不是**：
+- 原生 Android App
+- 原生 iOS App
+- 微信小程序
+
+#### 为什么当前先这样做
+- 与现有文档约束一致
+- MVP 实现速度更快
+- 更适合先把“建档 -> 任务 -> 指标 -> 家属查看 -> 周报”闭环跑通
+- 后续如要扩展到小程序或原生端，可以再基于现有 API 和业务模型演进
+
+#### 当前关键判断（已确认归档）
+当前阶段的推荐路线是：
+- **继续走 Web/H5 + API 路线**
+- **不建议现在切到微信小程序或原生 Android/iOS**
+
+原因归纳：
+1. 当前工程已经按 `Next.js Web + NestJS API + Prisma` 起好了骨架，继续沿现有方向推进成本最低；
+2. 这个阶段的核心目标是尽快验证 MVP 主链路，而不是提前做多端分化；
+3. Web/H5 最适合当前快速试错、联调、演示与部署；
+4. 现在切小程序或原生端，会显著增加前端适配成本和交付周期；
+5. 更合理的策略是：先用 Web/H5 跑通业务闭环，后续再根据实际使用场景决定是否扩展到小程序或原生端。
+
+---
+
+### 13. 建档页面第一版落地（Web 前端）
+
+#### 本轮目标
+- 开始把 MVP 第一条主链路真正从“接口骨架”推进到“前端可联调入口”。
+- 优先落 `elder profile` 的页面表单，而不是继续只堆后端模块。
+
+#### 本轮实际完成内容
+1. 新增 Web 侧基础配置：
+   - `apps/web/lib/config.ts`
+   - 统一读取 `NEXT_PUBLIC_API_BASE_URL`
+   - 支持默认 `NEXT_PUBLIC_DEFAULT_ELDER_USER_ID`
+
+2. 将 `apps/web/app/elder/profile/page.tsx` 从占位页升级为实际建档入口页。
+
+3. 新增前端表单组件：
+   - `apps/web/app/elder/profile/elder-profile-form.tsx`
+
+4. 表单已直接对接以下接口形状：
+   - `POST /api/profile/elder`
+   - `GET /api/profile/elder/:userId`
+
+5. 表单已支持的字段：
+   - `userId`
+   - `name`
+   - `gender`
+   - `age`
+   - `heightCm`
+   - `weightKg`
+   - `chronicConditions`
+   - `commonMedicines`
+   - `mobilityLevel`
+   - `helperMode`
+
+6. 页面当前已具备的交互：
+   - 根据 `userId` 加载已有档案
+   - 提交建档 / 更新请求
+   - 实时展示接口返回 JSON
+   - 对慢病 / 常用药字段做简单列表切分
+
+7. 更新了根级 `.env.example`：
+   - 新增 `NEXT_PUBLIC_DEFAULT_ELDER_USER_ID`
+   - 保留 `NEXT_PUBLIC_API_BASE_URL`
+
+#### 当前意义
+- `elder profile` 已经不是单纯文档概念，而是有了一个真实可联调的 Web 页面入口；
+- 下一步可以继续补：
+  - 创建用户与建档的关系处理；
+  - API 侧 DTO/校验；
+  - 页面级字段校验、提交态与错误态优化；
+  - 本地联调与真实数据库验证。
+
+#### 本轮校验结果
+- 已执行：`pnpm --filter @silver-health/web typecheck`
+- 结果：通过
+
+#### 下一步建议
+1. 启动 API / Web 本地运行链路
+2. 补 `user -> elderProfile` 的实际创建/关联策略
+3. 增加 DTO 校验和更明确的错误返回
+4. 再推进今日任务页与指标录入页
 
 ---
 
