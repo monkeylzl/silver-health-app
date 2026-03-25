@@ -880,6 +880,50 @@ silver-health-app/
 
 ---
 
+### 21. 指标接口校验收口：CreateHealthMetricDto 运行时校验
+
+#### 背景
+在 `elder/metrics` 页面已经具备录入表单之后，`POST /api/metrics` 如果仍然缺少后端 DTO 运行时校验，会导致：
+- 前端虽然有基础校验，但依然可能绕过页面直接提交非法数据；
+- 指标链路相比建档链路，后端约束还不够扎实。
+
+#### 本轮实际完成内容
+1. 为 `CreateHealthMetricDto` 增加运行时校验规则：
+   - `elderUserId`：必填字符串
+   - `metricType`：枚举校验
+   - `systolic`：可选数值，60~260
+   - `diastolic`：可选数值，40~180
+   - `pulse`：可选数值，30~220
+   - `glucoseValue`：可选数值，1~40
+   - `glucosePeriodType`：可选字符串
+   - `weightKg`：可选数值，20~300
+   - `createdByRole`：枚举校验
+   - `createdByUserId`：必填字符串
+   - `measuredAt`：合法日期字符串
+
+2. 由于 API 全局 `ValidationPipe` 已在此前开启，本轮 DTO 校验已直接接入实际运行链路，无需额外再改 `main.ts`。
+
+#### 本轮校验结果
+已实际执行：
+- `pnpm --filter @silver-health/api typecheck`
+- `pnpm --filter @silver-health/api build`
+
+结果：
+- 两者均通过
+
+#### 当前意义
+- 指标录入链路现在也具备了后端运行时校验；
+- 到目前为止，至少“建档”和“指标录入”两条主链路都已经具备前后端双重基础校验；
+- 后续再进入真实联调时，异常输入会更早暴露。
+
+#### 下一步建议
+1. 回头补 `tasks` 模块 DTO 校验与任务完成接口
+2. 推进 `medication` 页面与提醒配置
+3. 再推进 `family/dashboard` 的摘要页
+4. 最后再补更完整的本地联调验证
+
+---
+
 ## 后续维护规则（新增）
 
 从本次开始，后续每完成一步开发工作，都应同步更新：
