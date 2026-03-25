@@ -1027,6 +1027,75 @@ silver-health-app/
 
 ---
 
+### 24. 用药提醒第一版：新增提醒 + 提醒列表
+
+#### 本轮目标
+- 推进 MVP 第四条主链路：用药提醒。
+- 先把 `elder/medication` 从占位页升级为“可新增提醒 + 可查看提醒列表”的第一页版本。
+
+#### 本轮实际完成内容
+1. 新增前端表单组件：
+   - `apps/web/app/elder/medication/medication-form.tsx`
+
+2. 表单当前支持的字段：
+   - `elderUserId`
+   - `medicineName`
+   - `dosageText`
+   - `remindTime`
+   - `repeatRule`
+   - `enabled`
+
+3. 当前表单已具备的前端校验：
+   - `elderUserId` 必填
+   - 药品名称必填
+   - 剂量说明必填
+   - 提醒时间需符合 `HH:mm`
+   - 重复规则必填
+
+4. 当前表单已直接对接：
+   - `POST /api/medications`
+
+5. 重写 `apps/web/app/elder/medication/page.tsx`，当前支持两种数据模式：
+   - **真实 API 模式**：
+     - `GET /api/medications/elder/:elderUserId`
+   - **Mock 回退模式**：
+     - 当未配置默认 elder userId，或 API 加载失败时，自动回退到页面内置 mock 用药提醒数据
+
+6. 页面当前展示的信息包括：
+   - 当前数据源（API / Mock）
+   - 提醒数量
+   - 提醒列表
+   - 药品名称
+   - 剂量说明
+   - 提醒时间
+   - 重复规则
+   - 启用状态
+
+#### 本轮校验结果
+已实际执行：
+- `pnpm --filter @silver-health/web typecheck`
+- `pnpm --filter @silver-health/web build`
+
+结果：
+- 两者均通过
+- `elder/medication` 页面已能正常构建
+
+#### 当前意义
+- 到目前为止，MVP 中至少四条主链路都已具备前端入口：
+  1. 建档
+  2. 今日任务
+  3. 健康指标
+  4. 用药提醒
+- 用药提醒页已不再是占位页，而是具备“新增 + 查看”的基础能力。
+
+#### 下一步建议
+1. 推进 `family/dashboard` 摘要页
+2. 回头补 `medication` 模块的 DTO 运行时校验
+3. 再补 `task` 页面中更细的状态流转
+4. 最后做一轮更完整的本地联调验证
+
+---
+
 ## 后续维护规则（新增）
 
 从本次开始，后续每完成一步开发工作，都应同步更新：
