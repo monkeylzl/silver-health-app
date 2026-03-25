@@ -66,9 +66,13 @@ async function getReports(): Promise<{ reports: WeeklyReport[]; source: 'api' | 
   }
 }
 
-function formatPercent(value?: number | null) {
-  if (typeof value !== 'number') return '暂无';
-  return `${value}%`;
+function formatPercent(value?: number | string | null) {
+  if (value === null || value === undefined || value === '') return '暂无';
+
+  const numericValue = typeof value === 'number' ? value : Number(value);
+  if (!Number.isFinite(numericValue)) return '暂无';
+
+  return `${numericValue}%`;
 }
 
 export default async function Page() {
