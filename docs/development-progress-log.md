@@ -1483,6 +1483,68 @@ silver-health-app/
 
 ---
 
+### 33. 联调数据进一步落地：Seed 脚本第一版与使用说明
+
+#### 背景
+用户继续要求：
+- 不仅要有联调数据相关文档；
+- 还要把“落地方案”和“脚本”分别独立输出；
+- 并逐步往可执行层推进。
+
+#### 本轮实际完成内容
+1. 在根 `package.json` 中增加脚本：
+   - `seed:demo`
+
+2. 新增脚本文件：
+   - `scripts/seed-demo-data.ts`
+
+3. 当前脚本覆盖的数据对象：
+   - elder user
+   - family user
+   - elder profile
+   - family binding
+   - daily tasks
+   - health metrics
+   - medication reminders
+   - weekly reports
+
+4. 当前脚本策略：
+   - user / profile / binding：使用查找 / upsert 思路
+   - task / metric / medication / report：采用“先删后建”的简单重建策略
+   - 目标是先快速稳定地产出一套 demo 数据
+
+5. 新增脚本使用说明文档：
+   - `docs/seed-script-usage.md`
+
+6. 说明文档中已包含：
+   - 当前脚本位置
+   - 运行方式
+   - 运行前要求
+   - 脚本当前行为
+   - 输出内容
+   - 后续升级建议
+
+#### 本轮校验结果
+已实际执行：
+- `pnpm --filter @silver-health/api typecheck`
+- `pnpm --filter @silver-health/web typecheck`
+
+结果：
+- 两者均通过
+
+#### 当前意义
+- 联调数据相关工作已经不再只是文档设计，而是开始落到可执行脚本层；
+- 后续如果数据库环境就绪，可以直接尝试运行 `pnpm seed:demo`；
+- 这会显著降低准备 demo 数据和联调数据的成本。
+
+#### 下一步建议
+1. 在数据库环境就绪后实际运行 `pnpm seed:demo`
+2. 记录脚本首次真实执行时暴露的问题
+3. 将生成的 elder userId 写入 `.env`
+4. 开始第一轮真实端到端联调验证
+
+---
+
 ## 后续维护规则（新增）
 
 从本次开始，后续每完成一步开发工作，都应同步更新：
