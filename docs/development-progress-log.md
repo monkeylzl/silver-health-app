@@ -1156,6 +1156,45 @@ silver-health-app/
 
 ---
 
+### 26. 用药提醒接口校验收口：CreateMedicationReminderDto 运行时校验
+
+#### 背景
+`elder/medication` 页面已经具备“新增提醒 + 提醒列表”能力，但 `POST /api/medications` 此前还没有后端 DTO 运行时校验，这会导致：
+- 页面以外的非法调用无法被及时拦截；
+- 用药提醒链路相比建档/指标/任务链路，后端约束还不够一致。
+
+#### 本轮实际完成内容
+1. 为 `CreateMedicationReminderDto` 增加运行时校验规则：
+   - `elderUserId`：必填字符串
+   - `medicineName`：必填字符串，最大长度 128
+   - `dosageText`：必填字符串，最大长度 64
+   - `remindTime`：必填，且需符合 `HH:mm`
+   - `repeatRule`：必填字符串，最大长度 32
+   - `enabled`：可选布尔值
+
+2. 由于 API 全局 `ValidationPipe` 已在此前开启，本轮 DTO 校验已直接接入实际运行链路。
+
+#### 本轮校验结果
+已实际执行：
+- `pnpm --filter @silver-health/api typecheck`
+- `pnpm --filter @silver-health/api build`
+
+结果：
+- 两者均通过
+
+#### 当前意义
+- 用药提醒链路现在也具备了后端运行时校验；
+- 至此，建档、指标、任务、用药四条主要链路都已经具备不同程度的前后端约束；
+- 工程整体一致性明显提高。
+
+#### 下一步建议
+1. 推进 `family/report` 页面第一版
+2. 之后收敛家属绑定页
+3. 回头补更完整的本地联调验证
+4. 再逐步完善各模块更细的交互和状态流转
+
+---
+
 ## 后续维护规则（新增）
 
 从本次开始，后续每完成一步开发工作，都应同步更新：
