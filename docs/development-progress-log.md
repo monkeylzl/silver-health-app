@@ -477,6 +477,55 @@ silver-health-app/
 
 ---
 
+### 14. 本地开发说明与构建校验
+
+#### 本轮目标
+- 让项目从“代码骨架 + 局部联调页”进一步进入“至少可构建、可说明如何本地运行”的状态。
+
+#### 本轮实际完成内容
+1. 新增 API 侧环境变量示例：
+   - `apps/api/.env.example`
+
+2. 更新根级脚本：
+   - 增加 `dev:api`
+   - 增加 `dev:web`
+   - 增加 `prisma:generate`
+
+3. 新增本地开发说明文档：
+   - `docs/local-development.md`
+
+4. 文档中补充了：
+   - 依赖安装方式
+   - `corepack + pnpm` 使用方式
+   - 根级 / API 环境变量说明
+   - Prisma Client 生成方式
+   - API / Web 启动方式
+   - 当前建档页入口
+   - 当前已接通的联调接口
+   - 当前项目限制项
+
+#### 本轮校验结果
+已实际执行：
+- `pnpm --filter @silver-health/api build`
+- `pnpm --filter @silver-health/web build`
+
+结果：
+- 两者均通过
+- Web 构建已成功生成 `/elder/profile` 等页面产物
+
+#### 当前意义
+- 现在项目不仅能 typecheck，还已经能完成 Web / API 的基础 build；
+- 后续进入本地运行、联调、数据库接入阶段时，已有明确说明文档和脚本入口；
+- 这标志着工程从“纯初始化期”正式进入“可持续开发期”。
+
+#### 下一步建议
+1. 实际启动 API 与 Web 开发服务做本地访问验证
+2. 补 DTO 校验（class-validator / class-transformer）
+3. 明确 `userId` 创建/绑定策略，避免建档页依赖人工先填 ID
+4. 推进今日任务页与指标录入页
+
+---
+
 ## 后续维护规则（新增）
 
 从本次开始，后续每完成一步开发工作，都应同步更新：

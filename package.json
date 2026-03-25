@@ -8,7 +8,10 @@
     "build": "turbo run build",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "dev:api": "pnpm --filter @silver-health/api dev",
+    "dev:web": "pnpm --filter @silver-health/web dev",
+    "prisma:generate": "prisma generate --schema prisma/schema.prisma"
   },
   "dependencies": {
     "@prisma/client": "^6.6.0"
