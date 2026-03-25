@@ -1,6 +1,7 @@
 'use client';
 
 import { FormEvent, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { apiBaseUrl, defaultElderUserId } from '../../../lib/config';
 
 type MedicationFormState = {
@@ -72,6 +73,7 @@ function getErrorMessage(payload: unknown, fallback: string) {
 }
 
 export function MedicationForm() {
+  const router = useRouter();
   const [form, setForm] = useState<MedicationFormState>(initialFormState);
   const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState(false);
@@ -117,8 +119,9 @@ export function MedicationForm() {
         throw new Error(getErrorMessage(payload, '保存用药提醒失败'));
       }
 
-      setMessage('用药提醒保存成功。');
+      setMessage('用药提醒保存成功，列表已自动刷新。');
       setResult(JSON.stringify(payload.data, null, 2));
+      router.refresh();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : '保存用药提醒失败');
     } finally {

@@ -1,6 +1,7 @@
 'use client';
 
 import { FormEvent, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { apiBaseUrl, defaultElderUserId } from '../../../lib/config';
 
 type RelationType = 'son' | 'daughter' | 'spouse' | 'other';
@@ -48,6 +49,7 @@ function getErrorMessage(payload: unknown, fallback: string) {
 }
 
 export function BindForm() {
+  const router = useRouter();
   const [form, setForm] = useState(initialFormState);
   const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState(false);
@@ -86,8 +88,9 @@ export function BindForm() {
         throw new Error(getErrorMessage(payload, '发起绑定失败'));
       }
 
-      setMessage('绑定申请已提交。');
+      setMessage('绑定申请已提交，列表已自动刷新。');
       setResult(JSON.stringify(payload.data, null, 2));
+      router.refresh();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : '发起绑定失败');
     } finally {
