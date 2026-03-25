@@ -1545,6 +1545,339 @@ silver-health-app/
 
 ---
 
+### 34. Seed 脚本首次真实执行结果
+
+#### 本轮目标
+- 不再停留在文档和脚本层，直接验证 `pnpm seed:demo` 是否能够真实跑通。
+
+#### 本轮实际执行
+执行命令：
+- `pnpm seed:demo`
+
+#### 实际结果
+- 脚本已成功启动；
+- 但在 Prisma 第一次执行 `user.upsert()` 时终止；
+- 失败原因不是脚本逻辑本身，而是环境变量缺失。
+
+#### 当前暴露出的真实卡点
+报错核心：
+- `Environment variable not found: DATABASE_URL`
+
+说明：
+- 当前运行环境里还没有可用的 `DATABASE_URL`；
+- Prisma 无法建立数据库连接；
+- 因此 seed 脚本还无法真正把 demo 数据写入数据库。
+
+#### 结论
+本轮真实验证得到的结论是：
+- `seed-demo-data.ts` 脚本已经进入可执行状态；
+- 当前阻塞点已经从“代码层”收敛到“数据库环境层”；
+- 下一步不应继续盲改脚本，而应先补齐数据库连接配置。
+
+#### 下一步建议
+1. 在根 `.env`（或当前运行环境）中补 `DATABASE_URL`
+2. 确认本地 PostgreSQL 可访问
+3. 确认基础表已经存在（必要时先做 migration）
+4. 然后重新执行：
+   - `pnpm seed:demo`
+
+---
+
+### 35. 数据库环境真实排查结果
+
+#### 本轮目标
+- 在 seed 脚本首次失败后，继续把数据库环境卡点查清楚。
+
+#### 本轮实际执行
+1. 检查项目根目录 `.env` 是否存在
+2. 若不存在，则从 `.env.example` 复制生成
+3. 重新做数据库连通性检查
+4. 排查本机 PostgreSQL / 客户端工具 / 服务状态
+
+#### 实际结果
+1. 根目录 `.env` 之前确实不存在
+   - 本轮已从 `.env.example` 复制生成 `.env`
+
+2. 重新测试 Prisma 数据库连通性后，得到：
+   - `P1001`
+   - `Can't reach database server at localhost:5432`
+
+3. 本机进一步排查结果：
+   - `postgres` 命令不存在
+   - `psql` 命令不存在
+   - `pg_isready` 命令不存在
+   - 当前也未发现 PostgreSQL 服务监听在 `localhost:5432`
+
+#### 结论
+当前真实阻塞点已经进一步明确为：
+- 不只是缺 `.env`；
+- 而是本机当前并没有可直接使用的 PostgreSQL 运行环境（至少当前 shell 路径下不可见，也未监听默认端口）。
+
+#### 当前意义
+- `seed-demo-data.ts`、Prisma schema、项目代码本身已经推进到可继续联调阶段；
+- 当前第一优先级阻塞来自环境层：数据库服务尚未就绪；
+- 后续若不先补数据库环境，继续尝试 seed/migration 都不会真正成功。
+
+#### 下一步建议
+1. 先确认本机准备用哪种方式提供 PostgreSQL：
+   - 本地安装服务
+   - Docker
+   - 远程数据库
+2. 确认 `DATABASE_URL` 与实际数据库一致
+3. 跑 migration / schema 同步
+4. 再重新执行 `pnpm seed:demo`
+
+---
+
+### 36. 本地 PostgreSQL 打通：migration 与 seed 已真实跑通
+
+#### 背景
+在上一轮排查中，已经确认：
+- 项目根 `.env` 一开始缺失，但后续已补齐；
+- 更深层问题是本机缺少可用的 PostgreSQL 运行环境；
+- 用户随后明确决策：
+  - 先用“本机数据库”把项目测试/联调跑通；
+  - 长期再切远程数据库方案。
+
+#### 本轮实际执行
+1. 使用 Homebrew 安装并启动：
+   - `postgresql@16`
+
+2. 创建数据库：
+   - `silver_health`
+
+3. 进一步验证后确认：
+   - 本机 PostgreSQL 使用当前系统用户 `liuzhongliang` 可正常连接；
+   - 此机本地并不适合直接使用 `.env.example` 中的 `postgres:postgres` 账户写法；
+   - 因此已将项目 `.env` 中的 `DATABASE_URL` 调整为基于当前系统用户的本地连接写法。
+
+4. 实际执行 Prisma migration：
+   - `prisma migrate dev --schema prisma/schema.prisma --name init`
+
+5. 实际执行 demo seed：
+   - `pnpm seed:demo`
+
+6. Seed 成功后，已将生成出来的 elder userId 写入项目 `.env`：
+   - `NEXT_PUBLIC_DEFAULT_ELDER_USER_ID=<seeded elder id>`
+
+#### 本轮真实结果
+- PostgreSQL 已本机安装并启动
+- `silver_health` 数据库已存在
+- Prisma migration 已成功执行
+- demo seed 已成功执行
+- 已生成 demo 数据并拿到关键 ID
+
+#### 本轮 seed 输出结果
+- Elder user id：`cmn5zm37f0000ijdo5tp2h0e0`
+- Family user id：`cmn5zm37o0001ijdotbuh35vn`
+- Tasks inserted：4
+- Metrics inserted：3
+- Medication reminders inserted：2
+- Reports inserted：2
+
+#### 当前意义
+- 项目已经从“页面骨架 + 接口骨架 + seed 设计”推进到“本地数据库真实打通”；
+- 多数页面后续都可以开始优先走真实 API，而不再默认依赖 mock 回退；
+- 第一轮端到端联调已经具备了基本条件。
+
+#### 当前与长期方案的关系
+- 当前阶段：
+  - 本地 PostgreSQL 已作为短期联调环境跑通
+- 长期阶段：
+  - 仍按用户决策，后续项目正式环境使用远程数据库方案
+
+#### 下一步建议
+1. 实际启动 `dev:api` 与 `dev:web`
+2. 用当前 seeded elder id 做一轮真实页面联调
+3. 记录页面从 mock 切真实 API 后暴露的具体问题
+4. 再做第一轮体验与数据流收口
+
+---
+
+### 37. 第一轮真实联调验证结果
+
+#### 本轮目标
+- 在本地 PostgreSQL、migration、seed 都跑通后，真正启动 Web / API 服务，验证页面和接口是否已经开始走真实数据。
+
+#### 本轮实际执行
+1. 启动 API：
+   - `pnpm dev:api`
+
+2. 启动 Web：
+   - `pnpm dev:web`
+
+3. 逐项验证接口：
+   - `GET /api/health`
+   - `GET /api/profile/elder/:elderUserId`
+   - `GET /api/tasks/elder/:elderUserId`
+   - `GET /api/metrics/elder/:elderUserId`
+   - `GET /api/medications/elder/:elderUserId`
+   - `GET /api/reports/elder/:elderUserId`
+   - `GET /api/family-bindings/elder/:elderUserId`
+
+4. 进一步检查 Web 页面的实际渲染结果：
+   - `/elder/home`
+   - `/family/dashboard`
+
+#### 当前验证结果
+
+##### 1. API 健康检查：正常
+- `/api/health` 返回正常
+- Nest 服务已启动成功
+
+##### 2. Elder Profile：正常
+- `/api/profile/elder/:elderUserId` 返回真实数据
+
+##### 3. Metrics：正常
+- `/api/metrics/elder/:elderUserId` 返回 seeded 指标数据
+
+##### 4. Medications：正常
+- `/api/medications/elder/:elderUserId` 返回 seeded 用药提醒数据
+
+##### 5. Reports：正常
+- `/api/reports/elder/:elderUserId` 返回 seeded 周报数据
+
+##### 6. Family Bindings：正常
+- `/api/family-bindings/elder/:elderUserId` 返回 seeded 绑定数据
+
+##### 7. Tasks：异常
+- `/api/tasks/elder/:elderUserId` 当前返回空数组
+- 这说明 seed 虽然写入了 task，但当前 `findTodayByElderUserId` 的查询方式与数据库中的 `taskDate` 匹配策略仍有问题
+- 高概率原因：当前查询直接按完整 `Date` 对等匹配，而 seed / 数据库存储与运行时日期边界存在偏差（时区 / date truncation / 精确匹配问题）
+
+##### 8. Web 页面：仍在走 Mock
+- `/elder/home` 当前页面仍显示：
+  - `当前未设置 NEXT_PUBLIC_DEFAULT_ELDER_USER_ID，先展示 mock 今日任务。`
+- `/family/dashboard` 当前页面仍显示：
+  - `当前未设置 NEXT_PUBLIC_DEFAULT_ELDER_USER_ID，先展示 mock 家属摘要数据。`
+
+#### 当前结论
+本轮真实联调表明：
+- **API 大部分链路已经能走真实数据**；
+- 但还存在两个明显收口点：
+  1. Web 进程未读取到更新后的 `NEXT_PUBLIC_DEFAULT_ELDER_USER_ID`（需要重新启动或确认环境注入）；
+  2. Tasks 查询策略需要修正，不能继续按当前方式直接精确匹配日期。
+
+#### 下一步建议
+1. 先重启 Web 进程，让其重新读取 `.env`
+2. 修正 `TaskService.findTodayByElderUserId` 的日期查询逻辑（改为当天起止范围）
+3. 再重新验证 `/elder/home` 与 `/family/dashboard`
+4. 完成后继续检查其他页面是否已从 mock 切到真实数据
+
+---
+
+### 38. 第二轮真实联调结果：Tasks 已修复，Web 环境读取问题仍存在
+
+#### 本轮目标
+- 收口上一轮联调中暴露出的两个问题：
+  1. `tasks` 接口返回空数组；
+  2. Web 页面仍然走 mock。
+
+#### 本轮实际完成内容
+1. 修正 `TaskService.findTodayByElderUserId`：
+   - 由原先直接按完整 `Date` 对等匹配；
+   - 改为按“当天开始时间 ~ 当天结束时间”的范围查询。
+
+2. 重新执行：
+   - API typecheck
+   - Web 重启
+   - 再次验证关键 API 与页面
+
+#### 本轮真实结果
+##### 1. Tasks API 已修复
+- `GET /api/tasks/elder/:elderUserId` 现在已经返回真实 seeded task 数据
+- 当前说明：task 查询问题已成功收口
+
+##### 2. Web 页面仍未切到真实 API
+再次验证：
+- `/elder/home`
+- `/family/dashboard`
+
+结果仍然显示：
+- `当前未设置 NEXT_PUBLIC_DEFAULT_ELDER_USER_ID，先展示 mock ...`
+
+#### 当前判断
+本轮结果说明：
+- 问题已不再是 Web 进程没有重启；
+- 更可能是 **Next.js 当前运行时没有读取项目根目录 `.env` 里的 `NEXT_PUBLIC_DEFAULT_ELDER_USER_ID`**；
+- 在 monorepo 结构下，`apps/web` 作为 Next 应用，更可能只读取自身目录下的 `.env*` 文件，而不会自动读取仓库根 `.env`。
+
+#### 当前意义
+- API 侧真实数据链路已经进一步稳定；
+- 当前阻塞已收敛到前端配置注入层，而不是业务代码层；
+- 下一步重点不应继续查 task，而应处理 `apps/web` 的环境变量加载来源。
+
+#### 下一步建议
+1. 在 `apps/web` 下补专用 `.env.local`（或等效方案）
+2. 将 `NEXT_PUBLIC_API_BASE_URL` 与 `NEXT_PUBLIC_DEFAULT_ELDER_USER_ID` 明确写入 Web 应用级环境文件
+3. 重启 Web
+4. 再重新验证 `/elder/home` 与 `/family/dashboard` 是否切到真实 API
+
+---
+
+### 39. 第三轮真实联调结果：Web 已切到真实 API
+
+#### 本轮目标
+- 收口前一轮剩余的前端环境变量问题；
+- 让 `apps/web` 真正读取到 seeded elder id，并切换到真实 API 模式。
+
+#### 本轮实际完成内容
+1. 在 `apps/web` 下新增：
+   - `.env.local`
+
+2. 明确写入：
+   - `NEXT_PUBLIC_API_BASE_URL=http://localhost:3001`
+   - `NEXT_PUBLIC_DEFAULT_ELDER_USER_ID=cmn5zm37f0000ijdo5tp2h0e0`
+
+3. 重启 Next.js dev 服务
+4. 重新验证页面：
+   - `/elder/home`
+   - `/family/dashboard`
+   - `/family/report`
+
+#### 本轮真实结果
+##### 1. `/elder/home`：已切到真实 API
+- 页面显示：`真实 API`
+- 已展示 4 条真实 seeded task
+- 已完成 / 待完成统计与数据库数据一致
+
+##### 2. `/family/dashboard`：已切到真实 API
+- 页面显示：`真实 API`
+- 已展示真实任务摘要
+- 已展示真实指标摘要
+- 已展示真实用药提醒摘要
+
+##### 3. `/family/report`：已切到真实 API
+- 页面显示：`真实 API`
+- 已展示 2 份真实 seeded 周报
+- 摘要与建议内容已来自数据库
+
+#### 当前结论
+到这一轮为止：
+- 本地 PostgreSQL 已打通
+- migration 已成功
+- seed 已成功
+- Web 端环境变量注入已修好
+- 关键页面已经开始走真实 API，而不是 mock 回退
+
+#### 当前意义
+项目已经从“页面骨架 + 本地 demo 数据”推进到：
+- **本地真实联调环境可用**
+- **老人侧与家属侧关键页面均已开始走真实数据**
+
+这已经是一个很实在的阶段性里程碑。
+
+#### 下一步建议
+1. 将这轮联调修复（task 日期查询 + web 环境文件）提交入库
+2. 再继续验证：
+   - `/elder/metrics`
+   - `/elder/medication`
+   - `/family/bind`
+3. 记录真实模式下页面展示还有哪些不合理点
+4. 开始第一轮体验收口
+
+---
+
 ## 后续维护规则（新增）
 
 从本次开始，后续每完成一步开发工作，都应同步更新：

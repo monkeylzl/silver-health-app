@@ -25,9 +25,20 @@ export class TaskService {
   }
 
   async findTodayByElderUserId(elderUserId: string, taskDate?: string) {
-    const targetDate = taskDate ? new Date(taskDate) : new Date();
+    const baseDate = taskDate ? new Date(taskDate) : new Date();
+    const startOfDay = new Date(baseDate);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(baseDate);
+    endOfDay.setHours(23, 59, 59, 999);
+
     return this.prisma.dailyTask.findMany({
-      where: { elderUserId, taskDate: targetDate },
+      where: {
+        elderUserId,
+        taskDate: {
+          gte: startOfDay,
+          lte: endOfDay,
+        },
+      },
       orderBy: [{ priority: 'asc' }, { createdAt: 'desc' }],
     });
   }
