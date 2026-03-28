@@ -26,18 +26,29 @@ type FormErrors = Partial<Record<keyof ElderProfileFormState, string>>;
 
 const initialFormState: ElderProfileFormState = {
   userId: defaultElderUserId,
-  nickname: '',
-  mobile: '',
-  name: '',
+  nickname: '李阿姨',
+  mobile: '13800138000',
+  name: '李秀兰',
   gender: 'female',
   age: '68',
-  heightCm: '',
-  weightKg: '',
-  chronicConditions: '',
-  commonMedicines: '',
+  heightCm: '160',
+  weightKg: '61',
+  chronicConditions: '高血压，2 型糖尿病',
+  commonMedicines: '氨氯地平，二甲双胍',
   mobilityLevel: 'medium',
   helperMode: 'family_assisted',
 };
+
+const mobilityOptions: Array<{ value: MobilityLevel; label: string; helper: string }> = [
+  { value: 'low', label: '行动需要更多照看', helper: '适合卧床、步行明显受限等场景' },
+  { value: 'medium', label: '日常可自理，偶尔需要协助', helper: '适合多数需要家属提醒的老人' },
+  { value: 'high', label: '行动较灵活', helper: '适合能自主完成大部分日常活动的老人' },
+];
+
+const helperModeOptions: Array<{ value: HelperMode; label: string; helper: string }> = [
+  { value: 'self', label: '老人自己使用为主', helper: '适合老人能独立完成查看与录入' },
+  { value: 'family_assisted', label: '家属协助为主', helper: '适合家属一起建档、录指标、看周报' },
+];
 
 function parseList(value: string) {
   return value
@@ -138,7 +149,7 @@ export function ElderProfileForm() {
 
   const loadProfile = async () => {
     if (!canLoad) {
-      setMessage('请先输入 userId 再加载档案。');
+      setMessage('请先填写档案编号，再加载已有档案。');
       return;
     }
 
@@ -170,7 +181,7 @@ export function ElderProfileForm() {
       }));
       setErrors({});
       setResult(JSON.stringify(payload.data, null, 2));
-      setMessage('已加载该 userId 的档案。');
+      setMessage('档案已载入，可以直接补充或调整信息。');
     } catch (error) {
       setMessage(error instanceof Error ? error.message : '加载档案失败');
       setResult('');
@@ -231,8 +242,8 @@ export function ElderProfileForm() {
       }
 
       const successMessage = payload.data?.createdUser
-        ? `建档成功，已自动创建 elder 用户：${payload.data.userId}`
-        : '建档/更新成功。';
+        ? `建档成功，系统已自动生成档案编号：${payload.data.userId}。下一步可直接去“今日任务”。`
+        : '档案已保存，下一步可直接去“今日任务”继续演示。';
 
       setMessage(successMessage);
       setResult(JSON.stringify(payload.data, null, 2));
@@ -243,7 +254,7 @@ export function ElderProfileForm() {
     }
   };
 
-  const renderInput = (key: keyof ElderProfileFormState, label: string, placeholder?: string) => (
+  const renderInput = (key: keyof ElderProfileFormState, label: string, placeholder?: string, helper?: string) => (
     <label key={key} style={{ display: 'grid', gap: 8 }}>
       <span>{label}</span>
       <input
@@ -252,6 +263,7 @@ export function ElderProfileForm() {
         onChange={(event) => onChange(key, event.target.value)}
         style={fieldStyle(Boolean(errors[key]))}
       />
+      {helper ? <span style={{ color: '#667085', fontSize: 12 }}>{helper}</span> : null}
       {errors[key] ? <span style={{ color: '#b42318', fontSize: 12 }}>{errors[key]}</span> : null}
     </label>
   );
@@ -263,26 +275,31 @@ export function ElderProfileForm() {
           <div>
             <h2 style={{ margin: 0 }}>老人建档表单</h2>
             <p style={{ color: '#667085', margin: '8px 0 0' }}>
-              现在支持两种模式：填写现有 `userId` 更新档案，或留空 `userId` 由系统自动创建 elder 用户并完成建档。
+              默认已填好一份适合演示的示例资料。可直接保存生成档案，也可先输入已有档案编号再回填修改。
             </p>
           </div>
           <button type="button" onClick={loadProfile} disabled={loadingProfile || !canLoad} style={{ padding: '10px 16px' }}>
-            {loadingProfile ? '加载中...' : '按 userId 加载'}
+            {loadingProfile ? '加载中...' : '载入已有档案'}
           </button>
         </div>
 
-        <div style={{ marginBottom: 16, padding: 12, borderRadius: 12, background: '#eff8ff', color: '#175cd3' }}>
-          当前模式：<strong>{isCreateMode ? '自动创建 elder 用户并建档' : '基于已有 userId 更新/查看档案'}</strong>
+        <div style={{ display: 'grid', gap: 12, marginBottom: 16 }}>
+          <div style={{ padding: 12, borderRadius: 12, background: '#eff8ff', color: '#175cd3' }}>
+            当前模式：<strong>{isCreateMode ? '新建老人档案' : '编辑已有老人档案'}</strong>
+          </div>
+          <div style={{ padding: 12, borderRadius: 12, background: '#f8f9fc', color: '#344054' }}>
+            保存后会影响哪里：<strong>今日任务、指标录入、家属看板和周报</strong>都会围绕这位老人继续展示。
+          </div>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
-          {renderInput('userId', '用户 ID（可留空自动创建）')}
-          {renderInput('nickname', '昵称')}
-          {renderInput('mobile', '手机号', '例如 13800138000')}
-          {renderInput('name', '姓名 *')}
-          {renderInput('age', '年龄 *')}
-          {renderInput('heightCm', '身高(cm)')}
-          {renderInput('weightKg', '体重(kg)')}
+          {renderInput('userId', '档案编号（可留空自动生成）', '留空即可由系统自动生成', '如果已经建过档，可输入原编号后载入')}
+          {renderInput('nickname', '页面称呼', '例如 李阿姨', '用于首页、看板等友好称呼')}
+          {renderInput('mobile', '联系手机号', '例如 13800138000')}
+          {renderInput('name', '老人姓名 *', '例如 李秀兰')}
+          {renderInput('age', '年龄 *', '例如 68')}
+          {renderInput('heightCm', '身高(cm)', '例如 160')}
+          {renderInput('weightKg', '体重(kg)', '例如 61')}
 
           <label style={{ display: 'grid', gap: 8 }}>
             <span>性别 *</span>
@@ -294,31 +311,40 @@ export function ElderProfileForm() {
           </label>
 
           <label style={{ display: 'grid', gap: 8 }}>
-            <span>行动能力 *</span>
+            <span>行动状态 *</span>
             <select value={form.mobilityLevel} onChange={(event) => onChange('mobilityLevel', event.target.value)} style={fieldStyle(false)}>
-              <option value="low">低</option>
-              <option value="medium">中</option>
-              <option value="high">高</option>
+              {mobilityOptions.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
             </select>
+            <span style={{ color: '#667085', fontSize: 12 }}>
+              {mobilityOptions.find((option) => option.value === form.mobilityLevel)?.helper}
+            </span>
           </label>
 
           <label style={{ display: 'grid', gap: 8 }}>
-            <span>协助模式 *</span>
+            <span>照护方式 *</span>
             <select value={form.helperMode} onChange={(event) => onChange('helperMode', event.target.value)} style={fieldStyle(false)}>
-              <option value="self">自助</option>
-              <option value="family_assisted">家属协助</option>
+              {helperModeOptions.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
             </select>
+            <span style={{ color: '#667085', fontSize: 12 }}>
+              {helperModeOptions.find((option) => option.value === form.helperMode)?.helper}
+            </span>
           </label>
         </div>
 
         <div style={{ display: 'grid', gap: 16, marginTop: 16 }}>
           <label style={{ display: 'grid', gap: 8 }}>
             <span>慢病情况</span>
-            <textarea value={form.chronicConditions} onChange={(event) => onChange('chronicConditions', event.target.value)} rows={3} placeholder="如：高血压，糖尿病" style={fieldStyle(false)} />
+            <textarea value={form.chronicConditions} onChange={(event) => onChange('chronicConditions', event.target.value)} rows={3} placeholder="例如：高血压，2 型糖尿病" style={fieldStyle(false)} />
+            <span style={{ color: '#667085', fontSize: 12 }}>可填写 1~3 项关键信息，便于后续讲任务与提醒来源。</span>
           </label>
           <label style={{ display: 'grid', gap: 8 }}>
             <span>常用药物</span>
-            <textarea value={form.commonMedicines} onChange={(event) => onChange('commonMedicines', event.target.value)} rows={3} placeholder="如：氨氯地平，二甲双胍" style={fieldStyle(false)} />
+            <textarea value={form.commonMedicines} onChange={(event) => onChange('commonMedicines', event.target.value)} rows={3} placeholder="例如：氨氯地平，二甲双胍" style={fieldStyle(false)} />
+            <span style={{ color: '#667085', fontSize: 12 }}>这里填写的药物，会和后面的用药提醒形成自然呼应。</span>
           </label>
         </div>
 
@@ -332,7 +358,7 @@ export function ElderProfileForm() {
 
       <section style={{ background: '#101828', color: '#f8fafc', borderRadius: 16, padding: 24, overflowX: 'auto' }}>
         <h3 style={{ marginTop: 0 }}>接口返回预览</h3>
-        <pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{result || '提交或加载后，这里会展示接口返回结果。'}</pre>
+        <pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{result || '保存或载入后，这里会展示接口返回结果，便于演示时确认档案已生效。'}</pre>
       </section>
     </div>
   );

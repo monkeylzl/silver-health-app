@@ -1,4 +1,5 @@
 import { apiBaseUrl, defaultElderUserId } from '../../../lib/config';
+import { ChecklistNotice, DataSourceNotice, DemoStepNotice, PageHeader, pageStyles } from '../../ui/page-kit';
 import { TaskList } from './task-list';
 
 type TaskItem = {
@@ -46,7 +47,7 @@ async function getTasks(): Promise<{ tasks: TaskItem[]; source: 'api' | 'mock'; 
     return {
       tasks: mockTasks,
       source: 'mock',
-      note: '当前未设置 NEXT_PUBLIC_DEFAULT_ELDER_USER_ID，先展示 mock 今日任务。',
+      note: '当前没读到默认老人档案，所以先放一组演示任务，避免首页一上来就空白。',
     };
   }
 
@@ -68,7 +69,7 @@ async function getTasks(): Promise<{ tasks: TaskItem[]; source: 'api' | 'mock'; 
     return {
       tasks: mockTasks,
       source: 'mock',
-      note: error instanceof Error ? `API 加载失败，当前回退到 mock 数据：${error.message}` : 'API 加载失败，当前回退到 mock 数据。',
+      note: error instanceof Error ? `刚才没拿到真实任务，先用演示任务把流程讲下去：${error.message}` : '刚才没拿到真实任务，先用演示任务把流程讲下去。',
     };
   }
 }
@@ -77,19 +78,28 @@ export default async function Page() {
   const { tasks, source, note } = await getTasks();
 
   return (
-    <main style={{ maxWidth: 1100, margin: '0 auto', padding: '40px 24px' }}>
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ marginBottom: 8 }}>老人首页</h1>
-        <p style={{ color: '#667085', margin: 0 }}>
-          当前继续推进 MVP 第二条主链路：今日任务。页面现在已从“只能展示”升级到“可以直接标记完成任务”。
-        </p>
-      </div>
+    <main style={pageStyles.main}>
+      <PageHeader
+        title="老人首页"
+        description="建档之后，演示自然切到这里：看看今天要做什么，并直接完成一项任务，说明产品会持续陪老人把日常管理做下去。"
+      />
 
-      {note ? (
-        <div style={{ marginBottom: 20, background: '#fffaeb', border: '1px solid #fedf89', borderRadius: 12, padding: '12px 14px', color: '#b54708' }}>
-          {note}
-        </div>
-      ) : null}
+      <DemoStepNotice
+        step="演示第 2 步"
+        current="建议在这里点掉一项今日任务，让观众先感受到“不是只看信息，而是真的能完成日常事项”。"
+        next="接着进入“健康指标录入”，补一条当天数据。"
+      />
+
+      <DataSourceNotice source={source} fallbackNote={note} mockLabel="当前先用演示任务保住演示节奏；只要默认老人档案和接口恢复正常，这里会自动切回真实 API。" />
+
+      <ChecklistNotice
+        title="这一页建议顺手讲清楚"
+        items={[
+          '先看顶部接入状态，交代现在展示的是实时数据还是演示兜底。',
+          '现场标记完成 1 项任务，让“老人真的在执行”这件事先成立。',
+          '做完后直接切到“健康指标录入”，形成当天管理闭环。',
+        ]}
+      />
 
       <TaskList initialTasks={tasks} source={source} />
     </main>

@@ -14,10 +14,17 @@ type BindFormState = {
 
 type FormErrors = Partial<Record<keyof BindFormState, string>>;
 
+const relationOptions: Array<{ value: RelationType; label: string; helper: string }> = [
+  { value: 'son', label: '儿子', helper: '适合讲子女日常查看任务和提醒' },
+  { value: 'daughter', label: '女儿', helper: '适合讲家属远程陪伴和每周回顾' },
+  { value: 'spouse', label: '配偶', helper: '适合讲同住照护场景' },
+  { value: 'other', label: '其他家属', helper: '适合扩展到兄弟姐妹或其他照护者' },
+];
+
 const initialFormState: BindFormState = {
   elderUserId: defaultElderUserId,
-  familyUserId: '',
-  relationType: 'son',
+  familyUserId: 'family_demo_daughter',
+  relationType: 'daughter',
 };
 
 function fieldStyle(hasError: boolean) {
@@ -31,10 +38,10 @@ function fieldStyle(hasError: boolean) {
 function validateForm(form: BindFormState): FormErrors {
   const errors: FormErrors = {};
   if (!form.elderUserId.trim()) {
-    errors.elderUserId = 'elderUserId 不能为空';
+    errors.elderUserId = '老人档案编号不能为空';
   }
   if (!form.familyUserId.trim()) {
-    errors.familyUserId = 'familyUserId 不能为空';
+    errors.familyUserId = '家属账号编号不能为空';
   }
   return errors;
 }
@@ -88,7 +95,7 @@ export function BindForm() {
         throw new Error(getErrorMessage(payload, '发起绑定失败'));
       }
 
-      setMessage('绑定申请已提交，列表已自动刷新。');
+      setMessage('绑定申请已提交，列表已自动刷新。可回到家属看板继续讲“谁在照护”。');
       setResult(JSON.stringify(payload.data, null, 2));
       router.refresh();
     } catch (error) {
@@ -103,30 +110,43 @@ export function BindForm() {
       <form onSubmit={onSubmit} style={{ background: '#fff', borderRadius: 16, padding: 24, boxShadow: '0 8px 24px rgba(15,23,42,0.06)' }}>
         <div style={{ marginBottom: 16 }}>
           <h2 style={{ margin: '0 0 8px' }}>发起家属绑定</h2>
-          <p style={{ margin: 0, color: '#667085' }}>第一版先支持提交绑定申请，后续再补确认流程、邀请码或扫码方式。</p>
+          <p style={{ margin: 0, color: '#667085' }}>默认示例适合直接演示“女儿加入照护流程”，避免现场再临时想测试账号。</p>
+        </div>
+
+        <div style={{ display: 'grid', gap: 12, marginBottom: 16 }}>
+          <div style={{ padding: 12, borderRadius: 12, background: '#eff8ff', color: '#175cd3' }}>
+            保存后会影响哪里：这条关系会出现在下方绑定列表里，也能帮助解释家属为什么能在看板和周报里看到老人动态。
+          </div>
+          <div style={{ padding: 12, borderRadius: 12, background: '#f8f9fc', color: '#344054' }}>
+            演示建议：把这页放在家属看板或周报之后补讲，说明“家属是怎么接进来的”。
+          </div>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
           <label style={{ display: 'grid', gap: 8 }}>
-            <span>老人 userId *</span>
-            <input value={form.elderUserId} onChange={(event) => onChange('elderUserId', event.target.value)} style={fieldStyle(Boolean(errors.elderUserId))} />
+            <span>老人档案编号 *</span>
+            <input value={form.elderUserId} placeholder="默认沿用建档后的编号" onChange={(event) => onChange('elderUserId', event.target.value)} style={fieldStyle(Boolean(errors.elderUserId))} />
+            <span style={{ color: '#667085', fontSize: 12 }}>这里仍对应接口里的 elderUserId，但页面上只展示为“老人档案编号”。</span>
             {errors.elderUserId ? <span style={{ color: '#b42318', fontSize: 12 }}>{errors.elderUserId}</span> : null}
           </label>
 
           <label style={{ display: 'grid', gap: 8 }}>
-            <span>家属 userId *</span>
-            <input value={form.familyUserId} onChange={(event) => onChange('familyUserId', event.target.value)} style={fieldStyle(Boolean(errors.familyUserId))} />
+            <span>家属账号编号 *</span>
+            <input value={form.familyUserId} placeholder="例如 family_demo_daughter" onChange={(event) => onChange('familyUserId', event.target.value)} style={fieldStyle(Boolean(errors.familyUserId))} />
+            <span style={{ color: '#667085', fontSize: 12 }}>建议提前准备一个演示家属账号，避免现场重新注册。</span>
             {errors.familyUserId ? <span style={{ color: '#b42318', fontSize: 12 }}>{errors.familyUserId}</span> : null}
           </label>
 
           <label style={{ display: 'grid', gap: 8 }}>
-            <span>关系类型</span>
+            <span>家属关系</span>
             <select value={form.relationType} onChange={(event) => onChange('relationType', event.target.value)} style={fieldStyle(false)}>
-              <option value="son">儿子</option>
-              <option value="daughter">女儿</option>
-              <option value="spouse">配偶</option>
-              <option value="other">其他</option>
+              {relationOptions.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
             </select>
+            <span style={{ color: '#667085', fontSize: 12 }}>
+              {relationOptions.find((option) => option.value === form.relationType)?.helper}
+            </span>
           </label>
         </div>
 
@@ -140,7 +160,7 @@ export function BindForm() {
 
       <section style={{ background: '#101828', color: '#f8fafc', borderRadius: 16, padding: 24, overflowX: 'auto' }}>
         <h3 style={{ marginTop: 0 }}>接口返回预览</h3>
-        <pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{result || '提交后，这里会展示接口返回结果。'}</pre>
+        <pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{result || '提交后，这里会展示接口返回结果，便于演示时确认绑定关系已创建。'}</pre>
       </section>
     </div>
   );

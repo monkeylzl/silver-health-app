@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { EmptyState, InlineNotice, StatCard, pageStyles } from '../../ui/page-kit';
 import { apiBaseUrl } from '../../../lib/config';
 
 type TaskItem = {
@@ -68,7 +69,7 @@ export function TaskList({ initialTasks, source }: { initialTasks: TaskItem[]; s
   const completeTask = async (taskId: string) => {
     if (source !== 'api') {
       setTasks((prev) => prev.map((task) => (task.id === taskId ? { ...task, status: 'done' } : task)));
-      setMessage('当前为 mock 模式，已本地模拟完成该任务。');
+      setMessage('已在演示模式里模拟完成这项任务，后续切到真实数据时交互保持一致。');
       return;
     }
 
@@ -95,7 +96,7 @@ export function TaskList({ initialTasks, source }: { initialTasks: TaskItem[]; s
             : task,
         ),
       );
-      setMessage('任务已标记为完成。');
+      setMessage('任务已标记完成，可以继续进入指标录入。');
     } catch (error) {
       setMessage(error instanceof Error ? error.message : '完成任务失败');
     } finally {
@@ -105,68 +106,57 @@ export function TaskList({ initialTasks, source }: { initialTasks: TaskItem[]; s
 
   return (
     <>
-      <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginBottom: 24 }}>
-        <div style={{ background: '#ffffff', borderRadius: 16, padding: 20, boxShadow: '0 8px 24px rgba(15,23,42,0.06)' }}>
-          <div style={{ color: '#667085', marginBottom: 8 }}>当前数据源</div>
-          <strong>{source === 'api' ? '真实 API' : 'Mock 回退'}</strong>
-        </div>
-        <div style={{ background: '#ffffff', borderRadius: 16, padding: 20, boxShadow: '0 8px 24px rgba(15,23,42,0.06)' }}>
-          <div style={{ color: '#667085', marginBottom: 8 }}>待完成任务</div>
-          <strong>{todoCount} 项</strong>
-        </div>
-        <div style={{ background: '#ffffff', borderRadius: 16, padding: 20, boxShadow: '0 8px 24px rgba(15,23,42,0.06)' }}>
-          <div style={{ color: '#667085', marginBottom: 8 }}>已完成任务</div>
-          <strong>{doneCount} 项</strong>
-        </div>
+      <section style={pageStyles.statGrid}>
+        <StatCard label="当前接入状态" value={source === 'api' ? '真实 API' : '演示数据'} />
+        <StatCard label="待完成任务" value={`${todoCount} 项`} />
+        <StatCard label="已完成任务" value={`${doneCount} 项`} />
       </section>
 
-      {message ? (
-        <div style={{ marginBottom: 20, background: '#eff8ff', border: '1px solid #b2ddff', borderRadius: 12, padding: '12px 14px', color: '#175cd3' }}>
-          {message}
-        </div>
-      ) : null}
+      {message ? <InlineNotice tone="success">{message}</InlineNotice> : null}
 
-      <section style={{ display: 'grid', gap: 16 }}>
-        {tasks.map((task) => (
-          <article key={task.id} style={{ background: '#fff', borderRadius: 16, padding: 20, boxShadow: '0 8px 24px rgba(15,23,42,0.06)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 10 }}>
-              <div>
-                <h2 style={{ margin: '0 0 8px', fontSize: 20 }}>{task.title}</h2>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  <span style={{ background: '#f2f4f7', color: '#344054', borderRadius: 999, padding: '4px 10px', fontSize: 12 }}>
-                    {taskTypeLabelMap[task.taskType]}
-                  </span>
-                  <span style={{ background: `${getPriorityColor(task.priority)}15`, color: getPriorityColor(task.priority), borderRadius: 999, padding: '4px 10px', fontSize: 12 }}>
-                    {priorityLabelMap[task.priority]}
-                  </span>
-                  <span style={{ background: task.status === 'done' ? '#ecfdf3' : '#eff8ff', color: task.status === 'done' ? '#027a48' : '#175cd3', borderRadius: 999, padding: '4px 10px', fontSize: 12 }}>
-                    {statusLabelMap[task.status]}
-                  </span>
+      {tasks.length === 0 ? (
+        <EmptyState title="今天还没有待办任务" description="正常情况下新的 demo seed 会自动把任务对齐到当天；如果这里仍然空白，优先跑 pnpm check:demo 确认演示数据是否失稳，再按提示决定是否重跑 pnpm seed:demo 或先补一条今日任务。" />
+      ) : (
+        <section style={pageStyles.listSection}>
+          {tasks.map((task) => (
+            <article key={task.id} style={pageStyles.card}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 10 }}>
+                <div>
+                  <h2 style={{ margin: '0 0 8px', fontSize: 20 }}>{task.title}</h2>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    <span style={pageStyles.tag}>{taskTypeLabelMap[task.taskType]}</span>
+                    <span style={{ background: `${getPriorityColor(task.priority)}15`, color: getPriorityColor(task.priority), borderRadius: 999, padding: '4px 10px', fontSize: 12 }}>
+                      {priorityLabelMap[task.priority]}
+                    </span>
+                    <span style={{ background: task.status === 'done' ? '#ecfdf3' : '#eff8ff', color: task.status === 'done' ? '#027a48' : '#175cd3', borderRadius: 999, padding: '4px 10px', fontSize: 12 }}>
+                      {statusLabelMap[task.status]}
+                    </span>
+                  </div>
                 </div>
+                <div style={{ color: '#667085' }}>{task.dueTime ? `计划时间：${task.dueTime}` : '时间待补充'}</div>
               </div>
-              <div style={{ color: '#667085' }}>{task.dueTime ? `计划时间：${task.dueTime}` : '时间待定'}</div>
-            </div>
 
-            <p style={{ color: '#475467', margin: '0 0 14px' }}>{task.description || '暂无补充说明。'}</p>
+              <p style={{ color: '#475467', margin: '0 0 14px' }}>{task.description || '这项任务暂时还没有补充说明。'}</p>
 
-            <button
-              type="button"
-              disabled={task.status === 'done' || pendingTaskId === task.id}
-              onClick={() => completeTask(task.id)}
-              style={{
-                padding: '10px 16px',
-                borderRadius: 10,
-                border: 0,
-                background: task.status === 'done' ? '#d0d5dd' : '#2563eb',
-                color: '#fff',
-                cursor: task.status === 'done' ? 'not-allowed' : 'pointer',
-              }}
-            >
-              {pendingTaskId === task.id ? '处理中...' : task.status === 'done' ? '已完成' : '标记完成'}
-            </button>
-          </article>
-        ))}
-      </section>
+              <button
+                type="button"
+                disabled={task.status === 'done' || pendingTaskId === task.id}
+                onClick={() => completeTask(task.id)}
+                style={{
+                  padding: '10px 16px',
+                  borderRadius: 10,
+                  border: 0,
+                  background: task.status === 'done' ? '#d0d5dd' : '#2563eb',
+                  color: '#fff',
+                  cursor: task.status === 'done' ? 'not-allowed' : 'pointer',
+                }}
+              >
+                {pendingTaskId === task.id ? '处理中...' : task.status === 'done' ? '已完成' : '标记完成'}
+              </button>
+            </article>
+          ))}
+        </section>
+      )}
     </>
   );
 }

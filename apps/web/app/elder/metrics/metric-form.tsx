@@ -28,14 +28,25 @@ const initialFormState: MetricFormState = {
   createdByUserId: defaultElderUserId,
   createdByRole: 'elder',
   metricType: 'blood_pressure',
-  systolic: '',
-  diastolic: '',
-  pulse: '',
-  glucoseValue: '',
+  systolic: '128',
+  diastolic: '78',
+  pulse: '72',
+  glucoseValue: '6.2',
   glucosePeriodType: 'before_breakfast',
-  weightKg: '',
+  weightKg: '61.5',
   measuredAt: new Date().toISOString().slice(0, 16),
 };
+
+const metricTypeOptions: Array<{ value: MetricType; label: string; helper: string }> = [
+  { value: 'blood_pressure', label: '血压', helper: '最适合现场演示，保存后回显最直观' },
+  { value: 'blood_glucose', label: '血糖', helper: '适合讲餐前餐后记录与长期趋势' },
+  { value: 'weight', label: '体重', helper: '适合补充日常基础监测场景' },
+];
+
+const recorderRoleOptions: Array<{ value: MetricCreatedByRole; label: string; helper: string }> = [
+  { value: 'elder', label: '老人本人录入', helper: '适合演示老人自己完成一次打卡' },
+  { value: 'family', label: '家属代为补录', helper: '适合演示家属远程补录或电话回访' },
+];
 
 function fieldStyle(hasError: boolean) {
   return {
@@ -67,11 +78,11 @@ function validateForm(form: MetricFormState): FormErrors {
   const errors: FormErrors = {};
 
   if (!form.elderUserId.trim()) {
-    errors.elderUserId = 'elderUserId 不能为空';
+    errors.elderUserId = '档案编号不能为空';
   }
 
   if (!form.createdByUserId.trim()) {
-    errors.createdByUserId = 'createdByUserId 不能为空';
+    errors.createdByUserId = '录入人编号不能为空';
   }
 
   if (!form.measuredAt.trim()) {
@@ -121,9 +132,9 @@ export function MetricForm() {
   const [result, setResult] = useState('');
 
   const typeDescription = useMemo(() => {
-    if (form.metricType === 'blood_pressure') return '录入收缩压 / 舒张压 / 脉搏';
-    if (form.metricType === 'blood_glucose') return '录入血糖值与测量时段';
-    return '录入体重';
+    if (form.metricType === 'blood_pressure') return '默认示例已填好一条晨起血压，适合现场一键讲解“录入后立即回显”。';
+    if (form.metricType === 'blood_glucose') return '可切换成血糖，演示餐前餐后记录也很顺。';
+    return '可切换成体重，补充长期趋势观察场景。';
   }, [form.metricType]);
 
   const onChange = (key: keyof MetricFormState, value: string) => {
@@ -172,7 +183,7 @@ export function MetricForm() {
         throw new Error(getErrorMessage(payload, '保存指标失败'));
       }
 
-      setMessage('指标录入成功，列表已自动刷新。');
+      setMessage('指标录入成功，列表已自动刷新。下一步可切到“用药提醒”继续讲解。');
       setResult(JSON.stringify(payload.data, null, 2));
       router.refresh();
     } catch (error) {
@@ -182,7 +193,7 @@ export function MetricForm() {
     }
   };
 
-  const renderInput = (key: keyof MetricFormState, label: string, placeholder?: string) => (
+  const renderInput = (key: keyof MetricFormState, label: string, placeholder?: string, helper?: string) => (
     <label key={key} style={{ display: 'grid', gap: 8 }}>
       <span>{label}</span>
       <input
@@ -191,6 +202,7 @@ export function MetricForm() {
         onChange={(event) => onChange(key, event.target.value)}
         style={fieldStyle(Boolean(errors[key]))}
       />
+      {helper ? <span style={{ color: '#667085', fontSize: 12 }}>{helper}</span> : null}
       {errors[key] ? <span style={{ color: '#b42318', fontSize: 12 }}>{errors[key]}</span> : null}
     </label>
   );
@@ -203,45 +215,62 @@ export function MetricForm() {
           <p style={{ margin: 0, color: '#667085' }}>{typeDescription}</p>
         </div>
 
+        <div style={{ display: 'grid', gap: 12, marginBottom: 16 }}>
+          <div style={{ padding: 12, borderRadius: 12, background: '#eff8ff', color: '#175cd3' }}>
+            保存后会影响哪里：下方记录列表会立即回显，后面的<strong>家属看板与周报</strong>也会继续使用这条指标。
+          </div>
+          <div style={{ padding: 12, borderRadius: 12, background: '#f8f9fc', color: '#344054' }}>
+            演示建议：优先保留默认的“晨起血压”示例值，现场输入最少、反馈最直观。
+          </div>
+        </div>
+
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
-          {renderInput('elderUserId', '老人 userId *')}
-          {renderInput('createdByUserId', '录入人 userId *')}
+          {renderInput('elderUserId', '老人档案编号 *', '默认沿用建档后的编号', '若已从建档页进入，一般无需改动')}
+          {renderInput('createdByUserId', '录入人编号 *', '默认使用当前老人编号', '保留接口必填字段，但页面上按“录入人”来表达')}
 
           <label style={{ display: 'grid', gap: 8 }}>
-            <span>录入角色 *</span>
+            <span>录入身份 *</span>
             <select value={form.createdByRole} onChange={(event) => onChange('createdByRole', event.target.value)} style={fieldStyle(false)}>
-              <option value="elder">老人</option>
-              <option value="family">家属</option>
+              {recorderRoleOptions.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
             </select>
+            <span style={{ color: '#667085', fontSize: 12 }}>
+              {recorderRoleOptions.find((option) => option.value === form.createdByRole)?.helper}
+            </span>
           </label>
 
           <label style={{ display: 'grid', gap: 8 }}>
             <span>指标类型 *</span>
             <select value={form.metricType} onChange={(event) => onChange('metricType', event.target.value)} style={fieldStyle(false)}>
-              <option value="blood_pressure">血压</option>
-              <option value="blood_glucose">血糖</option>
-              <option value="weight">体重</option>
+              {metricTypeOptions.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
             </select>
+            <span style={{ color: '#667085', fontSize: 12 }}>
+              {metricTypeOptions.find((option) => option.value === form.metricType)?.helper}
+            </span>
           </label>
 
           <label style={{ display: 'grid', gap: 8 }}>
             <span>测量时间 *</span>
             <input type="datetime-local" value={form.measuredAt} onChange={(event) => onChange('measuredAt', event.target.value)} style={fieldStyle(Boolean(errors.measuredAt))} />
+            <span style={{ color: '#667085', fontSize: 12 }}>建议保留当前时间，便于现场解释“刚录入、刚回显”。</span>
             {errors.measuredAt ? <span style={{ color: '#b42318', fontSize: 12 }}>{errors.measuredAt}</span> : null}
           </label>
         </div>
 
         {form.metricType === 'blood_pressure' ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginTop: 16 }}>
-            {renderInput('systolic', '收缩压 *', '例如 128')}
-            {renderInput('diastolic', '舒张压 *', '例如 78')}
-            {renderInput('pulse', '脉搏', '例如 72')}
+            {renderInput('systolic', '收缩压 *', '例如 128', '建议填 120~135 之间，更贴近日常演示')}
+            {renderInput('diastolic', '舒张压 *', '例如 78', '建议填 70~85 之间')}
+            {renderInput('pulse', '脉搏', '例如 72', '可选填，补充说明心率情况')}
           </div>
         ) : null}
 
         {form.metricType === 'blood_glucose' ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginTop: 16 }}>
-            {renderInput('glucoseValue', '血糖值 *', '例如 6.2')}
+            {renderInput('glucoseValue', '血糖值 *', '例如 6.2', '建议现场用 5.8~7.2 的自然区间')}
             <label style={{ display: 'grid', gap: 8 }}>
               <span>测量时段</span>
               <select value={form.glucosePeriodType} onChange={(event) => onChange('glucosePeriodType', event.target.value)} style={fieldStyle(false)}>
@@ -252,13 +281,14 @@ export function MetricForm() {
                 <option value="before_dinner">晚餐前</option>
                 <option value="after_dinner">晚餐后</option>
               </select>
+              <span style={{ color: '#667085', fontSize: 12 }}>选一个最容易讲清楚的餐前/餐后时段即可。</span>
             </label>
           </div>
         ) : null}
 
         {form.metricType === 'weight' ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginTop: 16 }}>
-            {renderInput('weightKg', '体重 *', '例如 61.5')}
+            {renderInput('weightKg', '体重 *', '例如 61.5', '适合补充“长期观察趋势”场景')}
           </div>
         ) : null}
 
@@ -272,7 +302,7 @@ export function MetricForm() {
 
       <section style={{ background: '#101828', color: '#f8fafc', borderRadius: 16, padding: 24, overflowX: 'auto' }}>
         <h3 style={{ marginTop: 0 }}>接口返回预览</h3>
-        <pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{result || '提交后，这里会展示接口返回结果。'}</pre>
+        <pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{result || '提交后，这里会展示接口返回结果，适合演示时确认数据已经写入。'}</pre>
       </section>
     </div>
   );

@@ -12,7 +12,10 @@
     "dev:api": "pnpm --filter @silver-health/api dev",
     "dev:web": "pnpm --filter @silver-health/web dev",
     "prisma:generate": "prisma generate --schema prisma/schema.prisma",
-    "seed:demo": "node scripts/seed-demo-data.ts"
+    "seed:demo": "node scripts/seed-demo-data.ts",
+    "check:demo": "node scripts/check-demo-data.ts",
+    "check:demo-copy": "node scripts/check-demo-copy.ts",
+    "demo:ready": "node scripts/demo-ready.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.6.0"

@@ -1,4 +1,5 @@
 import { PrismaClient, BindingStatus, BindingRelationType, Gender, HelperMode, MetricCreatedByRole, MetricType, MobilityLevel, TaskPriority, TaskSourceType, TaskStatus, TaskType, UserRole, UserStatus } from '@prisma/client';
+import { formatLocalDate, getLocalDateOnly, getLocalDateTime, getWeekRange } from './demo-date-utils.ts';
 
 const prisma = new PrismaClient();
 
@@ -88,8 +89,7 @@ async function upsertBinding(elderUserId: string, familyUserId: string) {
 
 async function resetTasks(elderUserId: string) {
   await prisma.dailyTask.deleteMany({ where: { elderUserId } });
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = getLocalDateOnly();
 
   return prisma.dailyTask.createMany({
     data: [
@@ -125,7 +125,7 @@ async function resetTasks(elderUserId: string) {
         status: TaskStatus.done,
         sourceType: TaskSourceType.manual_config,
         dueTime: '12:00',
-        completedAt: new Date(),
+        completedAt: getLocalDateTime(0, 12, 10),
       },
       {
         elderUserId,
@@ -154,7 +154,7 @@ async function resetMetrics(elderUserId: string, familyUserId: string) {
         pulse: 72,
         createdByRole: MetricCreatedByRole.elder,
         createdByUserId: elderUserId,
-        measuredAt: new Date('2026-03-25T08:30:00.000Z'),
+        measuredAt: getLocalDateTime(0, 8, 30),
       },
       {
         elderUserId,
@@ -163,7 +163,7 @@ async function resetMetrics(elderUserId: string, familyUserId: string) {
         glucosePeriodType: 'after_breakfast',
         createdByRole: MetricCreatedByRole.family,
         createdByUserId: familyUserId,
-        measuredAt: new Date('2026-03-24T23:30:00.000Z'),
+        measuredAt: getLocalDateTime(-1, 7, 30),
       },
       {
         elderUserId,
@@ -171,7 +171,7 @@ async function resetMetrics(elderUserId: string, familyUserId: string) {
         weightKg: 61.5,
         createdByRole: MetricCreatedByRole.elder,
         createdByUserId: elderUserId,
-        measuredAt: new Date('2026-03-23T23:30:00.000Z'),
+        measuredAt: getLocalDateTime(-2, 20, 0),
       },
     ],
   });
@@ -203,12 +203,15 @@ async function resetMedicationReminders(elderUserId: string) {
 
 async function resetReports(elderUserId: string) {
   await prisma.weeklyReport.deleteMany({ where: { elderUserId } });
+  const lastWeek = getWeekRange(1);
+  const twoWeeksAgo = getWeekRange(2);
+
   return prisma.weeklyReport.createMany({
     data: [
       {
         elderUserId,
-        weekStartDate: new Date('2026-03-18T00:00:00.000Z'),
-        weekEndDate: new Date('2026-03-24T00:00:00.000Z'),
+        weekStartDate: lastWeek.start,
+        weekEndDate: lastWeek.end,
         exerciseCompletionRate: 82,
         medicationCompletionRate: 95,
         metricRecordCount: 6,
@@ -217,8 +220,8 @@ async function resetReports(elderUserId: string) {
       },
       {
         elderUserId,
-        weekStartDate: new Date('2026-03-11T00:00:00.000Z'),
-        weekEndDate: new Date('2026-03-17T00:00:00.000Z'),
+        weekStartDate: twoWeeksAgo.start,
+        weekEndDate: twoWeeksAgo.end,
         exerciseCompletionRate: 70,
         medicationCompletionRate: 88,
         metricRecordCount: 5,
@@ -237,15 +240,17 @@ async function main() {
   const metrics = await resetMetrics(elder.id, family.id);
   const medications = await resetMedicationReminders(elder.id);
   const reports = await resetReports(elder.id);
+  const today = getLocalDateOnly();
+  const lastWeek = getWeekRange(1);
 
   console.log('Demo data ready.');
   console.log(`Elder user id: ${elder.id}`);
   console.log(`Family user id: ${family.id}`);
   console.log(`Recommended NEXT_PUBLIC_DEFAULT_ELDER_USER_ID=${elder.id}`);
-  console.log(`Tasks inserted: ${tasks.count}`);
-  console.log(`Metrics inserted: ${metrics.count}`);
+  console.log(`Tasks inserted: ${tasks.count} (taskDate=${formatLocalDate(today)})`);
+  console.log(`Metrics inserted: ${metrics.count} (latest=${getLocalDateTime(0, 8, 30).toISOString()})`);
   console.log(`Medication reminders inserted: ${medications.count}`);
-  console.log(`Reports inserted: ${reports.count}`);
+  console.log(`Reports inserted: ${reports.count} (latestWeek=${formatLocalDate(lastWeek.start)} ~ ${formatLocalDate(lastWeek.end)})`);
 }
 
 main()

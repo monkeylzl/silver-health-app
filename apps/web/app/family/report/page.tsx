@@ -1,4 +1,5 @@
 import { apiBaseUrl, defaultElderUserId } from '../../../lib/config';
+import { ChecklistNotice, DataSourceNotice, DemoStepNotice, EmptyState, InlineNotice, PageHeader, StatCard, pageStyles } from '../../ui/page-kit';
 
 type WeeklyReport = {
   id: string;
@@ -39,7 +40,7 @@ async function getReports(): Promise<{ reports: WeeklyReport[]; source: 'api' | 
     return {
       reports: mockReports,
       source: 'mock',
-      note: '当前未设置 NEXT_PUBLIC_DEFAULT_ELDER_USER_ID，先展示 mock 家属周报。',
+      note: '当前没读到默认老人档案，所以先展示演示周报，方便把“一周回顾”这层价值讲完。',
     };
   }
 
@@ -61,90 +62,152 @@ async function getReports(): Promise<{ reports: WeeklyReport[]; source: 'api' | 
     return {
       reports: mockReports,
       source: 'mock',
-      note: error instanceof Error ? `API 加载失败，当前回退到 mock 数据：${error.message}` : 'API 加载失败，当前回退到 mock 数据。',
+      note: error instanceof Error ? `刚才没拿到真实周报，先用演示周报继续讲解：${error.message}` : '刚才没拿到真实周报，先用演示周报继续讲解。',
     };
   }
 }
 
 function formatPercent(value?: number | string | null) {
-  if (value === null || value === undefined || value === '') return '暂无';
+  if (value === null || value === undefined || value === '') return null;
 
   const numericValue = typeof value === 'number' ? value : Number(value);
-  if (!Number.isFinite(numericValue)) return '暂无';
+  if (!Number.isFinite(numericValue)) return null;
 
-  return `${numericValue}%`;
+  return numericValue;
+}
+
+function toPercentText(value?: number | string | null) {
+  const numericValue = formatPercent(value);
+  return numericValue === null ? '暂无' : `${numericValue}%`;
+}
+
+function buildWeeklyHeadline(report: WeeklyReport) {
+  const exerciseRate = formatPercent(report.exerciseCompletionRate);
+  const medicationRate = formatPercent(report.medicationCompletionRate);
+
+  const stableParts: string[] = [];
+  const attentionParts: string[] = [];
+
+  if (medicationRate !== null) {
+    if (medicationRate >= 90) {
+      stableParts.push('用药执行比较稳定');
+    } else if (medicationRate < 80) {
+      attentionParts.push('用药执行还有提升空间');
+    }
+  }
+
+  if (exerciseRate !== null) {
+    if (exerciseRate >= 80) {
+      stableParts.push('运动习惯在持续保持');
+    } else if (exerciseRate < 75) {
+      attentionParts.push('运动节奏有点波动');
+    }
+  }
+
+  if (report.metricRecordCount >= 5) {
+    stableParts.push('本周记录比较完整');
+  } else if (report.metricRecordCount <= 2) {
+    attentionParts.push('本周记录偏少，建议补齐');
+  }
+
+  return {
+    recap: stableParts.length > 0 ? stableParts.join('，') : '本周整体节奏基本平稳',
+    focus: attentionParts.length > 0 ? attentionParts.join('，') : '下周继续保持当前节奏',
+  };
 }
 
 export default async function Page() {
   const { reports, source, note } = await getReports();
+  const latestReport = reports[0];
+  const latestHeadline = latestReport ? buildWeeklyHeadline(latestReport) : null;
 
   return (
-    <main style={{ maxWidth: 1100, margin: '0 auto', padding: '40px 24px' }}>
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ marginBottom: 8 }}>家属周报</h1>
-        <p style={{ color: '#667085', margin: 0 }}>
-          当前先做家属周报第一页版，把近期周报摘要、建议和核心完成率集中展示，方便家属快速回顾一周情况。
-        </p>
-      </div>
+    <main style={pageStyles.main}>
+      <PageHeader
+        title="家属周报"
+        description="演示最后落在这里：把老人一周的执行情况、指标记录和建议集中给家属看，说明这不是一次性记录，而是持续陪伴。"
+      />
 
-      <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginBottom: 24 }}>
-        <div style={{ background: '#ffffff', borderRadius: 16, padding: 20, boxShadow: '0 8px 24px rgba(15,23,42,0.06)' }}>
-          <div style={{ color: '#667085', marginBottom: 8 }}>当前数据源</div>
-          <strong>{source === 'api' ? '真实 API' : 'Mock 回退'}</strong>
-        </div>
-        <div style={{ background: '#ffffff', borderRadius: 16, padding: 20, boxShadow: '0 8px 24px rgba(15,23,42,0.06)' }}>
-          <div style={{ color: '#667085', marginBottom: 8 }}>周报数量</div>
-          <strong>{reports.length} 份</strong>
-        </div>
+      <DemoStepNotice
+        step="演示第 6 步"
+        current="这一页适合用来做收尾：总结老人这一周做了什么、哪些地方稳定、接下来还需要关注什么。"
+        next="如果对方追问家属如何加入，再补讲“家属绑定”。"
+      />
+
+      <DataSourceNotice source={source} fallbackNote={note} mockLabel="当前先用演示周报把回顾价值讲完整；真实 API 一恢复，这里会自动换回真实周报。" />
+
+      <ChecklistNotice
+        title="这一页建议顺手讲清楚"
+        items={[
+          '先看顶部接入状态，再用“本周一句话总结”做演示收尾，不要只停留在列表展示。',
+          '强调系统不只是记录当天，还会把老人这一周的执行情况沉淀成家属能读懂的回顾。',
+          '如果对方继续追问关系建立流程，再补讲“家属绑定”即可。',
+        ]}
+      />
+
+      <section style={pageStyles.statGrid}>
+        <StatCard label="当前接入状态" value={source === 'api' ? '真实 API' : '演示数据'} />
+        <StatCard label="周报数量" value={`${reports.length} 份`} />
       </section>
 
-      {note ? (
-        <div style={{ marginBottom: 20, background: '#fffaeb', border: '1px solid #fedf89', borderRadius: 12, padding: '12px 14px', color: '#b54708' }}>
-          {note}
-        </div>
+      {latestHeadline ? (
+        <InlineNotice tone="success">
+          <strong>本周一句话总结</strong>
+          <div style={{ marginTop: 6 }}>{latestHeadline.recap}。</div>
+          <div style={{ marginTop: 6, opacity: 0.92 }}>下周重点关注：{latestHeadline.focus}。</div>
+          <div style={{ marginTop: 6, opacity: 0.92 }}>收尾就讲这一句：系统不只记录今天，还会把这一周沉淀成家属看得懂的回顾。</div>
+        </InlineNotice>
       ) : null}
 
-      <section style={{ display: 'grid', gap: 16 }}>
-        {reports.map((report) => (
-          <article key={report.id} style={{ background: '#fff', borderRadius: 16, padding: 20, boxShadow: '0 8px 24px rgba(15,23,42,0.06)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
-              <div>
-                <h2 style={{ margin: '0 0 8px', fontSize: 20 }}>
-                  {new Date(report.weekStartDate).toLocaleDateString('zh-CN')} - {new Date(report.weekEndDate).toLocaleDateString('zh-CN')}
-                </h2>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  <span style={{ background: '#f2f4f7', color: '#344054', borderRadius: 999, padding: '4px 10px', fontSize: 12 }}>
-                    运动完成率：{formatPercent(report.exerciseCompletionRate)}
-                  </span>
-                  <span style={{ background: '#f2f4f7', color: '#344054', borderRadius: 999, padding: '4px 10px', fontSize: 12 }}>
-                    用药完成率：{formatPercent(report.medicationCompletionRate)}
-                  </span>
-                  <span style={{ background: '#f2f4f7', color: '#344054', borderRadius: 999, padding: '4px 10px', fontSize: 12 }}>
-                    指标记录：{report.metricRecordCount} 次
-                  </span>
+      {reports.length === 0 ? (
+        <EmptyState title="暂时还没有周报" description="建议先补一份周报数据，确保家属端能展示完整的回顾与建议信息。" />
+      ) : (
+        <section style={pageStyles.listSection}>
+          {reports.map((report) => {
+            const headline = buildWeeklyHeadline(report);
+
+            return (
+              <article key={report.id} style={pageStyles.card}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
+                  <div>
+                    <h2 style={{ margin: '0 0 8px', fontSize: 20 }}>
+                      {new Date(report.weekStartDate).toLocaleDateString('zh-CN')} - {new Date(report.weekEndDate).toLocaleDateString('zh-CN')}
+                    </h2>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      <span style={pageStyles.tag}>运动完成率：{toPercentText(report.exerciseCompletionRate)}</span>
+                      <span style={pageStyles.tag}>用药完成率：{toPercentText(report.medicationCompletionRate)}</span>
+                      <span style={pageStyles.tag}>指标记录：{report.metricRecordCount} 次</span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
 
-            <p style={{ color: '#475467', margin: '0 0 12px' }}>{report.summaryText || '暂无周报摘要。'}</p>
+                <div style={{ marginBottom: 12, padding: '12px 14px', borderRadius: 12, background: '#f8f9fc', color: '#344054' }}>
+                  <strong style={{ display: 'block', marginBottom: 6 }}>这一周可以怎么讲</strong>
+                  <div>本周结论：{headline.recap}。</div>
+                  <div style={{ marginTop: 4 }}>下周关注：{headline.focus}。</div>
+                </div>
 
-            <div>
-              <strong style={{ display: 'block', marginBottom: 8 }}>建议</strong>
-              <ul style={{ margin: 0, paddingLeft: 18, color: '#475467' }}>
-                {(report.suggestionList ?? []).length > 0 ? (
-                  report.suggestionList!.map((suggestion, index) => (
-                    <li key={`${report.id}-${index}`} style={{ marginBottom: 6 }}>
-                      {suggestion}
-                    </li>
-                  ))
-                ) : (
-                  <li>暂无建议</li>
-                )}
-              </ul>
-            </div>
-          </article>
-        ))}
-      </section>
+                <p style={{ color: '#475467', margin: '0 0 12px' }}>{report.summaryText || '暂无周报摘要。'}</p>
+
+                <div>
+                  <strong style={{ display: 'block', marginBottom: 8 }}>建议</strong>
+                  <ul style={{ margin: 0, paddingLeft: 18, color: '#475467' }}>
+                    {(report.suggestionList ?? []).length > 0 ? (
+                      report.suggestionList!.map((suggestion, index) => (
+                        <li key={`${report.id}-${index}`} style={{ marginBottom: 6 }}>
+                          {suggestion}
+                        </li>
+                      ))
+                    ) : (
+                      <li>暂无建议</li>
+                    )}
+                  </ul>
+                </div>
+              </article>
+            );
+          })}
+        </section>
+      )}
     </main>
   );
 }

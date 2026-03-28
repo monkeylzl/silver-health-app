@@ -1,14 +1,18 @@
+import { DemoStepNotice, PageHeader, pageStyles } from '../../ui/page-kit';
 import { ElderProfileForm } from './elder-profile-form';
 
 export default function Page() {
   return (
-    <main style={{ maxWidth: 1100, margin: '0 auto', padding: '40px 24px' }}>
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ marginBottom: 8 }}>老人建档</h1>
-        <p style={{ color: '#667085', margin: 0 }}>
-          这是当前 MVP 第一条主链路的前端入口。先用一个直接可联调的表单，把建档页面和 API 接口串起来。
-        </p>
-      </div>
+    <main style={pageStyles.main}>
+      <PageHeader
+        title="老人建档"
+        description="演示从这里开始：先把老人基础情况录入清楚，后面的今日任务、指标和家属看板都会围绕这份档案展开。"
+      />
+      <DemoStepNotice
+        step="演示第 1 步"
+        current="建议先完整保存一份老人档案，让后续页面都围绕同一位老人继续展开。"
+        next="建档完成后进入“今日任务”，说明今天需要做什么。"
+      />
       <ElderProfileForm />
     </main>
   );

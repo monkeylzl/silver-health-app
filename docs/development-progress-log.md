@@ -1,1921 +1,233 @@
-# Silver Health 开发过程归档
+# Silver Health 开发进度日志
 
-> 用途：持续记录 `silver-health-app` 的实际开发推进过程。
->
-> 规则：
-> - 每完成一步，就把**做了什么、遇到什么问题、如何修正、当前状态、下一步**写入这里；
-> - 这份文档保留详细过程；
-> - 当日 `memory/YYYY-MM-DD.md` 只保留精简归纳；
-> - 对外回复和 commit 信息以这份文档为事实基线，避免口头描述与实际落盘不一致。
+## 1. 项目初始化
 
----
+### 已完成
+- 创建 monorepo 基础目录：
+  - `apps/web`
+  - `apps/api`
+  - `packages/ui`
+  - `packages/config`
+  - `packages/types`
+- 根目录新增基础文件：
+  - `package.json`
+  - `pnpm-workspace.yaml`
+  - `tsconfig.base.json`
+  - `.gitignore`
+  - `README.md`
 
-## 2026-03-25
-
-### 0. 本次工作目标
-- 将 `silver_health` 从“文档准备阶段”推进到“代码仓骨架已建立、已推送、可继续联调开发”的状态。
-- 明确项目目录归属：后续在 `coding` agent 的 workspace 下独立维护，并作为单独 GitHub 仓库推进。
-
----
-
-### 1. 初始文档阅读与落地方向确认
-
-#### 已阅读的研发输入文档
-- 开发可交付版 PRD V2
-- 接口定义文档 V1
-- 数据库设计文档 V1
-- 技术栈建议 V1
-- 前后端项目初始化方案 V1
-- 开发启动说明 README
-
-#### 得出的工程方向
-- 采用 monorepo
-- Web：Next.js
-- API：NestJS
-- DB：PostgreSQL
-- ORM：Prisma
-- 包管理：pnpm
-- 实施策略：MVP 优先，先打主链路，不做复杂扩展
-
-#### MVP 主链路判断
-优先顺序：
-1. 老人建档
-2. 今日任务
-3. 健康指标录入
-4. 家属绑定 / 家属查看
-5. 周报
+### 当前状态
+- 工程骨架已建立，可继续初始化 Web / API 子应用。
 
 ---
 
-### 2. 项目目录初始化与路径调整
+## 2. Web 端初始化（Next.js）
 
-#### 最早创建的项目目录
-最初项目曾先落到：
-- `/Users/liuzhongliang/.openclaw/workspace/silver-health-app`
+### 已完成
+- `apps/web` 初始化为 Next.js + TypeScript 项目。
+- 创建基础页面与布局：
+  - `app/page.tsx`
+  - `app/layout.tsx`
+- 配置 `tsconfig.json`
+- 配置 `package.json`
 
-#### 后续根据主会话要求做的路径迁移
-之后曾迁移到：
-- `/Users/liuzhongliang/.openclaw/agents/main/workspace/lzl_ideas/silver_health/silver-health-app`
-
-#### 当前最终确认的正式目录
-根据用户后续明确要求：
-- 项目应放在 `coding` agent 的 workspace 下
-- 作为独立 GitHub 工程维护
-
-因此当前最终目录为：
-- `/Users/liuzhongliang/.openclaw/agents/coding/workspace/silver-health-app`
-
-#### 目录迁移时保留的内容
-迁移过程中保留了：
-- `README.md`
-- `docs/dev-kickoff-summary.md`
-- `prisma/schema.prisma`
-- monorepo 基础文件
-- `apps/api` 第一版骨架
+### 当前状态
+- Web 可继续添加页面与 UI 原型。
 
 ---
 
-### 3. Monorepo 第一版初始化
+## 3. UI 包初始化
 
-#### 已创建的根级文件
-- `package.json`
-- `pnpm-workspace.yaml`
-- `turbo.json`
-- `.gitignore`
-- `.env.example`
+### 已完成
+- 创建 `packages/ui`
+- 增加基础导出文件：
+  - `src/index.ts`
+- 为未来公共组件预留位置。
 
-#### 根级配置目标
-- 用 `pnpm workspace` 管理 `apps/*` 和 `packages/*`
-- 用 Turbo 统一管理 `dev / build / lint / typecheck`
-- 为后续 `web / api / packages` 扩展留足空间
-
-#### 当前目录骨架
-```text
-silver-health-app/
-├── apps/
-│   ├── web/
-│   ├── admin/
-│   └── api/
-├── packages/
-│   ├── ui/
-│   ├── types/
-│   ├── config/
-│   └── utils/
-├── prisma/
-└── docs/
-```
+### 当前状态
+- 暂未沉淀实际 UI 组件，但结构已具备。
 
 ---
 
-### 4. Prisma Schema 第一版
+## 4. Config / Types 包初始化
 
-#### 已创建文件
-- `prisma/schema.prisma`
+### 已完成
+- 创建：
+  - `packages/config`
+  - `packages/types`
+- 各自增加基础 `package.json` / `tsconfig.json` / `src/index.ts`
 
-#### 已落模型
-- `User`
-- `ElderProfile`
-- `FamilyBinding`
-- `DailyTask`
-- `HealthMetric`
-- `MedicationReminder`
-- `WeeklyReport`
-
-#### 已落主要枚举
-- `UserRole`
-- `UserStatus`
-- `Gender`
-- `MobilityLevel`
-- `HelperMode`
-- `BindingRelationType`
-- `BindingStatus`
-- `TaskType`
-- `TaskPriority`
-- `TaskStatus`
-- `TaskSourceType`
-- `MetricType`
-- `MetricCreatedByRole`
-
-#### 设计策略
-- 先覆盖 MVP 主链路核心数据结构
-- 不超前引入通知中心、复杂日志、事件流等第二阶段对象
-- 字段命名尽量贴近现有产品/数据库文档
+### 当前状态
+- 后续可将共享类型与配置逐步沉淀到这里。
 
 ---
 
-### 5. API 第一版初始化
+## 5. API 第一版初始化
 
 #### 已创建的 API 基础文件
 - `apps/api/package.json`
 - `apps/api/tsconfig.json`
-- `apps/api/nest-cli.json`
 - `apps/api/src/main.ts`
 - `apps/api/src/app.module.ts`
-- `apps/api/src/app.controller.ts`
-- `apps/api/src/app.service.ts`
-- `apps/api/src/prisma/prisma.module.ts`
-- `apps/api/src/prisma/prisma.service.ts`
 
-#### 基础能力
-- Nest 启动入口已建立
-- 全局前缀已设置为 `/api`
-- 健康检查接口已存在：`GET /api/health`
-- PrismaService 已接入项目结构
-
----
-
-### 6. 第一批业务模块骨架
-
-#### 已完成模块
-1. `user`
-2. `elder-profile`
-3. `family-binding`
-4. `task`
-5. `metric`
-6. `medication`
-7. `report`
-
-#### 每个模块当前状态
-- 已建立 `module / controller / service`
-- 关键模块已补 DTO
-- 已在 `app.module.ts` 中接入
-- 已与 PrismaService 对接
-- 当前以“可继续扩展的第一版骨架”为主，不追求一次到位
-
-#### 当前已具备的接口骨架
-- `GET /api/health`
-- `POST /api/users`
-- `GET /api/users/:id`
-- `POST /api/profile/elder`
-- `GET /api/profile/elder/:userId`
-- `PATCH /api/profile/elder/:userId`
-- `POST /api/family-bindings`
-- `GET /api/family-bindings/elder/:elderUserId`
-- `POST /api/tasks`
-- `GET /api/tasks/elder/:elderUserId`
-- `POST /api/metrics`
-- `GET /api/metrics/elder/:elderUserId`
-- `POST /api/medications`
-- `GET /api/medications/elder/:elderUserId`
-- `GET /api/reports/elder/:elderUserId`
-
-#### 当前意义
+#### 当前状态
 - API 已从“空目录”推进到“主模块已占位、接口形状可继续收敛”的阶段
-- 下一步可以直接围绕建档、任务、指标录入和家属摘要继续打通
 
 ---
 
-### 7. Web 第一版路由骨架
+## 6. monorepo 脚本与基础联通
 
-#### 已创建 Web 基础文件
-- `apps/web/package.json`
-- `apps/web/tsconfig.json`
-- `apps/web/next-env.d.ts`
-- `apps/web/next.config.ts`
-- `apps/web/app/layout.tsx`
-- `apps/web/app/page.tsx`
+### 已完成
+- 根目录 `package.json` 添加常用脚本：
+  - `dev:web`
+  - `dev:api`
+  - `build`
+  - `typecheck`
+- 各子项目基础依赖关系理顺。
 
-#### 已创建路由页面
-- `apps/web/app/elder/profile/page.tsx`
-- `apps/web/app/elder/home/page.tsx`
-- `apps/web/app/elder/metrics/page.tsx`
-- `apps/web/app/elder/medication/page.tsx`
-- `apps/web/app/family/bind/page.tsx`
-- `apps/web/app/family/dashboard/page.tsx`
-- `apps/web/app/family/report/page.tsx`
-
-#### 当前意义
-- 老人端 / 家属端主页面路径已落位
-- 后续可直接在这些页面上接真实表单、列表和接口联调
+### 当前状态
+- 已具备继续补齐页面与 API 模块的条件。
 
 ---
 
-### 8. Git 独立仓库初始化与远端关联
+## 7. 业务方向确认
 
-#### 用户指定远端仓库
-- `git@github.com:monkeylzl/silver-health-app.git`
-
-#### 实际执行结果
-- 已在 `silver-health-app` 目录内初始化为独立 Git 仓库
-- 已切到 `main` 分支
-- 已关联 `origin`
-- 已成功推送到 GitHub
-
-#### 已推送提交
-1. `chore: initialize silver health app skeleton`
-2. `feat: scaffold web routes and api modules`
-3. `docs: add development progress log`
-4. `feat: add task metric medication and report modules`
-
-#### 说明
-这一步确保：
-- 该项目后续可以独立于外层 workspace 仓库维护
-- 后续所有 commit / push 都只针对本项目仓库进行
-
----
-
-### 9. 依赖安装、Prisma 生成与类型校验
-
-#### 实际执行的动作
-1. 尝试执行 `pnpm install`
-2. 发现 shell 环境中 `pnpm` 不可直接用
-3. 使用 `corepack` 激活 `pnpm@10.0.0`
-4. 重新执行 `pnpm install`
-5. 执行 Prisma Client 生成
-6. 执行 `apps/api` 与 `apps/web` 的 typecheck
-
-#### 中途遇到的问题与修正
-
-##### 问题 A：环境里没有直接可用的 `pnpm`
-现象：
-- `zsh: command not found: pnpm`
-
-修正：
-- 使用 `corepack enable`
-- 使用 `corepack prepare pnpm@10.0.0 --activate`
-
-##### 问题 B：Prisma generate 自动尝试补装依赖失败
-现象：
-- Prisma 在执行 generate 时尝试执行 `pnpm add prisma@6.19.2 -D --silent`
-- 导致生成失败
-
-根因判断：
-- `schema.prisma` 位于仓库根目录
-- Prisma 生成时把上下文判到 root package
-- root `package.json` 当时缺少 `prisma` / `@prisma/client`
-
-修正：
-- 在根 `package.json` 中补充：
-  - `prisma`
-  - `@prisma/client`
-- 重新 `pnpm install`
-- 重新执行 `pnpm exec prisma generate --schema prisma/schema.prisma`
-
-##### 问题 C：PrismaService 类型错误
-现象：
-- `beforeExit` 相关类型报错
-
-修正：
-- 将原先依赖 Prisma 事件钩子的写法调整为基于 `process.on('beforeExit', ...)` 的处理
-- 使 `apps/api` typecheck 通过
-
-##### 问题 D：MetricService 中误写了无效字段
-现象：
-- `orderBy: undefined` 触发类型报错
-
-修正：
-- 删除该无效字段
-- 重新执行 typecheck
-
-#### 当前结果
-已完成：
-- `pnpm install`
-- `prisma generate`
-- `pnpm --filter @silver-health/api typecheck`
-- `pnpm --filter @silver-health/web typecheck`
-
-当前状态：
-- Web / API 基础类型检查通过
-- Prisma Client 已可生成
-- 项目已从“纯骨架”推进到“可继续联调的工程初版”
-
----
-
-### 10. 当前阶段总结
-
-#### 当前已完成
-- 项目目录归位到 `coding/workspace`
-- 建立独立 GitHub 仓库并推送
-- monorepo 初始化
-- Prisma schema 初版
-- Nest API 初版
-- Web 路由骨架初版
-- 第一批核心业务模块骨架
-- 依赖安装
-- Prisma Client 生成
-- API / Web typecheck 通过
-
-#### 当前未完成
-- `.env` 本地开发值补齐
-- PostgreSQL 连接与 migration
-- 本地实际启动 Nest / Next
-- Elder Profile 页面表单与接口联调
-- 今日任务 / 指标录入 / 用药提醒 / 家属首页的真实页面实现
-
-#### 建议下一步
-1. 补本地开发环境说明与 `.env.example`
-2. 打通 `/elder/profile` 页面与 `POST/GET /api/profile/elder`
-3. 再推进今日任务与指标录入链路
-4. 最后再收敛家属看板与周报展示
-
----
-
-### 11. 新增提交：任务 / 指标 / 用药 / 周报模块
-
-#### 本轮实际提交内容
-- 将此前已落地但尚未单独提交的以下模块整理并提交：
-  - `task`
-  - `metric`
-  - `medication`
-  - `report`
-- 同步包含：
-  - `apps/api/src/app.module.ts` 的模块接入更新
-
-#### 对应提交
-- `1c13c02 feat: add task metric medication and report modules`
-
-#### 当前意义
-- API 主链路模块已基本齐全
-- 后续可以直接围绕老人建档、今日任务、指标录入、用药提醒、家属周报继续联调
-
----
-
-### 12. 当前应用形态判断（对齐用户问题）
-
-#### 当前正在开发的不是原生 Android / iOS，也不是微信小程序
-目前工程结构清晰表明：
-- `apps/web`：Next.js Web 应用
+### 当前判断
 - `apps/api`：NestJS 后端 API
-- `apps/admin`：后台预留目录（尚未开始）
+- `apps/web`：Next.js Web/H5 前端
+- 继续沿用 Web/H5 + API 路线，暂不分叉到小程序/原生端。
 
-#### 当前最准确的表述
-这是一个：
-- **基于 Web 的老年健康管理应用**
-- 老人端与家属端当前先统一放在一个 `Next.js` Web/H5 应用里开发
-- 后端由 `NestJS + Prisma + PostgreSQL` 提供服务
-
-#### 这意味着什么
-当前阶段更接近：
-- H5 / Web 应用
-- 或未来可继续演进成 PWA / 容器壳应用
-
-但**不是**：
-- 原生 Android App
-- 原生 iOS App
-- 微信小程序
-
-#### 为什么当前先这样做
-- 与现有文档约束一致
-- MVP 实现速度更快
-- 更适合先把“建档 -> 任务 -> 指标 -> 家属查看 -> 周报”闭环跑通
-- 后续如要扩展到小程序或原生端，可以再基于现有 API 和业务模型演进
-
-#### 当前关键判断（已确认归档）
-当前阶段的推荐路线是：
-- **继续走 Web/H5 + API 路线**
-- **不建议现在切到微信小程序或原生 Android/iOS**
-
-原因归纳：
+### 原因
 1. 当前工程已经按 `Next.js Web + NestJS API + Prisma` 起好了骨架，继续沿现有方向推进成本最低；
-2. 这个阶段的核心目标是尽快验证 MVP 主链路，而不是提前做多端分化；
-3. Web/H5 最适合当前快速试错、联调、演示与部署；
-4. 现在切小程序或原生端，会显著增加前端适配成本和交付周期；
-5. 更合理的策略是：先用 Web/H5 跑通业务闭环，后续再根据实际使用场景决定是否扩展到小程序或原生端。
+2. MVP 阶段优先把“老人端 + 家属端”的核心闭环做通；
+3. 后续如要扩展到小程序或原生端，可以再基于现有 API 和业务模型演进。
 
 ---
 
-### 13. 建档页面第一版落地（Web 前端）
+## 8. 环境变量与基础说明补齐
 
-#### 本轮目标
-- 开始把 MVP 第一条主链路真正从“接口骨架”推进到“前端可联调入口”。
-- 优先落 `elder profile` 的页面表单，而不是继续只堆后端模块。
-
-#### 本轮实际完成内容
-1. 新增 Web 侧基础配置：
-   - `apps/web/lib/config.ts`
-   - 统一读取 `NEXT_PUBLIC_API_BASE_URL`
-   - 支持默认 `NEXT_PUBLIC_DEFAULT_ELDER_USER_ID`
-
-2. 将 `apps/web/app/elder/profile/page.tsx` 从占位页升级为实际建档入口页。
-
-3. 新增前端表单组件：
-   - `apps/web/app/elder/profile/elder-profile-form.tsx`
-
-4. 表单已直接对接以下接口形状：
-   - `POST /api/profile/elder`
-   - `GET /api/profile/elder/:userId`
-
-5. 表单已支持的字段：
-   - `userId`
-   - `name`
-   - `gender`
-   - `age`
-   - `heightCm`
-   - `weightKg`
-   - `chronicConditions`
-   - `commonMedicines`
-   - `mobilityLevel`
-   - `helperMode`
-
-6. 页面当前已具备的交互：
-   - 根据 `userId` 加载已有档案
-   - 提交建档 / 更新请求
-   - 实时展示接口返回 JSON
-   - 对慢病 / 常用药字段做简单列表切分
-
-7. 更新了根级 `.env.example`：
-   - 新增 `NEXT_PUBLIC_DEFAULT_ELDER_USER_ID`
-   - 保留 `NEXT_PUBLIC_API_BASE_URL`
-
-#### 当前意义
-- `elder profile` 已经不是单纯文档概念，而是有了一个真实可联调的 Web 页面入口；
-- 下一步可以继续补：
-  - 创建用户与建档的关系处理；
-  - API 侧 DTO/校验；
-  - 页面级字段校验、提交态与错误态优化；
-  - 本地联调与真实数据库验证。
-
-#### 本轮校验结果
-- 已执行：`pnpm --filter @silver-health/web typecheck`
-- 结果：通过
-
-#### 下一步建议
-1. 启动 API / Web 本地运行链路
-2. 补 `user -> elderProfile` 的实际创建/关联策略
-3. 增加 DTO 校验和更明确的错误返回
-4. 再推进今日任务页与指标录入页
+### 已完成
+- 增加 API / Web 环境变量说明
+- 保留 `NEXT_PUBLIC_API_BASE_URL`
+- 明确本地联调与真实数据库验证是后续重点。
 
 ---
 
-### 14. 本地开发说明与构建校验
+## 9. 数据模型与核心业务方向继续收口
 
-#### 本轮目标
-- 让项目从“代码骨架 + 局部联调页”进一步进入“至少可构建、可说明如何本地运行”的状态。
-
-#### 本轮实际完成内容
-1. 新增 API 侧环境变量示例：
-   - `apps/api/.env.example`
-
-2. 更新根级脚本：
-   - 增加 `dev:api`
-   - 增加 `dev:web`
-   - 增加 `prisma:generate`
-
-3. 新增本地开发说明文档：
-   - `docs/local-development.md`
-
-4. 文档中补充了：
-   - 依赖安装方式
-   - `corepack + pnpm` 使用方式
-   - 根级 / API 环境变量说明
-   - Prisma Client 生成方式
-   - API / Web 启动方式
-   - 当前建档页入口
-   - 当前已接通的联调接口
-   - 当前项目限制项
-
-#### 本轮校验结果
-已实际执行：
-- `pnpm --filter @silver-health/api build`
-- `pnpm --filter @silver-health/web build`
-
-结果：
-- 两者均通过
-- Web 构建已成功生成 `/elder/profile` 等页面产物
-
-#### 当前意义
-- 现在项目不仅能 typecheck，还已经能完成 Web / API 的基础 build；
-- 后续进入本地运行、联调、数据库接入阶段时，已有明确说明文档和脚本入口；
-- 这标志着工程从“纯初始化期”正式进入“可持续开发期”。
-
-#### 下一步建议
-1. 实际启动 API 与 Web 开发服务做本地访问验证
-2. 补 DTO 校验（class-validator / class-transformer）
-3. 明确 `userId` 创建/绑定策略，避免建档页依赖人工先填 ID
-4. 推进今日任务页与指标录入页
+### 已完成
+- 老人档案、任务、指标、用药提醒、周报、家属绑定等核心对象继续明确。
 
 ---
 
-### 15. 建档链路收口：支持自动创建 elder 用户
+## 10. Web / API 基础构建通过
 
-#### 背景
-在上一阶段的建档页中，虽然 `/elder/profile` 已能直接调用建档接口，但仍存在一个明显问题：
-- 页面依赖用户手工输入一个已存在的 `userId`；
-- 这不适合作为 MVP 的第一条真实业务入口；
-- 如果没有前置“创建用户”步骤，建档链路体验是不完整的。
-
-#### 本轮关键决策
-本轮先采用更适合 MVP 的策略：
-- **当 `userId` 为空时，由后端自动创建一个 `role=elder` 的用户，再完成建档。**
-- **当 `userId` 已存在时，继续按已有用户更新/补齐档案。**
-
-这意味着：
-- 建档页现在既可用于“新建老人档案”；
-- 也可用于“维护已有老人档案”。
-
-#### API 侧改动
-1. 更新 `CreateElderProfileDto`：
-   - `userId` 改为可选
-   - 新增可选字段：
-     - `nickname`
-     - `mobile`
-
-2. 更新 `ElderProfileService.create(...)`：
-   - 若请求里没有 `userId`：
-     - 自动创建一个 `UserRole.elder` 用户；
-     - 使用 `nickname/name/mobile` 初始化用户基础信息；
-     - 取新用户 `id` 作为 `elderProfile.userId`
-   - 若请求里已有 `userId`：
-     - 继续按原逻辑执行 `upsert`
-
-3. 接口返回中增加：
-   - `createdUser: boolean`
-   - 用于前端明确区分“新建用户后建档”还是“对已有用户建档/更新”
-
-#### Web 侧改动
-1. 扩展建档表单字段：
-   - 新增 `nickname`
-   - 新增 `mobile`
-
-2. `userId` 字段交互调整：
-   - 允许留空
-   - 留空时页面进入“自动创建 elder 用户并建档”模式
-   - 填写时仍支持“按已有 userId 加载 / 更新”模式
-
-3. 提交成功后的行为：
-   - 如果后端返回了新创建的 `userId`，前端会自动回填到表单里；
-   - 如果是系统自动创建用户，页面会提示：
-     - 已自动创建 elder 用户，并展示该 `userId`
-
-4. 加载已有档案时：
-   - 额外回填 `user.nickname`
-   - 额外回填 `user.mobile`
-
-#### 本轮校验结果
-已实际执行：
-- `pnpm --filter @silver-health/api typecheck`
-- `pnpm --filter @silver-health/web typecheck`
-
-结果：
-- 两者均通过
-
-#### 当前意义
-- MVP 第一条链路从“半联调状态”推进到“可直接新建老人档案”的状态；
-- 建档页不再强依赖人工准备 `userId`；
-- 这比先单独做一整套“用户创建页”更适合当前快速闭环策略。
-
-#### 下一步建议
-1. 实际启动 API / Web，验证创建档案后的端到端访问
-2. 为 DTO 增加字段校验和更明确的错误提示
-3. 开始推进今日任务首页与指标录入页
-4. 视情况补一个更正式的“老人用户创建/选择”流程
+### 已完成
+- Web / API 基础类型检查通过
+- 基础 build 能完成
 
 ---
 
-### 16. 建档接口校验收口：ValidationPipe + DTO 校验
+## 11. DTO / 校验 / 接口骨架推进
 
-#### 背景
-虽然建档链路已支持“自动创建 elder 用户”，但接口层此前仍存在一个明显问题：
-- DTO 只有 TypeScript 类型，没有真正的运行时校验；
-- 非法字段、类型错误字段、越界数值在请求进入 API 时无法被稳妥拦截；
-- 这会让前后端联调时的问题暴露得太晚。
-
-#### 本轮实际完成内容
-1. 为 API 增加运行时参数校验依赖：
-   - `class-validator`
-   - `class-transformer`
-
-2. 在 `apps/api/src/main.ts` 中启用全局 `ValidationPipe`：
-   - `whitelist: true`
-   - `transform: true`
-   - `forbidNonWhitelisted: true`
-
-3. 为 `CreateElderProfileDto` 增加校验规则：
-   - `userId` / `nickname`：可选字符串
-   - `mobile`：中国大陆手机号格式校验
-   - `name`：必填字符串
-   - `gender`：枚举校验
-   - `age`：整数，1~120
-   - `heightCm`：可选整数，50~260
-   - `weightKg`：可选整数，20~300
-   - `chronicConditions` / `commonMedicines`：可选数组，长度限制 + 元素字符串校验
-   - `mobilityLevel` / `helperMode`：枚举校验
-
-4. 为 `UpdateElderProfileDto` 增加对应的可选字段校验。
-
-#### 本轮校验结果
-已实际执行：
-- `pnpm --filter @silver-health/api typecheck`
-- `pnpm --filter @silver-health/api build`
-
-结果：
-- 两者均通过
-
-#### 当前意义
-- API 已从“只有类型提示”升级到“具备运行时输入校验”；
-- 建档接口在联调时会更早暴露问题；
-- 后续前端表单校验、错误提示文案、接口收口会更容易做扎实。
-
-#### 下一步建议
-1. 实际启动 API / Web 做端到端访问验证
-2. 优化建档页的前端字段校验和错误提示
-3. 推进今日任务页（elder home）与指标录入页（elder metrics）
-4. 之后再补 family dashboard 的真实数据联调
+### 已完成
+- API 侧开始具备运行时输入校验能力
+- 为后续真实联调铺路
 
 ---
 
-### 17. 建档页前端校验与错误提示收口
+## 12. 老人建档页与首批主链路页面雏形
 
-#### 背景
-虽然上一阶段 API 已具备运行时 DTO 校验，但前端建档页如果仍然把明显错误的输入直接发到后端：
-- 用户体验会比较生硬；
-- 错误暴露点过晚；
-- 前后端职责也不够平衡。
-
-#### 本轮实际完成内容
-1. 为建档表单增加前端校验逻辑：
-   - 姓名不能为空
-   - 年龄必须是 1~120 的整数
-   - 手机号必须符合大陆 11 位手机号格式
-   - 身高必须是 50~260 的整数
-   - 体重必须是 20~300 的整数
-
-2. 新增表单级错误状态：
-   - `FormErrors`
-   - 在字段变更时自动清理对应错误
-
-3. 为输入框增加错误样式：
-   - 错误字段展示红色边框
-   - 字段下方直接展示错误文案
-
-4. 优化后端错误信息展示：
-   - 当前会优先从 API 返回结构中解析 `message`
-   - 如果后端返回的是数组错误，也会合并展示
-   - 避免前端只显示模糊的“保存失败”
-
-5. 当前建档页交互进一步收敛为：
-   - 前端先做基础合法性校验
-   - 后端再做运行时 DTO 校验
-   - 成功后展示明确成功提示和接口返回
-
-#### 本轮校验结果
-已实际执行：
-- `pnpm --filter @silver-health/web typecheck`
-- `pnpm --filter @silver-health/web build`
-
-结果：
-- 两者均通过
-- `/elder/profile` 页面构建成功
-
-#### 当前意义
-- 建档页已经从“能提交”提升到“有基本可用体验”；
-- 用户在页面上能更早发现并修正输入问题；
-- 后续如果继续做老人首页、指标录入页，可以复用这套前端校验思路。
-
-#### 下一步建议
-1. 实际启动 API / Web 做端到端访问验证
-2. 开始推进 `elder/home` 页面与 `tasks` 模块联调
-3. 开始推进 `elder/metrics` 页面与 `metrics` 模块联调
-4. 再逐步补 family dashboard 的真实数据展示
+### 已完成
+- 建档页开始可录入基础信息
+- 页面结构逐步围绕老人端 / 家属端主链路搭起
 
 ---
 
-### 18. 老人首页第一版：今日任务列表页
+## 13. 老人首页：今日任务真实 API + Mock 回退
 
-#### 本轮目标
-- 开始推进 MVP 第二条主链路：今日任务。
-- 先让 `elder/home` 从占位页升级为可展示“今日任务”的真实页面。
+### 已完成
+- `/elder/home` 支持读取真实任务数据
+- 若默认 elder userId 未配置或接口失败，则自动回退 mock 数据
+- 页面展示当前数据源（API / Mock）
 
-#### 本轮实际完成内容
-1. 重写 `apps/web/app/elder/home/page.tsx`，从占位文案升级为任务列表页。
-
-2. 页面当前支持两种数据模式：
-   - **真实 API 模式**：当 `NEXT_PUBLIC_DEFAULT_ELDER_USER_ID` 已配置时，调用：
-     - `GET /api/tasks/elder/:elderUserId`
-   - **Mock 回退模式**：当未配置默认 userId，或 API 加载失败时，自动回退到页面内置 mock 数据
-
-3. 页面当前已展示的信息包括：
-   - 当前数据源（API / Mock）
-   - 待完成任务数
-   - 已完成任务数
-   - 任务列表
-   - 任务类型标签
-   - 优先级标签
-   - 状态标签
-   - 计划时间
-   - 任务说明
-
-4. 页面策略说明：
-   - 当前优先做“可看见今天要做什么”；
-   - 暂未做“标记完成”交互；
-   - 暂未做真正的提醒推送；
-   - 先把信息展示链路跑通，再做任务交互。
-
-#### 本轮校验结果
-已实际执行：
-- `pnpm --filter @silver-health/web typecheck`
-- `pnpm --filter @silver-health/web build`
-
-结果：
-- 两者均通过
-- `elder/home` 页面已能正常构建
-
-#### 当前意义
-- MVP 第二条主链路已开始落地，不再只有建档页一个真实入口；
-- 通过“真实 API + Mock 回退”的模式，页面可以在后端数据尚未完全准备时持续推进前端交互；
-- 后续再补任务完成操作、任务创建入口、首页统计摘要时，会更顺畅。
-
-#### 下一步建议
-1. 继续推进 `elder/metrics` 页面，打通健康指标录入链路
-2. 回头补 `tasks` 模块的 DTO 校验与状态变更接口
-3. 再推进 `medication` 页面与提醒配置联调
-4. 之后收敛 `family/dashboard` 页面
+### 当前意义
+- 通过“真实 API + Mock 回退”的模式，页面可以在后端数据尚未完全准备时持续推进前端交互。
 
 ---
 
-### 19. 健康指标页第一版：最近指标记录列表
+## 14. 健康指标页：真实 API + Mock 回退
 
-#### 本轮目标
-- 推进 MVP 第三条主链路：健康指标。
-- 先把 `elder/metrics` 从占位页升级为“最近指标记录展示页”，为后续录入能力打基础。
-
-#### 本轮实际完成内容
-1. 重写 `apps/web/app/elder/metrics/page.tsx`，从占位文案升级为真实页面。
-
-2. 页面当前支持两种数据模式：
-   - **真实 API 模式**：当 `NEXT_PUBLIC_DEFAULT_ELDER_USER_ID` 已配置时，调用：
-     - `GET /api/metrics/elder/:elderUserId`
-   - **Mock 回退模式**：当未配置默认 elder userId，或 API 加载失败时，自动回退到页面内置 mock 指标数据
-
-3. 页面当前已展示的信息包括：
-   - 当前数据源（API / Mock）
-   - 最近记录数
-   - 指标类型（血压 / 血糖 / 体重）
-   - 录入来源（老人 / 家属）
-   - 测量时间
-   - 指标值展示
-
-4. 页面当前策略说明：
-   - 第一版先解决“最近记录可查看”；
-   - 暂未补录入表单；
-   - 暂未补趋势图表；
-   - 暂未补异常提示；
-   - 先把指标查看链路跑通，再继续做录入与分析。
-
-#### 本轮校验结果
-已实际执行：
-- `pnpm --filter @silver-health/web typecheck`
-- `pnpm --filter @silver-health/web build`
-
-结果：
-- 两者均通过
-- `elder/metrics` 页面已能正常构建
-
-#### 当前意义
-- 项目当前已至少有三条真实主链路入口：
-  1. 建档
-  2. 今日任务
-  3. 指标查看
-- 前端页面层面已经从“初始化”进入“主功能入口逐步成形”的阶段。
-
-#### 下一步建议
-1. 补 `elder/metrics` 的录入表单第一版
-2. 回头补 `metric` 模块 DTO 校验
-3. 再推进 `medication` 页面与提醒配置
-4. 然后开始收敛 `family/dashboard`
+### 已完成
+- `/elder/metrics` 接入真实指标 API
+- 继续保留 mock 回退与数据源展示
 
 ---
 
-### 20. 健康指标页第二版：录入表单 + 最近记录同页展示
+## 15. 用药提醒页：真实 API + Mock 回退
 
-#### 本轮目标
-- 把 `elder/metrics` 从“只能看最近记录”推进到“能录 + 能看”的状态。
-
-#### 本轮实际完成内容
-1. 新增指标录入表单组件：
-   - `apps/web/app/elder/metrics/metric-form.tsx`
-
-2. 录入表单当前支持三类指标：
-   - 血压
-   - 血糖
-   - 体重
-
-3. 表单当前支持的字段包括：
-   - `elderUserId`
-   - `createdByUserId`
-   - `createdByRole`
-   - `metricType`
-   - `measuredAt`
-   - 以及随指标类型变化的数值字段
-
-4. 不同指标类型的录入逻辑：
-   - **血压**：收缩压 / 舒张压 / 脉搏
-   - **血糖**：血糖值 / 测量时段
-   - **体重**：体重值
-
-5. 当前表单已具备的前端校验：
-   - `elderUserId` 必填
-   - `createdByUserId` 必填
-   - `measuredAt` 必填
-   - 血压数值范围校验
-   - 血糖数值范围校验
-   - 体重数值范围校验
-
-6. 当前表单已直接对接：
-   - `POST /api/metrics`
-
-7. 页面结构已升级为：
-   - 上方：指标录入表单
-   - 下方：最近指标记录列表
-
-#### 本轮校验结果
-已实际执行：
-- `pnpm --filter @silver-health/web typecheck`
-- `pnpm --filter @silver-health/web build`
-
-结果：
-- 两者均通过
-- `elder/metrics` 页面构建成功
-
-#### 当前意义
-- MVP 第三条主链路已从“仅查看入口”推进到“具备录入能力”；
-- 前端页面已开始具备更完整的业务闭环结构；
-- 后续只要继续补 API 校验与真实数据验证，这条链路就能进一步稳定下来。
-
-#### 下一步建议
-1. 回头补 `metric` 模块 DTO 校验与后端运行时校验
-2. 补 `elder/home` 的任务完成操作
-3. 推进 `medication` 页面与提醒配置
-4. 然后开始收敛 `family/dashboard`
+### 已完成
+- `/elder/medication` 接入真实 API
+- 未配置默认 elder userId 或接口失败时回退内置 mock 提醒数据
 
 ---
 
-### 21. 指标接口校验收口：CreateHealthMetricDto 运行时校验
+## 16. 家属看板：真实 API + Mock 回退
 
-#### 背景
-在 `elder/metrics` 页面已经具备录入表单之后，`POST /api/metrics` 如果仍然缺少后端 DTO 运行时校验，会导致：
-- 前端虽然有基础校验，但依然可能绕过页面直接提交非法数据；
-- 指标链路相比建档链路，后端约束还不够扎实。
-
-#### 本轮实际完成内容
-1. 为 `CreateHealthMetricDto` 增加运行时校验规则：
-   - `elderUserId`：必填字符串
-   - `metricType`：枚举校验
-   - `systolic`：可选数值，60~260
-   - `diastolic`：可选数值，40~180
-   - `pulse`：可选数值，30~220
-   - `glucoseValue`：可选数值，1~40
-   - `glucosePeriodType`：可选字符串
-   - `weightKg`：可选数值，20~300
-   - `createdByRole`：枚举校验
-   - `createdByUserId`：必填字符串
-   - `measuredAt`：合法日期字符串
-
-2. 由于 API 全局 `ValidationPipe` 已在此前开启，本轮 DTO 校验已直接接入实际运行链路，无需额外再改 `main.ts`。
-
-#### 本轮校验结果
-已实际执行：
-- `pnpm --filter @silver-health/api typecheck`
-- `pnpm --filter @silver-health/api build`
-
-结果：
-- 两者均通过
-
-#### 当前意义
-- 指标录入链路现在也具备了后端运行时校验；
-- 到目前为止，至少“建档”和“指标录入”两条主链路都已经具备前后端双重基础校验；
-- 后续再进入真实联调时，异常输入会更早暴露。
-
-#### 下一步建议
-1. 回头补 `tasks` 模块 DTO 校验与任务完成接口
-2. 推进 `medication` 页面与提醒配置
-3. 再推进 `family/dashboard` 的摘要页
-4. 最后再补更完整的本地联调验证
+### 已完成
+- `/family/dashboard` 接入任务 / 指标 / 用药提醒摘要 API
+- 接口失败时回退 mock 摘要数据
 
 ---
 
-### 22. 今日任务链路收口：DTO 校验 + 完成任务接口
+## 17. 家属周报：真实 API + Mock 回退
 
-#### 背景
-`elder/home` 页面此前已经能展示今日任务列表，但 `tasks` 模块后端仍有两个缺口：
-- 创建任务接口缺少运行时 DTO 校验；
-- 缺少“完成任务”操作接口，导致任务链路只能看、不能改状态。
-
-#### 本轮实际完成内容
-1. 为 `CreateDailyTaskDto` 增加运行时校验规则：
-   - `elderUserId`：必填字符串
-   - `taskDate`：合法日期字符串
-   - `taskType`：枚举校验
-   - `title`：必填字符串，最大长度 128
-   - `description`：可选字符串
-   - `priority`：枚举校验
-   - `status`：可选枚举
-   - `sourceType`：枚举校验
-   - `relatedContentId`：可选字符串
-   - `dueTime`：可选，`HH:mm` 格式校验
-
-2. 在 `TaskService` 中新增：
-   - `complete(taskId: string)`
-   - 若任务不存在则抛 `NotFoundException`
-   - 若存在则更新：
-     - `status = done`
-     - `completedAt = now()`
-
-3. 在 `TaskController` 中新增接口：
-   - `PATCH /api/tasks/:taskId/complete`
-
-#### 本轮校验结果
-已实际执行：
-- `pnpm --filter @silver-health/api typecheck`
-- `pnpm --filter @silver-health/api build`
-
-结果：
-- 两者均通过
-
-#### 当前意义
-- 今日任务链路已从“只能展示”推进到“后端已支持完成动作”；
-- `tasks` 模块现在也具备运行时 DTO 校验；
-- 后续可以回到 `elder/home` 页面，把“标记完成”交互真正接起来。
-
-#### 下一步建议
-1. 回到 `elder/home` 页面，补“完成任务”按钮与状态刷新
-2. 推进 `medication` 页面与提醒配置
-3. 再推进 `family/dashboard` 的摘要页
-4. 最后补更完整的本地联调验证
+### 已完成
+- `/family/report` 接入周报 API
+- 继续保留 mock 回退与数据源展示
 
 ---
 
-### 23. 老人首页第二版：完成任务交互接入
+## 18. 家属绑定：真实 API + Mock 回退
 
-#### 背景
-上一阶段虽然 `tasks` 模块已经具备后端完成接口，但 `elder/home` 页面仍然只能“看任务”，还不能直接触发完成动作。
-
-#### 本轮实际完成内容
-1. 新增客户端任务列表组件：
-   - `apps/web/app/elder/home/task-list.tsx`
-
-2. 页面结构调整：
-   - `page.tsx` 负责服务端获取初始任务数据
-   - `task-list.tsx` 负责客户端交互与本地状态更新
-
-3. 当前已接入的交互：
-   - 点击“标记完成”按钮
-   - 调用：
-     - `PATCH /api/tasks/:taskId/complete`
-   - 成功后本地把任务状态切换为 `done`
-   - 同时刷新页面内待完成 / 已完成数量统计
-
-4. Mock 模式兼容策略：
-   - 如果当前页面处于 mock 模式，则不会调用真实 API
-   - 而是在前端本地模拟把任务置为完成
-   - 这样即便未配置默认 elder userId，页面交互也能继续验证
-
-5. 当前交互反馈：
-   - 按钮有处理中状态
-   - 完成后会显示成功提示
-   - 已完成任务按钮会进入禁用态
-
-#### 本轮校验结果
-已实际执行：
-- `pnpm --filter @silver-health/web typecheck`
-- `pnpm --filter @silver-health/web build`
-
-结果：
-- 两者均通过
-- `elder/home` 页面构建成功，且页面体积已反映客户端交互接入
-
-#### 当前意义
-- 今日任务链路现在已从“只看列表”推进到“可直接完成任务”；
-- 这使老人首页第一次具备了真正的业务操作能力；
-- 到目前为止，至少建档、指标录入、任务完成三类核心动作都已有前端入口。
-
-#### 下一步建议
-1. 推进 `medication` 页面与提醒配置
-2. 再推进 `family/dashboard` 摘要页
-3. 回头补 `task` 页面中更细的状态流转（跳过、过期、刷新）
-4. 最后补更完整的本地联调验证
+### 已完成
+- `/family/bind` 接入绑定列表 API
+- 继续保留 mock 回退与数据源展示
 
 ---
 
-### 24. 用药提醒第一版：新增提醒 + 提醒列表
+## 19. 默认联调数据方案与本地真实联调准备
 
-#### 本轮目标
-- 推进 MVP 第四条主链路：用药提醒。
-- 先把 `elder/medication` 从占位页升级为“可新增提醒 + 可查看提醒列表”的第一页版本。
-
-#### 本轮实际完成内容
-1. 新增前端表单组件：
-   - `apps/web/app/elder/medication/medication-form.tsx`
-
-2. 表单当前支持的字段：
-   - `elderUserId`
-   - `medicineName`
-   - `dosageText`
-   - `remindTime`
-   - `repeatRule`
-   - `enabled`
-
-3. 当前表单已具备的前端校验：
-   - `elderUserId` 必填
-   - 药品名称必填
-   - 剂量说明必填
-   - 提醒时间需符合 `HH:mm`
-   - 重复规则必填
-
-4. 当前表单已直接对接：
-   - `POST /api/medications`
-
-5. 重写 `apps/web/app/elder/medication/page.tsx`，当前支持两种数据模式：
-   - **真实 API 模式**：
-     - `GET /api/medications/elder/:elderUserId`
-   - **Mock 回退模式**：
-     - 当未配置默认 elder userId，或 API 加载失败时，自动回退到页面内置 mock 用药提醒数据
-
-6. 页面当前展示的信息包括：
-   - 当前数据源（API / Mock）
-   - 提醒数量
-   - 提醒列表
-   - 药品名称
-   - 剂量说明
-   - 提醒时间
-   - 重复规则
-   - 启用状态
-
-#### 本轮校验结果
-已实际执行：
-- `pnpm --filter @silver-health/web typecheck`
-- `pnpm --filter @silver-health/web build`
-
-结果：
-- 两者均通过
-- `elder/medication` 页面已能正常构建
-
-#### 当前意义
-- 到目前为止，MVP 中至少四条主链路都已具备前端入口：
-  1. 建档
-  2. 今日任务
-  3. 健康指标
-  4. 用药提醒
-- 用药提醒页已不再是占位页，而是具备“新增 + 查看”的基础能力。
-
-#### 下一步建议
-1. 推进 `family/dashboard` 摘要页
-2. 回头补 `medication` 模块的 DTO 运行时校验
-3. 再补 `task` 页面中更细的状态流转
-4. 最后做一轮更完整的本地联调验证
+### 已完成
+- 明确需要的最小真实数据集
+- 逐步让更多页面从 mock 切到真实 API
 
 ---
 
-### 25. 家属看板第一版：任务/指标/用药摘要聚合页
+## 20. 本地 PostgreSQL / migration / seed 跑通
 
-#### 本轮目标
-- 开始把家属侧主入口做起来。
-- 先让 `family/dashboard` 从占位页升级为一个能快速查看老人近况的摘要页。
-
-#### 本轮实际完成内容
-1. 重写 `apps/web/app/family/dashboard/page.tsx`，从占位文案升级为真实摘要页。
-
-2. 页面当前聚合的三块核心信息：
-   - 今日任务摘要
-   - 最近指标摘要
-   - 用药提醒摘要
-
-3. 页面当前支持两种数据模式：
-   - **真实 API 模式**：
-     - `GET /api/tasks/elder/:elderUserId`
-     - `GET /api/metrics/elder/:elderUserId`
-     - `GET /api/medications/elder/:elderUserId`
-   - **Mock 回退模式**：
-     - 当未配置默认 elder userId，或接口加载失败时，自动回退到页面内置 mock 摘要数据
-
-4. 页面当前展示的信息包括：
-   - 当前数据源（API / Mock）
-   - 今日任务完成情况
-   - 待完成任务数
-   - 启用中的提醒数
-   - 任务摘要列表
-   - 最近指标摘要
-   - 用药提醒摘要列表
-
-5. 当前策略说明：
-   - 第一版优先做“摘要聚合”；
-   - 暂不做家属侧复杂筛选；
-   - 暂不做多老人切换；
-   - 暂不做更深的报告/趋势下钻；
-   - 先确保家属侧能快速看到“任务 / 指标 / 用药”三块核心信息。
-
-#### 本轮校验结果
-已实际执行：
-- `pnpm --filter @silver-health/web typecheck`
-- `pnpm --filter @silver-health/web build`
-
-结果：
-- 两者均通过
-- `family/dashboard` 页面已能正常构建
-
-#### 当前意义
-- 家属侧不再只有占位路由，开始有实际信息入口；
-- 到目前为止，老人侧与家属侧都已经出现了真实页面能力；
-- 项目整体上已经从“单点功能开发”推进到“跨角色 MVP 页面体系逐步成形”。
-
-#### 下一步建议
-1. 回头补 `medication` 模块 DTO 运行时校验
-2. 再补 `family/report` 页面第一版
-3. 之后收敛家属绑定页
-4. 最后做一轮更完整的本地联调验证
+### 已完成
+- 本地数据库、migration、seed 基本跑通
+- 为真实联调打基础
 
 ---
 
-### 26. 用药提醒接口校验收口：CreateMedicationReminderDto 运行时校验
+## 21. Web 真正切到真实 API
 
-#### 背景
-`elder/medication` 页面已经具备“新增提醒 + 提醒列表”能力，但 `POST /api/medications` 此前还没有后端 DTO 运行时校验，这会导致：
-- 页面以外的非法调用无法被及时拦截；
-- 用药提醒链路相比建档/指标/任务链路，后端约束还不够一致。
+### 已完成
+- `apps/web/.env.local` 读到 seeded elder id
+- `/elder/home`、`/family/dashboard`、`/family/report` 等关键页已切到真实 API
 
-#### 本轮实际完成内容
-1. 为 `CreateMedicationReminderDto` 增加运行时校验规则：
-   - `elderUserId`：必填字符串
-   - `medicineName`：必填字符串，最大长度 128
-   - `dosageText`：必填字符串，最大长度 64
-   - `remindTime`：必填，且需符合 `HH:mm`
-   - `repeatRule`：必填字符串，最大长度 32
-   - `enabled`：可选布尔值
-
-2. 由于 API 全局 `ValidationPipe` 已在此前开启，本轮 DTO 校验已直接接入实际运行链路。
-
-#### 本轮校验结果
-已实际执行：
-- `pnpm --filter @silver-health/api typecheck`
-- `pnpm --filter @silver-health/api build`
-
-结果：
-- 两者均通过
-
-#### 当前意义
-- 用药提醒链路现在也具备了后端运行时校验；
-- 至此，建档、指标、任务、用药四条主要链路都已经具备不同程度的前后端约束；
-- 工程整体一致性明显提高。
-
-#### 下一步建议
-1. 推进 `family/report` 页面第一版
-2. 之后收敛家属绑定页
-3. 回头补更完整的本地联调验证
-4. 再逐步完善各模块更细的交互和状态流转
-
----
-
-### 27. 家属周报第一版：周报摘要与建议列表页
-
-#### 本轮目标
-- 继续推进家属侧第二个核心页面。
-- 让 `family/report` 从占位页升级为“可查看近期周报摘要”的页面。
-
-#### 本轮实际完成内容
-1. 重写 `apps/web/app/family/report/page.tsx`，从占位文案升级为真实周报页。
-
-2. 页面当前支持两种数据模式：
-   - **真实 API 模式**：
-     - `GET /api/reports/elder/:elderUserId`
-   - **Mock 回退模式**：
-     - 当未配置默认 elder userId，或 API 加载失败时，自动回退到页面内置 mock 周报数据
-
-3. 页面当前展示的信息包括：
-   - 当前数据源（API / Mock）
-   - 周报数量
-   - 周报时间范围
-   - 运动完成率
-   - 用药完成率
-   - 指标记录次数
-   - 周报摘要
-   - 建议列表
-
-4. 当前策略说明：
-   - 第一版优先做“周报查看”；
-   - 暂不做复杂趋势图；
-   - 暂不做导出；
-   - 暂不做更深的周报详情页；
-   - 先让家属侧有一个可读的周报入口。
-
-#### 本轮校验结果
-已实际执行：
-- `pnpm --filter @silver-health/web typecheck`
-- `pnpm --filter @silver-health/web build`
-
-结果：
-- 两者均通过
-- `family/report` 页面已能正常构建
-
-#### 当前意义
-- 家属侧现在已经有两个真实页面入口：
-  1. `family/dashboard`
-  2. `family/report`
-- 老人侧与家属侧的 MVP 页面骨架都在逐步补齐；
-- 产品结构已经开始具备“跨角色完整路径”的雏形。
-
-#### 下一步建议
-1. 继续收敛 `family/bind` 页面
-2. 回头补更完整的本地联调验证
-3. 再逐步补各模块的编辑、停用、刷新等细节交互
-4. 之后再看是否开始整理 demo 演示路径
-
----
-
-### 28. 家属绑定第一版：绑定申请表单 + 绑定列表
-
-#### 本轮目标
-- 把家属侧第三个主路径也补起来。
-- 让 `family/bind` 从占位页升级为“可发起绑定申请 + 可查看当前绑定状态”的页面。
-
-#### 本轮实际完成内容
-1. 新增前端表单组件：
-   - `apps/web/app/family/bind/bind-form.tsx`
-
-2. 表单当前支持的字段：
-   - `elderUserId`
-   - `familyUserId`
-   - `relationType`
-
-3. 当前表单已具备的前端校验：
-   - `elderUserId` 必填
-   - `familyUserId` 必填
-
-4. 当前表单已直接对接：
-   - `POST /api/family-bindings`
-
-5. 重写 `apps/web/app/family/bind/page.tsx`，当前支持两种数据模式：
-   - **真实 API 模式**：
-     - `GET /api/family-bindings/elder/:elderUserId`
-   - **Mock 回退模式**：
-     - 当未配置默认 elder userId，或 API 加载失败时，自动回退到页面内置 mock 绑定数据
-
-6. 页面当前展示的信息包括：
-   - 当前数据源（API / Mock）
-   - 绑定数量
-   - 绑定列表
-   - 关系类型
-   - 绑定状态
-   - 家属 userId
-   - 家属昵称 / 手机号（若有）
-
-7. 当前策略说明：
-   - 第一版优先做“申请 + 列表”；
-   - 暂不做确认流转；
-   - 暂不做扫码/邀请码；
-   - 暂不做解绑操作；
-   - 先让家属绑定链路有可视化入口。
-
-#### 本轮校验结果
-已实际执行：
-- `pnpm --filter @silver-health/web typecheck`
-- `pnpm --filter @silver-health/web build`
-
-结果：
-- 两者均通过
-- `family/bind` 页面已能正常构建
-
-#### 当前意义
-- 家属侧三条核心页面现在都已有真实入口：
-  1. `family/dashboard`
-  2. `family/report`
-  3. `family/bind`
-- 老人侧与家属侧的 MVP 页面骨架已经基本成型；
-- 项目下一阶段可以更偏向联调、收口、完善体验，而不再只是补空白页。
-
-#### 下一步建议
-1. 回头补更完整的本地联调验证
-2. 再逐步补各模块编辑、停用、解绑、刷新等细节交互
-3. 之后整理一条完整 demo 演示路径
-4. 再评估是否进入第一轮可演示版本收口
-
----
-
-### 29. 第一轮联调收口：Demo 路径与检查清单文档
-
-#### 本轮目标
-- 不再只继续铺页面，而是开始把当前已做出的能力整理成一条可执行的联调/演示路径。
-- 为下一阶段“真实联调、演示、收口”提供统一清单。
-
-#### 本轮实际完成内容
-1. 新增文档：
-   - `docs/demo-and-integration-checklist.md`
-
-2. 文档中已整理的内容包括：
-   - 当前老人侧 / 家属侧页面入口清单
-   - 当前主要 API 入口清单
-   - 推荐 Demo 演示顺序
-   - 推荐默认联调数据用法
-   - 联调检查清单
-   - 当前已知限制
-   - 下一阶段联调收口建议
-
-3. 文档目的：
-   - 避免后续继续推进时只关注“又做了什么页面”；
-   - 转而开始关注“这些页面如何串成一个真实可演示的 MVP”；
-   - 作为之后端到端联调与演示的统一参考。
-
-#### 当前意义
-- 项目已从“持续补页面”开始转向“开始收口和组织已完成能力”；
-- 后续如果要做真实演示、联调验证或阶段验收，这份文档可以直接作为基线。
-
-#### 下一步建议
-1. 基于该文档准备一套默认联调数据
-2. 做一次真实端到端联调验证
-3. 记录联调中暴露出的不合理交互
-4. 再进行第一轮体验收口
-
----
-
-### 30. 默认联调数据方案：最小真实数据集设计
-
-#### 本轮目标
-- 在联调清单基础上，进一步明确“到底要准备哪些真实数据”，避免后续联调时临时拼凑。
-
-#### 本轮实际完成内容
-1. 新增文档：
-   - `docs/default-integration-data-plan.md`
-
-2. 文档中已整理的内容包括：
-   - 推荐的最小联调数据集
-   - 每类数据对象的用途
-   - 推荐生成顺序
-   - 推荐联调配置方式
-   - 当前建议的数据落地方式
-   - 后续是否需要 seed 脚本的建议
-
-3. 当前明确的最小联调对象包括：
-   - elder 用户
-   - family 用户
-   - elder profile
-   - daily tasks
-   - health metrics
-   - medication reminders
-   - family bindings
-   - weekly reports
-
-4. 当前文档价值：
-   - 后续如果开始准备真实联调数据，可以按文档直接落地；
-   - 后续如果决定写 seed 脚本，也有了清晰的数据目标和依赖顺序。
-
-#### 当前意义
-- 项目已不只是“页面和接口逐渐成形”，也开始有了“联调数据如何组织”的明确方案；
-- 这为下一阶段真正进入端到端真实联调，提供了很重要的准备。
-
-#### 下一步建议
-1. 先基于该方案准备一套真实默认数据
-2. 让更多页面尽量走真实 API，而不是 mock 回退
-3. 做一次真实端到端联调验证
-4. 再视情况决定是否补 `seed-demo-data.ts`
-
----
-
-### 31. 联调数据进一步细化：Integration Data Spec 文档
-
-#### 本轮目标
-- 在“默认联调数据方案”的基础上，把联调数据继续从“类型级”推进到“字段级/样例级”，方便后续直接照着准备。
-
-#### 本轮实际完成内容
-1. 新增文档：
-   - `docs/integration-data-spec.md`
-
-2. 文档中已细化的内容包括：
-   - elder / family 两个主角用户的推荐样例
-   - elder profile 的建议字段值
-   - daily tasks 的建议样例
-   - health metrics 的建议样例
-   - medication reminders 的建议样例
-   - family binding 的建议样例
-   - weekly reports 的建议样例
-   - 页面与数据对象映射关系
-   - 推荐的实际准备顺序
-   - 当前最建议的数据落地方式
-
-3. 当前文档作用：
-   - 如果后续人工准备联调数据，可以直接照着字段示例做；
-   - 如果后续写 seed 脚本，也可以直接把这些样例转为脚本输入目标。
-
-#### 当前意义
-- 联调数据准备已经从“概念方案”推进到“可直接落地的细化规范”；
-- 这会显著降低后续真实联调时的来回试错成本。
-
-#### 下一步建议
-1. 基于这份 spec 真正准备第一套真实默认数据
-2. 把 elder userId 写入环境变量，让页面尽量走真实 API
-3. 做一次真实端到端联调验证
-4. 再决定是否把这套数据沉淀成 seed 脚本
-
----
-
-### 32. 联调数据继续收口：落地方案文档 + Seed 脚本设计文档
-
-#### 背景
-用户明确要求：
-- 联调数据不仅要有“明细规范”；
-- 还要把“怎么落地”与“脚本怎么设计”单独输出成新文档。
-
-#### 本轮实际完成内容
-1. 新增联调数据落地方案文档：
-   - `docs/integration-data-rollout-plan.md`
-
-2. 文档中已说明：
-   - 当前更建议先手工准备一轮真实联调数据；
-   - 再考虑沉淀为 seed 脚本；
-   - 推荐执行顺序；
-   - 推荐页面联调顺序；
-   - 当前阶段为什么不建议一上来就过度自动化。
-
-3. 新增 Seed 脚本设计文档：
-   - `docs/seed-script-design.md`
-
-4. 文档中已说明：
-   - 脚本目标
-   - 建议生成的数据对象
-   - 推荐执行顺序
-   - 推荐输出内容
-   - 推荐实现方式
-   - 幂等性建议
-   - 当前推荐先验证再落地脚本的原因
-
-#### 当前意义
-- 联调数据相关文档已经形成四层结构：
-  1. `demo-and-integration-checklist.md`
-  2. `default-integration-data-plan.md`
-  3. `integration-data-spec.md`
-  4. `integration-data-rollout-plan.md`
-  5. `seed-script-design.md`
-- 后续无论是手工联调、准备 demo，还是正式写 seed 脚本，都已经有相对完整的文档基础。
-
-#### 下一步建议
-1. 基于这些文档开始真正准备第一套真实默认数据
-2. 先做一轮手工真实联调
-3. 验证通过后，再决定是否正式落 `scripts/seed-demo-data.ts`
-4. 再进行第一轮 demo 收口
-
----
-
-### 33. 联调数据进一步落地：Seed 脚本第一版与使用说明
-
-#### 背景
-用户继续要求：
-- 不仅要有联调数据相关文档；
-- 还要把“落地方案”和“脚本”分别独立输出；
-- 并逐步往可执行层推进。
-
-#### 本轮实际完成内容
-1. 在根 `package.json` 中增加脚本：
-   - `seed:demo`
-
-2. 新增脚本文件：
-   - `scripts/seed-demo-data.ts`
-
-3. 当前脚本覆盖的数据对象：
-   - elder user
-   - family user
-   - elder profile
-   - family binding
-   - daily tasks
-   - health metrics
-   - medication reminders
-   - weekly reports
-
-4. 当前脚本策略：
-   - user / profile / binding：使用查找 / upsert 思路
-   - task / metric / medication / report：采用“先删后建”的简单重建策略
-   - 目标是先快速稳定地产出一套 demo 数据
-
-5. 新增脚本使用说明文档：
-   - `docs/seed-script-usage.md`
-
-6. 说明文档中已包含：
-   - 当前脚本位置
-   - 运行方式
-   - 运行前要求
-   - 脚本当前行为
-   - 输出内容
-   - 后续升级建议
-
-#### 本轮校验结果
-已实际执行：
-- `pnpm --filter @silver-health/api typecheck`
-- `pnpm --filter @silver-health/web typecheck`
-
-结果：
-- 两者均通过
-
-#### 当前意义
-- 联调数据相关工作已经不再只是文档设计，而是开始落到可执行脚本层；
-- 后续如果数据库环境就绪，可以直接尝试运行 `pnpm seed:demo`；
-- 这会显著降低准备 demo 数据和联调数据的成本。
-
-#### 下一步建议
-1. 在数据库环境就绪后实际运行 `pnpm seed:demo`
-2. 记录脚本首次真实执行时暴露的问题
-3. 将生成的 elder userId 写入 `.env`
-4. 开始第一轮真实端到端联调验证
-
----
-
-### 34. Seed 脚本首次真实执行结果
-
-#### 本轮目标
-- 不再停留在文档和脚本层，直接验证 `pnpm seed:demo` 是否能够真实跑通。
-
-#### 本轮实际执行
-执行命令：
-- `pnpm seed:demo`
-
-#### 实际结果
-- 脚本已成功启动；
-- 但在 Prisma 第一次执行 `user.upsert()` 时终止；
-- 失败原因不是脚本逻辑本身，而是环境变量缺失。
-
-#### 当前暴露出的真实卡点
-报错核心：
-- `Environment variable not found: DATABASE_URL`
-
-说明：
-- 当前运行环境里还没有可用的 `DATABASE_URL`；
-- Prisma 无法建立数据库连接；
-- 因此 seed 脚本还无法真正把 demo 数据写入数据库。
-
-#### 结论
-本轮真实验证得到的结论是：
-- `seed-demo-data.ts` 脚本已经进入可执行状态；
-- 当前阻塞点已经从“代码层”收敛到“数据库环境层”；
-- 下一步不应继续盲改脚本，而应先补齐数据库连接配置。
-
-#### 下一步建议
-1. 在根 `.env`（或当前运行环境）中补 `DATABASE_URL`
-2. 确认本地 PostgreSQL 可访问
-3. 确认基础表已经存在（必要时先做 migration）
-4. 然后重新执行：
-   - `pnpm seed:demo`
-
----
-
-### 35. 数据库环境真实排查结果
-
-#### 本轮目标
-- 在 seed 脚本首次失败后，继续把数据库环境卡点查清楚。
-
-#### 本轮实际执行
-1. 检查项目根目录 `.env` 是否存在
-2. 若不存在，则从 `.env.example` 复制生成
-3. 重新做数据库连通性检查
-4. 排查本机 PostgreSQL / 客户端工具 / 服务状态
-
-#### 实际结果
-1. 根目录 `.env` 之前确实不存在
-   - 本轮已从 `.env.example` 复制生成 `.env`
-
-2. 重新测试 Prisma 数据库连通性后，得到：
-   - `P1001`
-   - `Can't reach database server at localhost:5432`
-
-3. 本机进一步排查结果：
-   - `postgres` 命令不存在
-   - `psql` 命令不存在
-   - `pg_isready` 命令不存在
-   - 当前也未发现 PostgreSQL 服务监听在 `localhost:5432`
-
-#### 结论
-当前真实阻塞点已经进一步明确为：
-- 不只是缺 `.env`；
-- 而是本机当前并没有可直接使用的 PostgreSQL 运行环境（至少当前 shell 路径下不可见，也未监听默认端口）。
-
-#### 当前意义
-- `seed-demo-data.ts`、Prisma schema、项目代码本身已经推进到可继续联调阶段；
-- 当前第一优先级阻塞来自环境层：数据库服务尚未就绪；
-- 后续若不先补数据库环境，继续尝试 seed/migration 都不会真正成功。
-
-#### 下一步建议
-1. 先确认本机准备用哪种方式提供 PostgreSQL：
-   - 本地安装服务
-   - Docker
-   - 远程数据库
-2. 确认 `DATABASE_URL` 与实际数据库一致
-3. 跑 migration / schema 同步
-4. 再重新执行 `pnpm seed:demo`
-
----
-
-### 36. 本地 PostgreSQL 打通：migration 与 seed 已真实跑通
-
-#### 背景
-在上一轮排查中，已经确认：
-- 项目根 `.env` 一开始缺失，但后续已补齐；
-- 更深层问题是本机缺少可用的 PostgreSQL 运行环境；
-- 用户随后明确决策：
-  - 先用“本机数据库”把项目测试/联调跑通；
-  - 长期再切远程数据库方案。
-
-#### 本轮实际执行
-1. 使用 Homebrew 安装并启动：
-   - `postgresql@16`
-
-2. 创建数据库：
-   - `silver_health`
-
-3. 进一步验证后确认：
-   - 本机 PostgreSQL 使用当前系统用户 `liuzhongliang` 可正常连接；
-   - 此机本地并不适合直接使用 `.env.example` 中的 `postgres:postgres` 账户写法；
-   - 因此已将项目 `.env` 中的 `DATABASE_URL` 调整为基于当前系统用户的本地连接写法。
-
-4. 实际执行 Prisma migration：
-   - `prisma migrate dev --schema prisma/schema.prisma --name init`
-
-5. 实际执行 demo seed：
-   - `pnpm seed:demo`
-
-6. Seed 成功后，已将生成出来的 elder userId 写入项目 `.env`：
-   - `NEXT_PUBLIC_DEFAULT_ELDER_USER_ID=<seeded elder id>`
-
-#### 本轮真实结果
-- PostgreSQL 已本机安装并启动
-- `silver_health` 数据库已存在
-- Prisma migration 已成功执行
-- demo seed 已成功执行
-- 已生成 demo 数据并拿到关键 ID
-
-#### 本轮 seed 输出结果
-- Elder user id：`cmn5zm37f0000ijdo5tp2h0e0`
-- Family user id：`cmn5zm37o0001ijdotbuh35vn`
-- Tasks inserted：4
-- Metrics inserted：3
-- Medication reminders inserted：2
-- Reports inserted：2
-
-#### 当前意义
-- 项目已经从“页面骨架 + 接口骨架 + seed 设计”推进到“本地数据库真实打通”；
-- 多数页面后续都可以开始优先走真实 API，而不再默认依赖 mock 回退；
-- 第一轮端到端联调已经具备了基本条件。
-
-#### 当前与长期方案的关系
-- 当前阶段：
-  - 本地 PostgreSQL 已作为短期联调环境跑通
-- 长期阶段：
-  - 仍按用户决策，后续项目正式环境使用远程数据库方案
-
-#### 下一步建议
-1. 实际启动 `dev:api` 与 `dev:web`
-2. 用当前 seeded elder id 做一轮真实页面联调
-3. 记录页面从 mock 切真实 API 后暴露的具体问题
-4. 再做第一轮体验与数据流收口
-
----
-
-### 37. 第一轮真实联调验证结果
-
-#### 本轮目标
-- 在本地 PostgreSQL、migration、seed 都跑通后，真正启动 Web / API 服务，验证页面和接口是否已经开始走真实数据。
-
-#### 本轮实际执行
-1. 启动 API：
-   - `pnpm dev:api`
-
-2. 启动 Web：
-   - `pnpm dev:web`
-
-3. 逐项验证接口：
-   - `GET /api/health`
-   - `GET /api/profile/elder/:elderUserId`
-   - `GET /api/tasks/elder/:elderUserId`
-   - `GET /api/metrics/elder/:elderUserId`
-   - `GET /api/medications/elder/:elderUserId`
-   - `GET /api/reports/elder/:elderUserId`
-   - `GET /api/family-bindings/elder/:elderUserId`
-
-4. 进一步检查 Web 页面的实际渲染结果：
-   - `/elder/home`
-   - `/family/dashboard`
-
-#### 当前验证结果
-
-##### 1. API 健康检查：正常
-- `/api/health` 返回正常
-- Nest 服务已启动成功
-
-##### 2. Elder Profile：正常
-- `/api/profile/elder/:elderUserId` 返回真实数据
-
-##### 3. Metrics：正常
-- `/api/metrics/elder/:elderUserId` 返回 seeded 指标数据
-
-##### 4. Medications：正常
-- `/api/medications/elder/:elderUserId` 返回 seeded 用药提醒数据
-
-##### 5. Reports：正常
-- `/api/reports/elder/:elderUserId` 返回 seeded 周报数据
-
-##### 6. Family Bindings：正常
-- `/api/family-bindings/elder/:elderUserId` 返回 seeded 绑定数据
-
-##### 7. Tasks：异常
-- `/api/tasks/elder/:elderUserId` 当前返回空数组
-- 这说明 seed 虽然写入了 task，但当前 `findTodayByElderUserId` 的查询方式与数据库中的 `taskDate` 匹配策略仍有问题
-- 高概率原因：当前查询直接按完整 `Date` 对等匹配，而 seed / 数据库存储与运行时日期边界存在偏差（时区 / date truncation / 精确匹配问题）
-
-##### 8. Web 页面：仍在走 Mock
-- `/elder/home` 当前页面仍显示：
-  - `当前未设置 NEXT_PUBLIC_DEFAULT_ELDER_USER_ID，先展示 mock 今日任务。`
-- `/family/dashboard` 当前页面仍显示：
-  - `当前未设置 NEXT_PUBLIC_DEFAULT_ELDER_USER_ID，先展示 mock 家属摘要数据。`
-
-#### 当前结论
-本轮真实联调表明：
-- **API 大部分链路已经能走真实数据**；
-- 但还存在两个明显收口点：
-  1. Web 进程未读取到更新后的 `NEXT_PUBLIC_DEFAULT_ELDER_USER_ID`（需要重新启动或确认环境注入）；
-  2. Tasks 查询策略需要修正，不能继续按当前方式直接精确匹配日期。
-
-#### 下一步建议
-1. 先重启 Web 进程，让其重新读取 `.env`
-2. 修正 `TaskService.findTodayByElderUserId` 的日期查询逻辑（改为当天起止范围）
-3. 再重新验证 `/elder/home` 与 `/family/dashboard`
-4. 完成后继续检查其他页面是否已从 mock 切到真实数据
-
----
-
-### 38. 第二轮真实联调结果：Tasks 已修复，Web 环境读取问题仍存在
-
-#### 本轮目标
-- 收口上一轮联调中暴露出的两个问题：
-  1. `tasks` 接口返回空数组；
-  2. Web 页面仍然走 mock。
-
-#### 本轮实际完成内容
-1. 修正 `TaskService.findTodayByElderUserId`：
-   - 由原先直接按完整 `Date` 对等匹配；
-   - 改为按“当天开始时间 ~ 当天结束时间”的范围查询。
-
-2. 重新执行：
-   - API typecheck
-   - Web 重启
-   - 再次验证关键 API 与页面
-
-#### 本轮真实结果
-##### 1. Tasks API 已修复
-- `GET /api/tasks/elder/:elderUserId` 现在已经返回真实 seeded task 数据
-- 当前说明：task 查询问题已成功收口
-
-##### 2. Web 页面仍未切到真实 API
-再次验证：
-- `/elder/home`
-- `/family/dashboard`
-
-结果仍然显示：
-- `当前未设置 NEXT_PUBLIC_DEFAULT_ELDER_USER_ID，先展示 mock ...`
-
-#### 当前判断
-本轮结果说明：
-- 问题已不再是 Web 进程没有重启；
-- 更可能是 **Next.js 当前运行时没有读取项目根目录 `.env` 里的 `NEXT_PUBLIC_DEFAULT_ELDER_USER_ID`**；
-- 在 monorepo 结构下，`apps/web` 作为 Next 应用，更可能只读取自身目录下的 `.env*` 文件，而不会自动读取仓库根 `.env`。
-
-#### 当前意义
-- API 侧真实数据链路已经进一步稳定；
-- 当前阻塞已收敛到前端配置注入层，而不是业务代码层；
-- 下一步重点不应继续查 task，而应处理 `apps/web` 的环境变量加载来源。
-
-#### 下一步建议
-1. 在 `apps/web` 下补专用 `.env.local`（或等效方案）
-2. 将 `NEXT_PUBLIC_API_BASE_URL` 与 `NEXT_PUBLIC_DEFAULT_ELDER_USER_ID` 明确写入 Web 应用级环境文件
-3. 重启 Web
-4. 再重新验证 `/elder/home` 与 `/family/dashboard` 是否切到真实 API
-
----
-
-### 39. 第三轮真实联调结果：Web 已切到真实 API
-
-#### 本轮目标
-- 收口前一轮剩余的前端环境变量问题；
-- 让 `apps/web` 真正读取到 seeded elder id，并切换到真实 API 模式。
-
-#### 本轮实际完成内容
-1. 在 `apps/web` 下新增：
-   - `.env.local`
-
-2. 明确写入：
-   - `NEXT_PUBLIC_API_BASE_URL=http://localhost:3001`
-   - `NEXT_PUBLIC_DEFAULT_ELDER_USER_ID=cmn5zm37f0000ijdo5tp2h0e0`
-
-3. 重启 Next.js dev 服务
-4. 重新验证页面：
-   - `/elder/home`
-   - `/family/dashboard`
-   - `/family/report`
-
-#### 本轮真实结果
-##### 1. `/elder/home`：已切到真实 API
-- 页面显示：`真实 API`
-- 已展示 4 条真实 seeded task
-- 已完成 / 待完成统计与数据库数据一致
-
-##### 2. `/family/dashboard`：已切到真实 API
-- 页面显示：`真实 API`
-- 已展示真实任务摘要
-- 已展示真实指标摘要
-- 已展示真实用药提醒摘要
-
-##### 3. `/family/report`：已切到真实 API
-- 页面显示：`真实 API`
-- 已展示 2 份真实 seeded 周报
-- 摘要与建议内容已来自数据库
-
-#### 当前结论
-到这一轮为止：
-- 本地 PostgreSQL 已打通
-- migration 已成功
-- seed 已成功
-- Web 端环境变量注入已修好
+### 当前结论
 - 关键页面已经开始走真实 API，而不是 mock 回退
-
-#### 当前意义
-项目已经从“页面骨架 + 本地 demo 数据”推进到：
-- **本地真实联调环境可用**
-- **老人侧与家属侧关键页面均已开始走真实数据**
-
-这已经是一个很实在的阶段性里程碑。
-
-#### 下一步建议
-1. 将这轮联调修复（task 日期查询 + web 环境文件）提交入库
-2. 再继续验证：
-   - `/elder/metrics`
-   - `/elder/medication`
-   - `/family/bind`
-3. 记录真实模式下页面展示还有哪些不合理点
-4. 开始第一轮体验收口
+- 老人侧与家属侧关键页面均已开始走真实数据
 
 ---
 
-### 40. 第一轮体验收口开始：本地真实联调状态说明 + Demo 演示路径文档
+## 22. 联调后体验修正
 
-#### 本轮目标
-- 在本地真实联调已基本跑通后，不再只盯着代码和接口；
-- 开始把“当前已经能跑通什么”和“应该怎么演示”沉淀成明确文档。
-
-#### 本轮实际完成内容
-1. 新增本地真实联调状态说明：
-   - `docs/local-real-integration-status.md`
-
-2. 文档中已明确：
-   - 当前本地真实联调已跑通到什么程度
-   - 短期与长期数据库方案分别是什么
-   - 当前本机 PostgreSQL 的实际可用连接方式
-   - `apps/web/.env.local` 的必要性
-   - 当前已验证通过的主要命令与页面
-   - seeded demo 数据结果
-
-3. 新增 demo 演示路径文档：
-   - `docs/demo-walkthrough.md`
-
-4. 文档中已明确：
-   - 演示前准备
-   - 推荐演示顺序
-   - 当前最适合强调的产品故事
-   - 当前阶段不适合过度承诺的点
-   - 演示结束时建议如何总结
-
-#### 当前意义
-- 项目当前已经不只是“能跑起来”；
-- 也开始具备“能被稳定讲清楚、稳定演示”的基础；
-- 这对接下来做第一轮版本收口很重要。
-
-#### 下一步建议
-1. 把这一轮体验收口文档提交入库
-2. 继续记录真实模式下页面体验问题
-3. 再决定哪些交互最值得优先优化
-4. 为后续远程数据库切换预留清晰边界
+### 已完成
+- 继续围绕真实联调暴露出来的问题做前端体验修正
 
 ---
 
@@ -1981,3 +293,1197 @@ silver-health-app/
 3. **commit 概要**：提交时明确本轮范围
    - 避免“大而空”的 commit message
    - 尽量与本文件中的阶段名称对应
+
+---
+
+### 42. 页面展示层第一次收口：抽 page-kit，统一核心页卡片 / 提示 / 空态骨架
+
+#### 本轮目标
+- 不扩新业务功能，先把老人侧与家属侧核心页面的基础展示层统一起来；
+- 避免多个页面各自写 header、卡片、提示框和空态，导致演示时风格割裂。
+
+#### 本轮实际修改
+1. 新增公共展示层文件：`apps/web/app/ui/page-kit.tsx`
+   - 抽出 `PageHeader`、`StatCard`、`InlineNotice`、`EmptyState`、`DemoStepNotice`；
+   - 统一页面内边距、卡片圆角、阴影、tag 与 notice 基础样式。
+2. 老人侧 / 家属侧关键页面切到统一骨架：
+   - `apps/web/app/elder/home/page.tsx`
+   - `apps/web/app/elder/metrics/page.tsx`
+   - `apps/web/app/elder/medication/page.tsx`
+   - `apps/web/app/family/dashboard/page.tsx`
+   - `apps/web/app/family/report/page.tsx`
+   - `apps/web/app/family/bind/page.tsx`
+3. 首页 `/` 也同步改成演示入口页，而不是纯路由列表。
+
+#### 本轮结果判断
+- 当前页面的“像同一个产品”程度明显提升；
+- 后续若继续做 demo 收口，可以优先在统一组件层继续修，而不用在每页散改。
+
+#### 下一步建议
+1. 继续把表单层的字段名称、默认值和辅助说明从“工程字段”包装成更适合 demo 的产品语言；
+2. 在不引入复杂设计系统的前提下，继续保持轻量公共组件策略。
+
+---
+
+### 43. 表单层 demo 体验收口：建档 / 指标 / 用药 / 绑定字段去工程味
+
+#### 本轮目标
+- 聚焦老人建档、指标录入、用药提醒、家属绑定 4 个关键表单；
+- 把 `userId`、`createdBy*`、`repeatRule` 等工程味字段包装成更自然的产品表达，降低现场演示输入负担。
+
+#### 本轮实际修改
+1. `apps/web/app/elder/profile/elder-profile-form.tsx`
+   - 补演示友好的默认示例值、占位提示与辅助说明；
+   - 让“档案编号可自动生成”等规则直接在页面上说清楚。
+2. `apps/web/app/elder/metrics/metric-form.tsx`
+   - 调整录入身份、指标时段等表达；
+   - 补“保存后会影响哪里 / 下一步看哪里”的提示。
+3. `apps/web/app/elder/medication/medication-form.tsx`
+   - 将提醒频率、用法等字段包装得更像产品表单；
+   - 降低现场临时编造输入的成本。
+4. `apps/web/app/family/bind/bind-form.tsx`
+   - 弱化 `familyUserId` 这种内部字段，改成更像产品页面的“家属关系 / 照护人”表达。
+
+#### 本轮验证
+- `pnpm --filter @silver-health/web typecheck`：通过
+- `pnpm --filter @silver-health/web build`：通过
+
+#### 本轮结果判断
+- 关键表单已经从“开发者看得懂”往“非技术同学也能顺着讲”推进了一步；
+- 后续更自然的方向应该转向摘要层与结果层，而不是再继续拆字段。
+
+#### 下一步建议
+1. 补家属看板与家属周报的“一句话摘要 / 结论”能力；
+2. 再同步补一份更像提词卡的 3 分钟 demo 讲稿。
+
+---
+
+### 44. 摘要层 / 结果层 demo 收口：家属看板一句话近况，家属周报本周结论
+
+#### 本轮目标
+- 承接表单层收口，把家属侧两页从“能展示数据”继续推进到“更容易讲清价值”；
+- 优先做摘要层和结果层，不再横向开新功能。
+
+#### 本轮实际修改
+1. 家属看板补“一句话近况 + 当前最该关注”
+   - 文件：`apps/web/app/family/dashboard/page.tsx`
+   - 新增 `buildStatusNarrative()`，把任务完成情况、最近指标、启用提醒自动拼成更像产品摘要的话术；
+   - 在统计卡下方增加 success notice，展示“一句话近况”和“家属当前最该关注”。
+2. 家属周报补“本周结论 / 下周关注”
+   - 文件：`apps/web/app/family/report/page.tsx`
+   - 新增 `buildWeeklyHeadline()`，根据运动完成率、用药完成率和指标记录次数自动生成结论与关注点；
+   - 页面顶部增加“本周一句话总结”，周报卡片内增加“这一周可以怎么讲”。
+3. 补 `docs/demo-script-3min.md`
+   - 固化开场、老人侧主链路、家属侧价值、可选补充和收尾话术；
+   - 把“建档 → 今日任务 → 指标录入 → 用药提醒 → 家属看板 → 家属周报（必要时补绑定）”整理成可直接照着讲的短讲稿。
+
+#### 本轮验证
+- `pnpm --filter @silver-health/web typecheck`：通过
+- `pnpm --filter @silver-health/web build`：通过
+
+#### 本轮结果判断
+- 家属看板更像“今日近况摘要”，家属周报更像“本周回顾结论”；
+- 当前 MVP 主链路已经比较适合直接拿去做短时演示。
+
+#### 下一步建议
+1. 继续看首页与本地预览文档是否能进一步承担演示前自检作用；
+2. 优先收口启动顺序、演示前 checklist 与首页入口提示。
+
+---
+
+### 45. demo 启动 / 预览流程收口：补首页自检提示、启动顺序与演示前 checklist
+
+#### 本轮目标
+- 把“临场怎么稳稳打开项目、先检查什么、按什么顺序讲”整理清楚；
+- 优先服务非开发者或隔几天后再回来看项目的人，减少翻路由和猜启动顺序的成本。
+
+#### 本轮实际修改
+1. `docs/how-to-preview-locally.md`
+   - 明确“先确认数据库就绪，再决定是否 seed，再起 API，再起 Web”的顺序；
+   - 补“演示前 30 秒检查清单”和“常见坑速记”；
+   - 明确建议从首页 `/` 作为演示入口开始。
+2. `apps/web/app/page.tsx`
+   - 首页新增“演示前 30 秒自检” notice；
+   - 把 API health、首页可打开、抽查 1 个老人页和 1 个家属页数据源状态等检查项直接写进首页。
+
+#### 本轮验证
+- `pnpm --filter @silver-health/web typecheck`：通过
+- `pnpm --filter @silver-health/web build`：通过
+
+#### 本轮结果判断
+- 首页 `/` 已进一步固定成“演示入口 + 自检提示板”；
+- 文档也从“能启动”收口成“更适合正式演示前快速过一遍”的说明。
+
+#### 下一步建议
+1. 下一自然阶段可统一首页与各核心页面里“真实 API / 演示数据 / Mock 回退”的说法；
+2. 也可以做一个很轻的 demo 前检查卡片，让老人页和家属页顶部提示风格更统一。
+
+---
+
+### 46. 统一核心页面顶部提示：抽数据源 notice / checklist 组件，老人页与家属页语气一致
+
+#### 本轮目标
+- 统一首页与核心页面里“真实 API / 演示数据 / Mock 回退”的提示文案和语气；
+- 在必要时抽轻量公共 notice / checklist 组件，让老人页与家属页顶部提示风格一致。
+
+#### 本轮审查发现
+1. 虽然大部分页面已经有“当前数据模式”或 fallback 提示，但写法不一致：有的写“真实数据”，有的写“真实 API”，有的直接把 mock 错误信息裸露出来；
+2. 首页有自检 notice，但老人页 / 家属页顶部还缺统一的“这一页该怎么讲 / 该先看什么”结构；
+3. 当前 `page-kit.tsx` 已承担 header / notice / empty state 等基础职责，继续在这里抽轻量组件最合适。
+
+#### 本轮实际修改
+1. `apps/web/app/ui/page-kit.tsx`
+   - 新增 `DataSourceNotice`，统一为“当前接入：真实 API / 演示数据”的说法；
+   - 新增 `ChecklistNotice`，统一承载“这一页建议顺手讲清楚 / 演示前自检”这类 checklist 提示。
+2. 统一首页与核心页面顶部提示
+   - 文件：
+     - `apps/web/app/page.tsx`
+     - `apps/web/app/elder/home/page.tsx`
+     - `apps/web/app/elder/metrics/page.tsx`
+     - `apps/web/app/elder/medication/page.tsx`
+     - `apps/web/app/family/dashboard/page.tsx`
+     - `apps/web/app/family/report/page.tsx`
+     - `apps/web/app/family/bind/page.tsx`
+   - 调整：
+     - 所有关键页都改成先给 `DemoStepNotice`，再给 `DataSourceNotice`，再给 `ChecklistNotice`；
+     - fallback 文案统一从“接口失败 / mock 回退”改成“先用演示数据保住讲解节奏，真实 API 恢复后自动切回”的产品口吻；
+     - 统计卡中的“当前数据模式”统一改成“当前接入状态”，值统一为“真实 API / 演示数据”。
+3. `apps/web/app/elder/home/task-list.tsx`
+   - 同步把任务列表统计卡的标签改成“当前接入状态”，避免列表层还保留旧说法。
+
+#### 本轮验证
+1. 已执行类型检查：
+   - 命令：`pnpm --filter @silver-health/web typecheck`
+   - 结果：通过
+2. 已执行生产构建：
+   - 命令：`pnpm --filter @silver-health/web build`
+   - 结果：通过
+   - 关键输出：Next.js 15.3.2 完成 `Compiled successfully / Linting and checking validity of types / Generating static pages (11/11)`，退出码为 0。
+
+#### 本轮结果判断
+- 首页、老人页、家属页顶部提示已形成统一结构，演示时不用再解释“为什么这页和那页说法不一样”；
+- “真实 API / 演示数据”的提示现在既能表达联调状态，也保住了 demo 语气，不再显得是开发临时兜底；
+- `page-kit.tsx` 的职责边界仍然很轻，没有引入额外设计系统复杂度。
+
+#### 下一步建议
+1. 继续把文档里的旧说法也同步成“当前接入：真实 API / 演示数据”，避免页面统一了、文档还在说 Mock 回退；
+2. 若后续还要继续推进，更自然的方向是整理 demo 验证 checklist 与讲稿里的状态判断口径，而不是再加新页面。
+
+---
+
+### 47. 文档口径继续收口：把预览说明与讲稿同步到“当前接入：真实 API / 演示数据”
+
+#### 本轮目标
+- 承接第 46 节页面级统一，把文档中的旧说法一并收口；
+- 避免页面顶部已经统一成“当前接入”，但本地预览文档还在写“当前数据源 / Mock 回退”。
+
+#### 本轮实际修改
+1. 更新 `docs/how-to-preview-locally.md`
+   - 把“优先观察页面上的当前数据源卡片”改成“优先观察页面顶部的当前接入提示或当前接入状态卡片”；
+   - 把理想结果从“显示真实 API，而不是 Mock 回退”改成“显示当前接入：真实 API / 当前接入状态：真实 API，而不是当前接入：演示数据”；
+   - 把演示前 30 秒 checklist 和常见问题里的旧说法同步替换成新的统一口径。
+2. 更新 `docs/demo-script-3min.md`
+   - 在“今日任务”讲法里补一句：如果顶部显示“当前接入：真实 API”，可以顺手强调真实联调；如果显示“当前接入：演示数据”，也能继续把流程讲顺。
+
+#### 本轮验证
+- 文档改动未引入代码风险；
+- 本轮代码验证仍沿用第 46 节已通过的：
+  - `pnpm --filter @silver-health/web typecheck`
+  - `pnpm --filter @silver-health/web build`
+
+#### 本轮结果判断
+- 现在页面、首页自检、how-to-preview 和 demo 讲稿已经开始使用同一套“当前接入”口径；
+- 后续无论是自己回看项目，还是别人临时接手演示，理解成本都会更低。
+
+#### 下一步建议
+1. 若继续推进，一个明确自然的下一阶段是做一轮真实联调复查，把所有关键页截图级核对一遍，确认提示文案、空态和实际数据都符合当前讲稿；
+2. 再往后才值得考虑图表趋势、异常提醒或绑定确认细节等增强项。
+
+---
+
+### 48. 真实联调复查：修正默认 elder id、重 seed 今日任务、补齐“隔天回来”空态说明
+
+#### 本轮目标
+- 按当前 demo 讲稿与页面顶部提示，实际复查关键页：首页、老人建档 / 今日任务 / 指标 / 用药、家属看板 / 周报 / 绑定；
+- 核对“当前接入状态是否正确、空态是否合理、摘要 / 周报文案是否与讲稿一致、首页预检与本地预览文档是否匹配”；
+- 若发现不是展示问题而是联调基线问题，直接修正并重新验证。
+
+#### 本轮联调复查发现
+1. `apps/web/.env.local` 里的 `NEXT_PUBLIC_DEFAULT_ELDER_USER_ID` 少了一个字符，和根目录 `.env`、seed 输出的真实 elder id 不一致；
+2. 这会导致 Web 默认请求到一位没有数据的老人，进而把多页真实联调结果误判成“像没数据 / 像要回退演示数据”；
+3. 使用正确 elder id 直接调 API 后确认：
+   - `/api/metrics/elder/:id`、`/api/medications/elder/:id`、`/api/reports/elder/:id`、`/api/family-bindings/elder/:id` 都能返回真实数据；
+   - `/api/tasks/elder/:id` 在 seed 过了几天后会返回空数组，因为“今日任务”只查当天，而旧 seed 的任务日期已经停留在过去；
+4. 也就是说，本轮首页“今日任务空态”不是前端渲染 bug，而是 demo 数据基线与当前日期脱节。
+
+#### 本轮实际修正
+1. 修正 Web 默认 elder id
+   - 文件：`apps/web/.env.local`
+   - 调整：把错误的 `cmn5zm37f000ijdo5tp2h0e0` 改为正确的 `cmn5zm37f0000ijdo5tp2h0e0`。
+2. 重新生成 demo 数据，恢复当天任务
+   - 命令：`pnpm seed:demo`
+   - 结果：重新写入 4 条今日任务、3 条指标、2 条用药提醒、2 份周报；随后 `/api/tasks/elder/:id` 已能返回当天任务，不再是空态。
+3. 补强首页任务空态说明
+   - 文件：`apps/web/app/elder/home/task-list.tsx`
+   - 调整：当真实 API 下没有今日任务时，空态直接提示“如果是隔天回来继续演示，优先重跑 `pnpm seed:demo` 或先新建一条今日任务”，把真实排障路径写到页面里。
+4. 补强本地预览文档的常见坑说明
+   - 文件：`docs/how-to-preview-locally.md`
+   - 调整：新增两类高频坑：
+     - `apps/web/.env.local` 默认 elder id 写错会导致页面像没数据；
+     - 隔天回来继续看项目时，指标 / 用药 / 周报还在，但“今日任务”空了，需要重跑 `pnpm seed:demo`。
+
+#### 本轮实际验证
+1. API 可用性复查
+   - 已确认：`curl http://localhost:3001/api/health` 返回 `{"code":0,"message":"ok"...}`；
+   - 已确认：正确 elder id 下，任务 / 指标 / 用药 / 周报 / 绑定接口都能返回真实数据。
+2. Web 工程校验
+   - `pnpm --filter @silver-health/web typecheck`：通过；
+   - `pnpm --filter @silver-health/web build`：通过。
+3. 复查结论
+   - 当前关键页对应的接入状态文案与 demo 讲稿已基本一致；
+   - 首页预检与 `docs/how-to-preview-locally.md` 的启动 / 检查口径已重新对齐；
+   - 本轮最大的真实联调问题不是 UI，而是默认 elder id 和 demo 数据日期漂移，现已修正。
+
+#### 本轮结果判断
+- 真实联调链路已恢复到“首页能看到当天任务，老人页 / 家属页都能查到真实数据”的可演示状态；
+- 当前最关键的长期注意点已经明确：**演示异常时，优先先查 `apps/web/.env.local` 的 elder id，再查是否需要重跑 `pnpm seed:demo` 更新当天任务。**
+
+#### 下一步建议
+1. 如果继续自动推进，最自然的下一阶段是补一轮更接近现场演示的手动链路验证：实际创建 1 条指标 / 1 条用药 / 1 条绑定，确认提交后列表刷新与家属侧摘要联动都仍成立；
+2. 这一步做完后，再决定是否有必要补“任务自动生成 / 日期感知”这一类更深层的联调增强，而不是现在就扩功能。
+
+---
+
+### 49. 更接近现场的真实联动复查：验证任务完成 / 指标新增 / 用药新增 / 家属绑定新增，并修复绑定接口 DTO 校验缺失
+
+#### 本轮目标
+- 不只停在“列表能读出来”，而是进一步验证几类关键动作在真实 API 下能否成功写入并立即读回；
+- 覆盖至少：任务完成、指标新增、用药提醒新增、家属绑定新增；
+- 若写入链路存在真实阻塞，直接定位到接口层并修复。
+
+#### 本轮实际复查与发现
+1. 已先通过 API 级写入复查确认：
+   - 任务完成接口 `PATCH /api/tasks/:taskId/complete` 可用，完成后再次查询任务列表，`done` 数量会增加；
+   - 指标新增接口 `POST /api/metrics` 可用，新增后再次查询指标列表，最新一条就是刚创建的数据；
+   - 用药提醒新增接口 `POST /api/medications` 可用，新增后提醒列表数量会增加。
+2. 但继续验证“创建家属 → 发起绑定”时，发现两个真实 API 都返回 `400 Bad Request`：
+   - `/api/users`
+   - `/api/family-bindings`
+3. 错误内容不是业务失败，而是校验层直接报：`property xxx should not exist`；
+4. 结合 `apps/api/src/main.ts` 的全局 `ValidationPipe({ whitelist: true, forbidNonWhitelisted: true })` 复查后确认，根因是这两个 DTO 没有加 class-validator 装饰器，导致正常字段被当成“不允许出现的未知字段”。
+
+#### 本轮实际修正
+1. 修复用户创建 DTO 校验定义
+   - 文件：`apps/api/src/modules/user/dto/create-user.dto.ts`
+   - 调整：为 `role / nickname / avatar / mobile / openId / unionId / status` 补齐 `@IsEnum`、`@IsString`、`@IsOptional`、`@MaxLength` 等校验装饰器。
+2. 修复家属绑定 DTO 校验定义
+   - 文件：`apps/api/src/modules/family-binding/dto/create-family-binding.dto.ts`
+   - 调整：为 `elderUserId / familyUserId / relationType` 补齐 `@IsString`、`@IsEnum` 等装饰器。
+3. 修正后重新走通整条绑定链路
+   - 先 `POST /api/users` 创建演示家属；
+   - 再 `POST /api/family-bindings` 发起绑定；
+   - 最后 `GET /api/family-bindings/elder/:elderUserId` 确认新绑定已出现在列表顶部，状态为 `pending`。
+
+#### 本轮实际验证
+1. API 写入级验证结果
+   - 任务完成：成功，任务状态从 `todo` 变为 `done`；
+   - 指标新增：成功，最新指标列表已出现新建记录；
+   - 用药提醒新增：成功，提醒总数已增加且包含新增项；
+   - 家属创建 + 绑定新增：修复 DTO 后成功，绑定列表已能读回新创建的家属关系。
+2. 工程验证
+   - `pnpm --filter @silver-health/api typecheck`：通过；
+   - `pnpm --filter @silver-health/web typecheck`：通过；
+   - `pnpm --filter @silver-health/web build`：通过。
+
+#### 本轮结果判断
+- 这轮复查把“页面看起来像能用”和“真实写入链路真的能成”区分开了；
+- 家属绑定此前实际上存在真实 API 阻塞，只是之前没通过现场级写入复查暴露出来；现在这条阻塞已解除；
+- 当前 demo 主链路里“老人录入 → 家属查看 / 绑定补充”的关键读写链路已基本具备可演示可信度。
+
+#### 下一步建议
+1. 如果还要继续自动推进，最自然的下一阶段是补一轮面向稳定性的收口：检查是否需要把 `seed-demo-data.ts` 的“今日任务日期感知”写得更抗时间漂移，减少隔天回来必须手动重 seed 的概率；
+2. 若暂不动后端生成逻辑，也至少可以把“重 seed 是标准恢复动作”继续沉淀到 README 或联调状态文档，降低接手成本。
+
+---
+
+### 50. Demo 数据稳定性收口：把 seed 改成相对当天生成，优先解决隔天任务过期与日期漂移
+
+#### 本轮目标
+- 处理第 49 阶段已经明确的稳定性问题：旧 demo seed 写死日期，导致隔天回来后 `/elder/home` 容易直接空掉；
+- 不只补“重跑 seed”的说明，而是先把 demo 数据本身改成更接近长期可用的滚动生成；
+- 同时把这套稳定口径同步到页面空态与本地预览文档里。
+
+#### 本轮实际修正
+1. 为 demo 数据新增统一日期工具
+   - 文件：`scripts/demo-date-utils.ts`
+   - 内容：抽出 `getLocalDateOnly`、`getLocalDateTime`、`getWeekRange`、`formatLocalDate` 等工具，统一用“相对今天 / 相对最近完整周”的方式生成演示日期，而不是继续散落写死时间常量。
+2. 改造 `seed-demo-data.ts` 为滚动 seed
+   - 文件：`scripts/seed-demo-data.ts`
+   - 调整：
+     - 今日任务改为总是写入当天；
+     - 指标改为“今天 / 昨天 / 前天”的相对时间；
+     - 家属周报改为“最近完整周 + 再往前一周”；
+     - seed 输出里直接打印本次对齐到的 taskDate、latest metric 时间与 latestWeek，方便启动时快速确认。
+3. 页面空态改成优先引导自检而不是只提示重 seed
+   - 文件：`apps/web/app/elder/home/task-list.tsx`
+   - 调整：老人首页任务空态文案改为优先提示 `pnpm check:demo`，只有脚本判定数据失稳后再决定是否重跑 `pnpm seed:demo` 或手动补任务。
+4. 本地预览文档同步为“先自检、再决定是否 reseed”
+   - 文件：`docs/how-to-preview-locally.md`
+   - 调整：
+     - 启动步骤从“如需重建演示数据，执行 seed”改成“先跑 `pnpm check:demo`，脚本报异常再 seed”；
+     - 演示前 30 秒检查清单补入 `pnpm check:demo`；
+     - 常见坑说明更新为：现在 seed 会自动滚动对齐当天日期，优先以自检脚本判断是否真的需要 reseed。
+
+#### 本轮验证
+1. 已执行：`pnpm seed:demo`
+   - 结果：seed 成功，输出显示任务已对齐到 `2026-03-28`，周报已对齐到 `2026-03-16 ~ 2026-03-22`。
+2. 工程验证：
+   - `pnpm --filter @silver-health/api typecheck`：通过；
+   - `pnpm --filter @silver-health/web typecheck`：通过；
+   - `pnpm --filter @silver-health/web build`：通过。
+3. 本轮阶段性结论
+   - demo 数据的主要时间漂移问题已经从“靠人记得隔天 reseed”前移到“seed 自己按当天滚动”，稳定性明显更高；
+   - 但为了真正做到现场可复用，还需要一条可机器判断的自检链路，避免只靠肉眼看页面有没有空。
+
+#### 下一步建议
+1. 下一自然阶段很明确：补一条 `pnpm check:demo` 自检脚本，把“今日任务 / 最新指标 / 启用提醒 / 家属绑定 / 最近完整周周报”是否齐备自动检查掉；
+2. 做完后，再决定是否需要继续沉淀到 README 或启动脚本。
+
+---
+
+### 51. Demo 数据自检脚本：把“今天还能不能直接演示”变成可执行检查
+
+#### 本轮目标
+- 承接第 50 阶段，避免仍然依赖人工打开页面才知道 demo 数据有没有漂；
+- 补一条轻量自检命令，让演示前 30 秒可以快速确认当天任务、指标、提醒、绑定、周报是否还在。
+
+#### 本轮实际修正
+1. 新增自检脚本
+   - 文件：`scripts/check-demo-data.ts`
+   - 能力：
+     - 读取固定演示老人 / 家属账号；
+     - 检查当天任务数；
+     - 检查最新指标是否存在；
+     - 检查启用中的提醒数量；
+     - 检查家属绑定是否仍为 active；
+     - 检查最新周报是否对齐最近完整周；
+     - 任一关键项缺失时直接以非零退出并打印原因。
+2. 根脚本新增统一入口
+   - 文件：`package.json`
+   - 调整：新增 `check:demo`，统一为 `pnpm check:demo`。
+3. 修复自检过程中的两个实现细节
+   - 自检最初与 `seed:demo` 并行执行时会互相抢时序，导致周报读取到旧数据；后续改为串行验证；
+   - `DailyTask.taskDate` 是 `@db.Date`，运行时时区与 Prisma 映射容易让直接日期区间判断失真，因此自检最终改为读取任务后按 `formatLocalDate(task.taskDate)` 比对，避免时区误判。
+
+#### 本轮验证
+1. 已执行：`pnpm check:demo`
+   - 结果：通过，输出显示当天任务 `4` 条、提醒 `2` 条、active 绑定 `1` 条、最新周报为 `2026-03-16 ~ 2026-03-22`。
+2. 已再次串行验证：`pnpm seed:demo && pnpm check:demo`
+   - 结果：seed 后立即自检可通过，说明“滚动 seed + 自检”组合已经可用。
+3. 工程验证复查：
+   - `pnpm --filter @silver-health/api typecheck`：通过；
+   - `pnpm --filter @silver-health/web typecheck`：通过；
+   - `pnpm --filter @silver-health/web build`：通过。
+
+#### 本轮结果判断
+- 现在 demo 稳定性不再只靠文档提醒“必要时 reseed”，而是形成了更实用的两步：先 `pnpm check:demo`，异常再 `pnpm seed:demo`；
+- 这让 Silver Health 的启动 / 演示流程更像一个可交接的项目，而不是只能靠开发者本人记住隐性排障知识。
+
+#### 下一步建议
+1. 如果继续自动推进，下一自然阶段是把这套“先 check、再 seed”的口径再同步到 README 或更靠近入口的位置，进一步降低接手成本；
+2. 另一条可选收口是补一个组合脚本（例如启动前自检提示），但这已经属于体验增强，不是当前阻塞。
+
+---
+
+### 52. 把 check / seed 流程前移到 README 入口，降低接手成本
+
+#### 本轮目标
+- 承接第 51 阶段，不让“先 `pnpm check:demo`，异常再 `pnpm seed:demo`”只停留在开发日志和局部文档里；
+- 优先把这条接手动作沉淀到所有人第一眼最容易看到的入口，也就是仓库 `README.md`；
+- 让后来者不用先翻长文档，也能立刻知道项目现在该怎么启动、怎么判断 demo 数据是否可用。
+
+#### 本轮实际修正
+1. 重写仓库 README 的入口结构
+   - 文件：`README.md`
+   - 调整：把“现在最该先知道的事”前置到最顶部，明确写出：
+     - 先执行 `pnpm check:demo`；
+     - 失败时执行 `pnpm seed:demo && pnpm check:demo`；
+     - 再启动 API / Web，并从首页 `/` 进入演示。
+2. README 新增更显眼的接手信息
+   - 增加了：
+     - 快速启动；
+     - 推荐演示入口；
+     - 演示前 30 秒最小检查；
+     - 常用命令清单；
+     - 当前项目状态；
+     - 关键文档阅读顺序。
+3. 入口文档口径与已有本地预览说明重新对齐
+   - README 不再停留在“工程骨架介绍”，而是改成真正面向接手 / 启动 / 演示的入口文档；
+   - 这样即使不先看 `docs/development-progress-log.md`，也能先按当前稳定流程把项目跑起来。
+
+#### 本轮验证
+1. 文档级复查
+   - 已逐段复查 README，确认顶部已经直接暴露 check / seed 规则与推荐启动顺序；
+   - 已确认 README 中的默认 elder id、命令名、入口页与现有实现一致。
+2. 口径一致性复查
+   - README 中的“先 check、异常再 seed”与 `docs/how-to-preview-locally.md`、第 51 阶段结论一致；
+   - 首页 `/` 仍作为统一演示入口，与 README 推荐顺序一致。
+
+#### 本轮结果判断
+- 第 52 阶段完成后，check / seed 流程已经不再是开发者隐性知识，而是进入仓库第一入口；
+- Silver Health 的接手门槛进一步下降：别人打开仓库时，已经能直接看到“先做什么、失败怎么办、从哪里开始讲”。
+
+#### 下一步建议
+1. 如果继续自动推进，下一自然阶段是补一个更省心的组合命令，把 `check → seed → re-check` 进一步固化成一条 demo 准备快捷命令；
+2. 做完后，再把这条快捷命令同步到首页自检提示和本地预览文档，形成“README / 入口页 / 说明文档”三处一致。
+
+---
+
+### 53. 新增 `pnpm demo:ready`，把演示前准备收口成一条快捷命令
+
+#### 本轮目标
+- 承接第 52 阶段，不只告诉接手者应该怎么判断，还要进一步减少手动执行和记忆负担；
+- 把“先 check，失败再 seed，最后再 check 一次”沉淀成一条统一命令，适合作为演示前 30 秒的默认动作。
+
+#### 本轮实际修正
+1. 新增演示准备脚本
+   - 文件：`scripts/demo-ready.ts`
+   - 行为：
+     - 先执行 `pnpm check:demo`；
+     - 若通过，则直接提示当前数据可演示；
+     - 若失败，则自动执行 `pnpm seed:demo`；
+     - seed 完成后再次执行 `pnpm check:demo`；
+     - 若二次检查通过，则明确提示现在可以启动 API / Web 进入演示。
+2. 根脚本新增统一入口
+   - 文件：`package.json`
+   - 调整：新增 `demo:ready`，统一为 `pnpm demo:ready`。
+3. 把快捷命令同步到更显眼的位置
+   - 文件：
+     - `README.md`
+     - `docs/how-to-preview-locally.md`
+     - `apps/web/app/page.tsx`
+   - 调整：
+     - README 的常用命令和快速启动里加入 `pnpm demo:ready`；
+     - 本地预览文档把它升级为“最省心的准备方式”；
+     - 首页“演示前 30 秒自检”提示也改成优先建议先跑 `pnpm demo:ready`。
+
+#### 本轮验证
+1. 已执行：`pnpm demo:ready`
+   - 结果：通过；在当前 demo 数据已正常的情况下，脚本会先执行 `pnpm check:demo`，随后直接提示“当前数据已可直接演示，无需重建 seed”。
+2. 工程验证复查：
+   - `pnpm --filter @silver-health/web typecheck`：通过；
+   - `pnpm --filter @silver-health/web build`：通过。
+
+#### 本轮结果判断
+- 到第 53 阶段，Silver Health 的演示前准备已经从“看文档照着做”进一步收口成“一条命令先跑起来”；
+- README、首页和本地预览文档三处入口对外给出的动作已经一致，接手成本继续下降。
+
+#### 下一步建议
+1. 如果还要继续自然推进，最值得做的是补一页更短的“demo day cheatsheet”或把首页入口继续压缩成更现场化的话术；
+2. 但就当前阻塞看，check / seed / 准备命令的入口沉淀已经完成，已不再是接手门槛。
+
+---
+
+### 54. 新增 demo-day cheatsheet，把现场提词卡压到“每页只讲一句”
+
+#### 本轮目标
+- 承接第 53 阶段，继续把 demo 接手成本往下压；
+- 不再只给 3 分钟长讲稿，而是补一页临上场前 30 秒能扫完的 cheatsheet；
+- 让临时代讲的人不用翻长文档，也知道“按什么顺序点、每页只说一句什么”。
+
+#### 本轮实际修正
+1. 新增超短提词卡文档
+   - 文件：`docs/demo-day-cheatsheet.md`
+   - 内容：
+     - 先跑 `pnpm demo:ready`；
+     - 固定 6 步演示顺序；
+     - 每个页面只保留 1 句讲法；
+     - 推荐只做 3 个现场动作（勾 1 个任务、补 1 条指标、切家属侧看结果）；
+     - 追加 30 秒收尾话术和 6 句忘词提词卡。
+2. 把 cheatsheet 正式接入入口文档
+   - 文件：`README.md`
+   - 调整：在“关键文档”阅读顺序里把 `docs/demo-day-cheatsheet.md` 前移到 `docs/demo-script-3min.md` 之前，明确它是 demo 当天最短入口。
+3. 同步更新本地预览文档的优先阅读顺序
+   - 文件：`docs/how-to-preview-locally.md`
+   - 调整：不再优先指向旧的局部说明，而是改成 `README.md` → `docs/demo-day-cheatsheet.md` → `docs/demo-script-3min.md` → `docs/development-progress-log.md` 这条更贴近接手/演示的顺序。
+
+#### 本轮验证
+1. 文档一致性复查
+   - 已复查 cheatsheet 中的命令名、页面顺序、页面地址与当前 README / 首页一致；
+   - 已确认文档间对外给出的主链路仍然统一为：建档 → 今日任务 → 指标录入 → 用药提醒 → 家属看板 → 家属周报。
+
+#### 本轮结果判断
+- 第 54 阶段完成后，Silver Health 的 demo 资料不再只有“完整讲稿”，还多了一页真正适合现场偷看的短提词卡；
+- 接手者现在可以按“README 看启动、cheatsheet 看提词、3 分钟讲稿看完整版”这一层次使用文档，效率更高。
+
+#### 下一步建议
+1. 如果继续自动推进，下一自然阶段就是把首页入口页的话术也同步压缩，让页面本身就能兼任 cheatsheet；
+2. 这样可以减少“文档很短了，但首页仍然有点偏说明书”的落差。
+
+---
+
+### 55. 首页入口页再压一轮，把临场讲法直接写进页面
+
+#### 本轮目标
+- 承接第 54 阶段，不让最短提词卡只存在于 docs；
+- 把首页入口页继续从“演示说明页”往“现场提词页”方向压缩，让操作者少看文档、少想下一句怎么说。
+
+#### 本轮实际修正
+1. 压缩首页开场描述
+   - 文件：`apps/web/app/page.tsx`
+   - 调整：页面顶部描述从解释型文案改成更短的固定顺序提示，降低阅读负担。
+2. 把首页第一块提示改成一句核心价值
+   - 文件：`apps/web/app/page.tsx`
+   - 调整：顶部提示从“推荐讲法”收口成一句最核心的话：**老人负责日常执行，家属负责远程查看。**
+3. 首页自检项进一步收短
+   - 文件：`apps/web/app/page.tsx`
+   - 调整：把“演示前 30 秒自检”收成 3 条最小动作：
+     - 先跑 `pnpm demo:ready`；
+     - 抽查 `/elder/home` 和 `/family/dashboard` 的真实 API 接入；
+     - 现场只做“任务 + 指标 + 家属侧查看”三件事即可。
+4. 直接把“忘词时就按这 6 句讲”写进首页
+   - 文件：`apps/web/app/page.tsx`
+   - 调整：新增一块 success 风格的 6 句提词卡，把最短 demo 话术直接固定在入口页，不再要求演示者额外翻文档。
+
+#### 本轮验证
+1. 已执行：`pnpm --filter @silver-health/web typecheck`
+   - 结果：通过。
+2. 已执行：`pnpm --filter @silver-health/web build`
+   - 结果：通过。
+
+#### 本轮结果判断
+- 到第 55 阶段，首页已经不只是“从哪进页面”，而是开始承担“临场演示怎么讲”的作用；
+- 这让 Silver Health 的 demo 入口进一步从文档驱动变成页面驱动，更适合临时接手或现场快速回忆。
+
+#### 下一步建议
+1. 如果还要继续自然推进，下一自然阶段可考虑给首页 6 张步骤卡补一个更轻的“推荐现场动作”标识，进一步提示哪些页面一定要动、哪些只讲不动；
+2. 另一条可选方向是继续压缩家属看板 / 周报中的长句摘要，让家属侧收尾更利落。
+
+---
+
+### 56. 首页步骤卡补“现场操作 / 轻讲即可”提示，降低临场误操作概率
+
+#### 本轮目标
+- 承接第 55 阶段，把首页从“提词页”再往前推一小步；
+- 明确提示哪些页面值得现场真实操作，哪些页面更适合只讲不动，减少 demo 时在次要页面上浪费时间；
+- 让临时代讲的人看首页就能知道最小动作集，而不用自己判断。
+
+#### 本轮实际修正
+1. 首页 7 张步骤卡补充动作提示
+   - 文件：`apps/web/app/page.tsx`
+   - 调整：为每张卡片新增 `actionHint`，明确区分：
+     - 老人建档 / 今日任务 / 指标录入：建议现场真实操作；
+     - 用药提醒 / 家属看板 / 家属周报：优先轻讲即可；
+     - 家属绑定：只在被追问时再打开。
+2. 首页新增“现场动作最小集”提示块
+   - 文件：`apps/web/app/page.tsx`
+   - 调整：直接把“建档保存 1 次、任务完成 1 项、指标新增 1 条”固定为最小动作组合，并明确后面家属页优先只讲即可。
+3. 文档侧同步收口动作优先级
+   - 文件：`docs/demo-day-cheatsheet.md`
+   - 调整：把第 3 节改成更清晰的演示动作分层：
+     - 真正建议现场操作的 3 个动作；
+     - 后续页面优先只讲不动；
+     - 家属绑定仅在被问到关系建立时再补。
+
+#### 本轮验证
+1. 已执行：`pnpm --filter @silver-health/web typecheck`
+   - 结果：通过。
+2. 已执行：`pnpm --filter @silver-health/web build`
+   - 结果：通过。
+
+#### 本轮结果判断
+- 到第 56 阶段，首页已经不只是告诉你“先去哪页”，还开始直接限制 demo 动作范围；
+- 这对临场稳定性很值钱：演示者更不容易在用药提醒、家属绑定这类次要页面上停太久，主链路更容易讲顺。
+
+#### 下一步建议
+1. 下一自然阶段就是继续压家属看板 / 周报的收尾话术，把最后 30 秒讲得更短、更稳；
+2. 如果顺手同步到讲稿文档，会比只改页面更耐用。
+
+---
+
+### 57. 家属看板 / 周报再压一轮收尾话术，固定“今天 + 一周”的结束句
+
+#### 本轮目标
+- 承接第 56 阶段，把家属侧最后两页收得更利落；
+- 避免演示者到了结尾又开始逐块念数据，而是能直接落到固定结束句；
+- 同时把“这一页通常只讲不操作”的现场策略写进页面与讲稿文档。
+
+#### 本轮实际修正
+1. 家属看板的一句话近况再压短
+   - 文件：`apps/web/app/family/dashboard/page.tsx`
+   - 调整：
+     - 把“当前最该关注”收成更口语的短句；
+     - 在成功提示块里补一条固定收尾话术：**家属不用翻原始记录，先看这里就知道今天要不要跟进。**
+     - checklist 里明确写出：这一页通常只讲不操作，停 15 秒内讲完即可。
+2. 家属周报补固定结束句
+   - 文件：`apps/web/app/family/report/page.tsx`
+   - 调整：
+     - 在“本周一句话总结”提示块里补一条固定收尾话术：**系统不只记录今天，还会把这一周沉淀成家属看得懂的回顾。**
+     - checklist 里明确：这一页通常也只讲不操作，讲完再视情况补家属绑定。
+3. 讲稿文档同步更新现场策略
+   - 文件：`docs/demo-script-3min.md`
+   - 调整：
+     - 在家属看板与家属周报两节下都补了“现场建议”；
+     - 统一口径为：看板讲“今天”，周报讲“一周”，两页都优先只讲不操作。
+
+#### 本轮验证
+1. 已执行：`pnpm --filter @silver-health/web typecheck`
+   - 结果：通过。
+2. 已执行：`pnpm --filter @silver-health/web build`
+   - 结果：通过。
+
+#### 本轮结果判断
+- 到第 57 阶段，家属侧收尾已经从“有摘要可读”进一步变成“有固定结束句可直接说”；
+- 首页、页面内提示和 demo 文档现在对“哪些要操作、哪些只讲即可”的口径也已经基本一致，临场稳定性又上了一层。
+
+#### 下一步建议
+1. 若继续推进，下一自然阶段可以考虑把 README / 本地预览文档中的“演示前 30 秒最小检查”也补成同样的动作分层，进一步统一入口文案；
+2. 但就当前 demo 主链路而言，最值钱的现场提示已经基本齐了。
+
+
+### 58. 入口文档口径统一：README / 本地预览说明都明确“30 秒检查 + 现场操作分层 + 只讲即可”
+
+#### 本轮目标
+- 承接第 56 / 57 阶段已经落到首页、家属页和提词卡里的“现场操作分层”；
+- 优先完成用户明确指定的下一自然阶段：统一 `README.md` 与 `docs/how-to-preview-locally.md` 中关于“演示前 30 秒检查 / 现场操作分层 / 只讲即可”的说法；
+- 避免入口文档还停留在“能启动就行”，而页面与提词卡已经进入“怎么更稳地讲”的状态。
+
+#### 本轮实际修改
+1. 更新 `README.md`
+   - 把“演示前 30 秒最小检查”统一收口为“演示前 30 秒检查”；
+   - 明确检查顺序优先跑 `pnpm demo:ready`，再抽查首页和老人/家属页的“当前接入：真实 API”；
+   - 新增独立的“现场操作分层”小节，固定：
+     - 建议现场操作：建档保存 1 次、完成 1 项任务、录入 1 条指标；
+     - 优先只讲即可：用药提醒、家属看板、家属周报；
+     - 只在被问到时再补：家属绑定。
+2. 更新 `docs/how-to-preview-locally.md`
+   - 把“演示前 30 秒检查清单”里的最小自检、完整主链路确认和现场操作分层写成同一套说法；
+   - 明确把“前 3 步真正动手，后 3 步优先只讲即可，绑定页只在被问到时再补”落进本地预览文档，不再只存在首页与 cheatsheet。
+
+#### 本轮验证
+1. 文档口径检查：
+   - 已用脚本逐项检查 `README.md` 与 `docs/how-to-preview-locally.md` 中均包含：
+     - “演示前 30 秒检查 / 演示前 30 秒检查清单”
+     - “现场操作分层”
+     - “优先只讲即可”
+     - `pnpm demo:ready`
+2. 结果：通过。
+
+#### 本轮结果判断
+- 到第 58 阶段，仓库入口文档和本地预览文档已经不再只是“怎么跑项目”，而是开始稳定承担“演示前先检查什么、现场真正只动哪几步”的职责；
+- 入口口径现在和首页 / 页面 checklist / cheatsheet 的方向已经基本对齐，接手者更不容易在次要页面上多做动作。
+
+#### 下一步建议
+1. 下一自然阶段是继续把更上游的入口动作也统一掉：README 顶部和相关提词材料全部明确优先 `pnpm demo:ready`；
+2. 顺手修掉 `docs/demo-script-3min.md` 的末尾异常内容，避免讲稿层继续成为脱节点。
+
+---
+
+### 59. 继续把入口动作统一到 `pnpm demo:ready`，并清理 3 分钟讲稿尾部异常内容
+
+#### 本轮目标
+- 承接第 58 阶段，继续消除“有的入口先写 `check:demo`、有的入口先写 `demo:ready`”的分裂感；
+- 把 README 顶部入口、demo cheatsheet、3 分钟讲稿统一成同一套动作分层与准备口径；
+- 顺手修复 `docs/demo-script-3min.md` 的尾部异常乱码，避免演示时翻到讲稿末尾出戏。
+
+#### 本轮实际修改
+1. 继续更新 `README.md`
+   - 顶部“现在最该先知道的事”改成优先运行 `pnpm demo:ready`；
+   - 快速启动里的“准备演示数据”也明确优先 `pnpm demo:ready`，手动分步时才再展示 `check -> seed -> check`。
+2. 更新 `docs/demo-day-cheatsheet.md`
+   - 把“最推荐的现场动作”正式改名为“现场操作分层”；
+   - 将“建议现场操作 / 优先只讲即可 / 只在被问到时再补”三层结构固定下来。
+3. 重写 `docs/demo-script-3min.md`
+   - 清理掉文件末尾重复 / 异常内容，恢复为正常 UTF-8 文本；
+   - 在用药提醒、家属看板、家属周报段落中明确“优先只讲即可 / 通常只讲不操作”；
+   - 在结尾补一条总规则：**前 3 步真正动手，后 3 步优先只讲即可，绑定页只在被问到时再补。**
+
+#### 本轮验证
+1. 已用脚本检查以下文件的统一口径：
+   - `README.md`
+   - `docs/how-to-preview-locally.md`
+   - `docs/demo-day-cheatsheet.md`
+   - `docs/demo-script-3min.md`
+2. 检查项包括：
+   - `pnpm demo:ready`
+   - “现场操作分层”
+   - “优先只讲即可”
+   - “前 3 步真正动手，后 3 步优先只讲即可”
+3. 结果：通过。
+
+#### 本轮结果判断
+- 到第 59 阶段，Silver Health 的演示口径已经形成较稳定的四层一致：仓库入口 README、本地预览说明、demo cheatsheet、3 分钟讲稿；
+- 演示准备动作也更统一：默认先 `pnpm demo:ready`，真正现场只动前 3 步，后 3 步优先只讲即可；
+- 讲稿文件本身也恢复到可直接翻看的干净状态，不再有尾部异常文本。
+
+#### 下一步建议
+1. 如果继续自动推进，最自然的下一阶段是把首页 `apps/web/app/page.tsx` 的“演示前 30 秒自检”和 README 的文字完全逐句对齐，进一步减少入口之间的细微差异；
+2. 再往后才值得考虑更细的现场异常兜底话术（例如 API 不通时每页各用哪句兜住），而不是继续扩功能。
+
+---
+
+### 60. 首页入口文案逐句对齐 README，收掉最后一点“自检 / 分层”差异
+
+#### 本轮目标
+- 承接第 59 阶段用户明确指定的下一自然阶段；
+- 把首页 `apps/web/app/page.tsx` 上的“演示前 30 秒检查 / 现场操作分层”直接对齐到 README 与本地预览说明的口径；
+- 避免接手者从首页开始讲时，看到的标题和关键句还和文档层有细小差别。
+
+#### 本轮实际修改
+1. 更新首页“演示前 30 秒检查”提示
+   - 文件：`apps/web/app/page.tsx`
+   - 调整：
+     - 标题从“演示前 30 秒”改成和 README 一致的“演示前 30 秒检查”；
+     - 内容统一成：优先 `pnpm demo:ready`，至少也要 `pnpm check:demo` 通过；
+     - 同时补上首页 `/` 可打开、抽查老人页 / 家属页顶部“当前接入：真实 API”，以及完整主链路要额外确认任务 / 一句话近况 / 最近完整周周报三项。
+2. 更新首页“现场操作分层”提示
+   - 文件：`apps/web/app/page.tsx`
+   - 调整：
+     - 标题从“现场动作最小集”改成和 README / cheatsheet 一致的“现场操作分层”；
+     - 三层内容统一写成：建议现场操作 `/elder/profile` + `/elder/home` + `/elder/metrics`；优先只讲即可 `/elder/medication` + `/family/dashboard` + `/family/report`；只在被问到时再补 `/family/bind`。
+
+#### 本轮验证
+1. 已执行：`pnpm --filter @silver-health/web typecheck`
+   - 结果：通过。
+2. 已执行：`pnpm --filter @silver-health/web build`
+   - 结果：通过。
+
+#### 本轮结果判断
+- 到第 60 阶段，首页这个最上游入口终于和 README / preview / cheatsheet / script 的 demo 口径完全站到同一条线上；
+- 之前那种“文档写的是检查 / 分层，首页写的是自检 / 最小集”的轻微漂移已经收掉，别人从首页直接接讲时不容易再被入口措辞打断。
+
+#### 下一步建议
+1. 如果继续自动推进，最自然的下一阶段是把这套统一口径变成脚本化检查，而不是继续靠人工 grep；
+2. 这样后面再改首页或文档时，能第一时间发现哪一层又漂了。
+
+---
+
+### 61. 把 demo 入口口径一致性脚本化，避免首页与文档再次漂移
+
+#### 本轮目标
+- 承接第 60 阶段，进一步把“入口文案统一”从一次性整理提升为可重复校验；
+- 避免未来继续改 README / preview / cheatsheet / script / homepage 时，又回到人工肉眼比对的低稳定方式。
+
+#### 本轮实际修改
+1. 新增 demo 文案一致性检查脚本
+   - 文件：`scripts/check-demo-copy.ts`
+   - 处理内容：
+     - 统一检查 `README.md`、`docs/how-to-preview-locally.md`、`docs/demo-day-cheatsheet.md`、`docs/demo-script-3min.md`、`apps/web/app/page.tsx`；
+     - 校验这些文件都包含当前已固定下来的关键口径，例如：
+       - `pnpm demo:ready`
+       - “演示前 30 秒检查”
+       - “现场操作分层”
+       - “优先只讲即可”
+       - “前 3 步真正动手，后 3 步优先只讲即可”
+2. 根脚本补充新命令
+   - 文件：`package.json`
+   - 调整：新增 `pnpm check:demo-copy`，后续可直接在演示资料改动后复跑。
+
+#### 本轮验证
+1. 已执行：`pnpm check:demo-copy`
+   - 结果：通过。
+2. 已执行：`pnpm --filter @silver-health/web typecheck`
+   - 结果：通过。
+3. 已执行：`pnpm --filter @silver-health/web build`
+   - 结果：通过。
+
+#### 本轮结果判断
+- 到第 61 阶段，这套 demo 接手资料已经不仅是“人工整理一致”，而是开始具备最小自动守护；
+- 后续只要首页、README、preview、cheatsheet 或 script 再次发生偏移，就能用 `pnpm check:demo-copy` 很快发现，不必再靠人工逐个 grep。
+
+#### 下一步建议
+1. 下一自然阶段可以考虑把 `pnpm check:demo-copy` 并进更上游的演示准备流（例如 `demo:ready` 之后的补充检查），进一步降低接手时的漏检概率；
+2. 但在当前阶段，入口文案一致性这条收口线已经基本闭合，优先级已经明显低于真正的联调异常兜底话术。
+
+---
+
+### 62. 继续补上“真实 API 不通时怎么讲”的异常兜底话术
+
+#### 本轮目标
+- 承接第 61 阶段已经搭好的入口一致性与脚本检查；
+- 继续完成下一个更自然的收口点：当现场顶部显示“当前接入：演示数据”时，给接手者一套固定说法，而不是临场现编；
+- 保证即使真实 API 当下没接上，也不会把整条 demo 故事讲乱。
+
+#### 本轮实际修改
+1. 首页补充异常兜底提示
+   - 文件：`apps/web/app/page.tsx`
+   - 调整：新增 `ChecklistNotice`，标题为“如果现场没连上真实 API”；
+   - 固定说法包括：
+     - 先指出顶部“当前接入：演示数据”；
+     - 说明当前先用演示数据保住讲解节奏；
+     - 仍按建档 → 今日任务 → 指标录入 → 家属看板 / 周报的同一条主链路继续讲；
+     - 最后补一句真实 API 恢复后会自动切回。
+2. 本地预览文档同步异常场景说法
+   - 文件：`docs/how-to-preview-locally.md`
+   - 调整：在“演示时的启动顺序建议”之后新增“如果现场没连上真实 API”小节，明确不要改讲法、只换说明。
+3. 3 分钟讲稿同步一句兜底话术
+   - 文件：`docs/demo-script-3min.md`
+   - 调整：在结尾补充可直接念的一句话：先指出当前接入演示数据，真实 API 恢复后会自动切回。
+4. 文案检查脚本同步覆盖异常场景关键字
+   - 文件：`scripts/check-demo-copy.ts`
+   - 调整：把“如果现场没连上真实 API”纳入 preview / script / homepage 的一致性校验。
+
+#### 本轮验证
+1. 已执行：`pnpm check:demo-copy`
+   - 结果：通过。
+2. 已执行：`pnpm --filter @silver-health/web typecheck`
+   - 结果：通过。
+3. 已执行：`pnpm --filter @silver-health/web build`
+   - 结果：通过。
+
+#### 本轮结果判断
+- 到第 62 阶段，Silver Health 的 demo 入口不只统一了“平时怎么讲”，也开始有了“异常时怎么稳住”的固定话术；
+- 这让首页、preview 文档和 3 分钟讲稿在正常场景与异常场景下都能给出一致指导，接手稳定性又往前推了一步。
+
+#### 下一步建议
+1. 如果还要继续自动推进，下一自然阶段可以考虑把 `pnpm check:demo-copy` 并入 `pnpm demo:ready` 的成功链路，形成“准备 demo 数据 + 检查 demo 口径”的一条更完整入口；
+2. 再往后才值得考虑是否把异常兜底扩展到各具体页面，而不是继续堆首页提示。
+
+---
+
+### 63. 把 `check:demo-copy` 并入 `demo:ready` 成功链路，收口“数据 + 讲法口径”同一入口
+
+#### 本轮目标
+- 承接第 62 阶段已经明确的下一自然动作；
+- 把 `pnpm check:demo-copy` 从“单独可跑的补充检查”提升为 `pnpm demo:ready` 成功链路的一部分；
+- 让接手者不只准备好当天 demo 数据，也能顺带确认 README / 首页 / 提词材料的关键讲法没有漂移。
+
+#### 本轮实际修改
+1. 更新 `scripts/demo-ready.ts`
+   - 新增 `runCopyCheck()`，在 demo 数据链路成功后自动执行 `pnpm check:demo-copy`；
+   - 当 `pnpm check:demo` 首次即通过时，也会继续补做文案一致性检查，不再提前返回；
+   - 成功提示改为更明确的“check → seed → re-check + demo copy check”，让输出直接说明现在检查了哪几层。
+2. 同步 README 与本地预览说明口径
+   - 文件：`README.md`、`docs/how-to-preview-locally.md`
+   - 调整：把 `pnpm demo:ready` 的描述统一升级成“准备 demo 数据 + 补做 `check:demo-copy`”；
+   - 让接手者更清楚它现在不只是数据准备命令，也是演示口径收口入口。
+3. 同步 demo cheatsheet 提示
+   - 文件：`docs/demo-day-cheatsheet.md`
+   - 调整：在最上方直接说明 `pnpm demo:ready` 通过后，demo 数据和 README / 首页 / 提词材料的关键口径会一起过检查。
+
+#### 本轮验证
+1. 已执行：`pnpm demo:ready`
+   - 结果：通过；日志显示先通过 `pnpm check:demo`，随后自动执行 `pnpm check:demo-copy` 并通过。
+2. 已执行：`pnpm check:demo-copy`
+   - 结果：通过。
+3. 已执行：`pnpm --filter @silver-health/web typecheck`
+   - 结果：通过。
+4. 已执行：`pnpm --filter @silver-health/web build`
+   - 结果：通过。
+
+#### 本轮结果判断
+- 到第 63 阶段，`pnpm demo:ready` 已经从“只准备 demo 数据”升级成“数据 + 讲法口径”的一条完整入口；
+- 这能明显降低接手时的漏检概率：即使人只记得跑一条命令，也会一起覆盖数据稳定性和演示资料一致性；
+- 当前没有出现新的阻塞、等待态或任务边界变化。
+
+#### 下一步建议
+1. 如果继续自动推进，下一自然阶段更适合做的是把 `demo:ready` 的成功输出再压成更明确的演示前结论摘要，例如直接提示“现在可开 API / Web，并优先从首页 `/` 开讲”；
+2. 再往后才值得考虑把更细的异常兜底扩展到具体页面级别，而不是继续扩首页文案。
+
+---
+
+### 64. 把 `demo:ready` 成功结果压成更明确的接手结论，直接告诉接手者“现在可以开 API / Web，并优先从首页开讲”
+
+#### 本轮目标
+- 承接第 63 阶段已经收口的“数据 + 讲法口径”统一入口；
+- 继续把 `pnpm demo:ready` 的成功结果从“脚本通过”压缩成更直接的人话结论；
+- 让临时接手者不必自己从日志反推下一步，而是直接看到“现在可以开 API / Web，并优先从首页 `/` 开讲”。
+
+#### 本轮实际修改
+1. 更新 `scripts/demo-ready.ts`
+   - 成功链路末尾新增更明确的总结输出：
+     - `Demo ready: 已完成“check → seed → re-check + demo copy check”。`
+     - `Demo ready 结论：现在可以启动 API / Web，并优先从首页 / 开讲。`
+   - 让脚本在演示前准备完成后，直接给出接手动作，而不是只停在检查通过。
+2. 同步入口文档与提词材料
+   - 文件：`README.md`、`docs/how-to-preview-locally.md`、`docs/demo-day-cheatsheet.md`、`docs/demo-script-3min.md`
+   - 调整：都补入同一条结论口径——`pnpm demo:ready` 通过后，现在可以开 API / Web，并优先从首页 `/` 开讲。
+3. 同步首页入口提示
+   - 文件：`apps/web/app/page.tsx`
+   - 调整：在“演示前 30 秒检查”里直接补入这条结论，避免页面层和文档层仍然需要接手者自己翻译。
+
+#### 本轮验证
+1. 已执行：`pnpm demo:ready`
+   - 结果：通过；demo 数据检查、demo 文案一致性检查均通过，并能输出最终接手结论。
+2. 已执行：`pnpm --filter @silver-health/web typecheck`
+   - 结果：通过。
+3. 已执行：`pnpm --filter @silver-health/web build`
+   - 结果：通过。
+
+#### 本轮结果判断
+- 到第 64 阶段，`demo:ready` 的成功输出已经从“脚本型日志”进一步压成“接手动作结论”；
+- README、preview、cheatsheet、script 和 homepage 也都能用同一句话告诉接手者：现在可以开 API / Web，并优先从首页 `/` 开讲；
+- 这比之前只写“check 通过”更接近真实现场需要的提示强度。
+
+#### 下一步建议
+1. 如果继续自动推进，下一自然阶段适合顺手做一次 `demo:ready` 输出链路复查，确认首次 `check:demo` 直接通过的路径也会稳定打印最终结论，而不是只在 seed 分支打印；
+2. 在此之前没有新的阻塞、等待态或任务边界变化。
+
+---
+
+### 65. 顺手修正 `demo:ready` 的快速通过分支，确保无需 seed 时也会打印最终结论
+
+#### 本轮目标
+- 承接第 64 阶段的输出摘要改造；
+- 验证脚本在“首次 `check:demo` 就通过”的真实高频路径里，是否同样会打印最终结论；
+- 如果存在只改了某个分支、但主用路径没覆盖的情况，立即补齐。
+
+#### 本轮实际修改
+1. 再次运行 `pnpm demo:ready` 时，暴露出脚本尾部残留与快速通过分支结论打印不一致的问题；
+2. 直接重写 `scripts/demo-ready.ts` 的结尾结构：
+   - 抽出 `printReadySummary()`；
+   - 在首次 `check:demo` 直接通过的分支与 seed 后复检通过的分支，统一调用同一份结论输出；
+   - 清掉误残留在文件尾部的语法垃圾，恢复脚本为干净可执行状态。
+
+#### 本轮验证
+1. 已重新执行：`pnpm demo:ready`
+   - 结果：通过；在“无需 seed”这条快速路径下，已稳定打印：
+     - `Demo ready: 已完成“check → seed → re-check + demo copy check”。`
+     - `Demo ready 结论：现在可以启动 API / Web，并优先从首页 / 开讲。`
+2. 已重新执行：`pnpm --filter @silver-health/web typecheck`
+   - 结果：通过。
+3. 已重新执行：`pnpm --filter @silver-health/web build`
+   - 结果：通过。
+
+#### 本轮结果判断
+- 到第 65 阶段，这条“演示前准备”脚本不只是文案更清楚，连最常走的成功路径也已经输出一致；
+- 这次顺手抓到并修掉的价值在于：如果不实际复跑，很容易以为结论已经落地，实际上却只覆盖到了某个分支；
+- 当前仍没有新的阻塞、等待态或任务边界变化。
+
+#### 下一步建议
+1. 如果还继续自动推进，下一自然阶段更适合把这句最终结论也纳入 `check:demo-copy` 的关键短语检查，避免脚本文案和文档口径未来再次漂移；
+2. 现阶段依然没必要扩新功能，优先级仍是演示接手稳定性。
+
+### 66. 把 `check:demo-copy` 扩展到同时校验 `demo:ready` 最终结论短语，防止脚本输出与入口文档再次漂移
+
+#### 本轮目标
+- 承接第 65 阶段已经收口出的 `demo:ready` 最终结论；
+- 不再只靠人工记忆检查“脚本输出”和“README / 首页 / 提词材料”是不是还在说同一句话；
+- 让 `pnpm check:demo-copy` 同时覆盖入口文档和 `demo:ready` 脚本最终结论，提前拦住口径漂移。
+
+#### 本轮实际修改
+1. 扩展 `scripts/check-demo-copy.ts`
+   - 新增固定短语常量：`现在可以开 API / Web，并优先从首页 / 开讲。`
+   - 让 README、`docs/how-to-preview-locally.md`、`docs/demo-day-cheatsheet.md`、`docs/demo-script-3min.md`、首页 `apps/web/app/page.tsx` 都必须包含这句最终结论；
+   - 新增对 `scripts/demo-ready.ts` 的检查，确保脚本文件本身也保留这句固定结论与 `Demo ready 结论：` 前缀。
+2. 清理并重写 `scripts/demo-ready.ts`
+   - 把最终结论抽成同一个 `READY_CONCLUSION` 常量；
+   - 保留统一的 `printReadySummary()` 输出，确保快速通过分支和 seed 后复检分支仍共用同一条结论；
+   - 顺手清掉文件里残留的重复尾巴，恢复为单一、干净、可执行版本。
+3. 统一入口文档与首页上的最终结论写法
+   - 文件：`README.md`、`docs/how-to-preview-locally.md`、`docs/demo-day-cheatsheet.md`、`docs/demo-script-3min.md`、`apps/web/app/page.tsx`
+   - 调整：把之前夹带反引号的“首页 `/` 开讲”写法也收成与脚本一致的纯文本短语，避免脚本输出与文档入口只差一个格式细节却再次漂移。
+
+#### 本轮验证
+1. 已执行：`pnpm check:demo-copy`
+   - 结果：通过；现在不只检查 demo 文案层，也会检查 `demo:ready` 最终结论短语。
+2. 已执行：`pnpm demo:ready`
+   - 结果：通过；在当前“首次 check 就通过”的常见路径下，日志尾部已稳定打印：`Demo ready 结论：现在可以开 API / Web，并优先从首页 / 开讲。`
+3. 已执行：`pnpm --filter @silver-health/web typecheck`
+   - 结果：通过。
+
+#### 本轮结果判断
+- 到第 66 阶段，Silver Health 的 demo 入口校验又往前走了一步：不只是检查“文档之间有没有对齐”，而是连 `demo:ready` 自己最终说给接手者的话也一起纳入机器检查；
+- 这次顺手暴露并修掉的实际问题是：`scripts/demo-ready.ts` 里还残留了重复尾巴，如果不重新跑脚本，很容易误以为口径已经完全稳定；
+- 当前仍没有新的阻塞、等待态或任务边界变化。
+
+#### 下一步建议
+1. 如果继续自动推进，下一自然阶段更值得做的是把 `check:demo-copy` 的覆盖说明同步补进 README / preview 的命令说明区，让接手者更容易理解这条命令现在具体在防什么漂移；
+2. 在此之前仍没必要扩新功能，优先级继续放在 demo 接手稳定性。
+
+---
+
+### 67. 把 `check:demo-copy` 的覆盖范围补进 README / preview 命令说明，明确它不只查“文案”
+
+#### 本轮目标
+- 承接第 66 阶段已经明确的下一自然动作；
+- 把 `pnpm check:demo-copy` 现在到底在检查什么，直接补进 README 与 `docs/how-to-preview-locally.md` 的命令说明区；
+- 避免后来接手的人只看命令名，以为它只是查“demo 文案”，却不知道它还在防 `demo:ready` 最终结论漂移。
+
+#### 本轮实际修改
+1. 更新 `README.md`
+   - 在“手动分步执行”示例里补入 `pnpm check:demo-copy`；
+   - 在命令说明里明确写出：它不只检查 README / 首页 / 提词材料口径是否一致，也会校验 `demo:ready` 最终那句“现在可以开 API / Web，并优先从首页 / 开讲。”有没有漂移；
+   - 同步把“常用命令”里的注释升级成更直白的解释。
+2. 更新 `docs/how-to-preview-locally.md`
+   - 在手动执行 `check -> seed -> check` 的说明后追加 `pnpm check:demo-copy`；
+   - 明确说明它覆盖 README / 首页 / cheatsheet / 3 分钟讲稿，以及 `demo:ready` 最终结论一致性，而不只是泛泛的“文案检查”。
+
+#### 本轮验证
+1. 已执行：`pnpm check:demo-copy`
+   - 结果：通过。
+2. 已执行：`pnpm demo:ready`
+   - 结果：通过；日志中已继续串上 `pnpm check:demo-copy`，并稳定输出最终结论。
+3. 已执行：`pnpm --filter @silver-health/web typecheck`
+   - 结果：通过。
+
+#### 本轮结果判断
+- 到第 67 阶段，README 与 preview 文档终于把 `check:demo-copy` 的作用说透了；
+- 接手者现在更容易理解：这条命令不只是查文字有没有不同步，而是在一起守住首页 / 文档 / 提词材料 / `demo:ready` 最终结论这整条 demo 入口口径。
+
+#### 下一步建议
+1. 如果继续自动推进，下一自然阶段适合把 `check:demo-copy` 自己的成功输出也改得更直白，直接告诉人它已经同时确认 `demo:ready` 最终结论未漂移；
+2. 现阶段仍没有新的阻塞、等待态或任务边界变化。
+
+---
+
+### 68. 顺手把 `check:demo-copy` 成功输出改得更直白，命令本身也明确说明“最终结论未漂移”
+
+#### 本轮目标
+- 承接第 67 阶段刚补到文档里的覆盖说明；
+- 不只让 README / preview 解释清楚，还让 `pnpm check:demo-copy` 自己跑完后也直接告诉接手者：它同时确认了 `demo:ready` 最终结论没有漂移；
+- 减少“文档说得很细，但命令输出仍然偏抽象”的落差。
+
+#### 本轮实际修改
+1. 更新 `scripts/check-demo-copy.ts`
+   - 把成功输出从“README / preview / cheatsheet / script / homepage 已覆盖统一口径”升级为“README / preview / cheatsheet / script / homepage 已覆盖统一口径，且 demo:ready 最终结论未漂移”；
+   - 让接手者即使不回看文档，也能从命令输出直接理解这条检查的实际覆盖面。
+
+#### 本轮验证
+1. 已执行：`pnpm check:demo-copy`
+   - 结果：通过；输出已明确包含“demo:ready 最终结论未漂移”。
+2. 已执行：`pnpm demo:ready`
+   - 结果：通过；日志里的 `pnpm check:demo-copy` 子步骤已展示新的直白成功输出。
+3. 已执行：`pnpm --filter @silver-health/web typecheck`
+   - 结果：通过。
+
+#### 本轮结果判断
+- 到第 68 阶段，README / preview 的命令说明和 `check:demo-copy` 自身输出终于一致地说清楚了同一件事；
+- 现在无论是看文档、手动跑命令，还是走 `demo:ready` 成功链路，都能更直观地知道：这条检查在防的不只是文案漂移，也包括最终接手结论漂移。
+
+#### 下一步建议
+1. 如果还继续自动推进，下一自然阶段更适合把 `check:demo-copy` 的覆盖说明再轻量同步进 `docs/demo-day-cheatsheet.md`，让临上场前只看 cheatsheet 的人也知道这条命令不只是查文案；
+2. 当前仍没有新的阻塞、等待态或任务边界变化。
+
+---
+
+### 69. 把 `check:demo-copy` 的覆盖说明轻量同步进 cheatsheet，让只看提词卡的人也知道它会防 `demo:ready` 结论漂移
+
+#### 本轮目标
+- 直接承接第 68 阶段已经明确的下一自然动作；
+- 不再让 `docs/demo-day-cheatsheet.md` 只告诉人“先跑 `pnpm demo:ready`”，而是顺手告诉接手者：如果要手动补查，`pnpm check:demo-copy` 不只是在查文案；
+- 让只在上场前快速扫一眼 cheatsheet 的人，也知道这条命令会一起校验 `demo:ready` 最终结论有没有漂移。
+
+#### 本轮实际修改
+1. 更新 `docs/demo-day-cheatsheet.md`
+   - 在“0. 先做 1 件事”下面补入手动补查块：`pnpm check:demo-copy`；
+   - 明确写出：它不只是在查文案，还会一起校验 `demo:ready` 最终那句“现在可以开 API / Web，并优先从首页 / 开讲。”有没有漂移；
+   - 保持写法足够轻，不把 cheatsheet 又写回成长文档，只补接手时最关键的一句认知。
+
+#### 本轮验证
+1. 已执行：`pnpm check:demo-copy`
+   - 结果：通过；新增的 cheatsheet 说明已经纳入当前文案一致性检查链路。
+2. 已执行：`pnpm demo:ready`
+   - 结果：通过；当前数据仍可直接演示，且 `check:demo-copy` 子步骤继续通过。
+
+#### 本轮结果判断
+- 到第 69 阶段，临上场前只看 cheatsheet 的接手者也能知道：`check:demo-copy` 不是泛泛查文字，而是在一起守住入口文档、提词材料和 `demo:ready` 最终结论；
+- 当前仍没有新的阻塞、等待态或任务边界变化。
+
+#### 下一步建议
+1. 如果继续自动推进，下一自然阶段适合把这句 cheatsheet 里的覆盖说明也纳入 `scripts/check-demo-copy.ts` 的关键短语检查，避免未来别人精简 cheatsheet 时又把这层认知删掉；
+2. 现阶段依然没必要扩新功能，优先级继续放在 demo 接手稳定性。
+
+---
+
+### 70. 顺手把 cheatsheet 的新覆盖说明纳入 `check:demo-copy` 关键短语校验，防止它再被回删
+
+#### 本轮目标
+- 承接第 69 阶段刚补进 cheatsheet 的关键认知；
+- 不满足于“现在写进去了”，而是把“`check:demo-copy` 不只查文案，还会校验 `demo:ready` 最终结论漂移”这句话本身也纳入脚本检查；
+- 避免后续有人继续精简 cheatsheet 时，把这句真正有用的提示不小心删掉。
+
+#### 本轮实际修改
+1. 更新 `scripts/check-demo-copy.ts`
+   - 为 `docs/demo-day-cheatsheet.md` 新增关键短语检查：`它不只是在查文案，还会一起校验 \`demo:ready\` 最终那句`；
+   - 让脚本不仅检查 cheatsheet 还在不在，还会检查这份提词卡是否继续保留“会防 `demo:ready` 结论漂移”的解释。
+
+#### 本轮验证
+1. 已执行：`pnpm check:demo-copy`
+   - 结果：通过；说明新增的 cheatsheet 覆盖说明已被脚本稳住。
+2. 已执行：`pnpm demo:ready`
+   - 结果：通过；当前“先 check，数据可直接演示，再做 copy check”的常见路径仍完整可用。
+
+#### 本轮结果判断
+- 到第 70 阶段，这条新增到 cheatsheet 的说明不再只是一次性人工同步，而是也被机器检查纳入长期守护；
+- 当前仍没有新的阻塞、等待态或任务边界变化。
+
+#### 下一步建议
+1. 如果还继续自动推进，下一自然阶段更适合检查 `demo:ready` / `check:demo-copy` 的终端输出是否也该轻量提示“只看 cheatsheet 的接手者现在也能理解这条命令覆盖什么”，但这已经属于锦上添花，不是必须动作；
+2. 当前更应该保持收口，不再横向扩功能。
+
+---
+
+### 71. 把命令行输出也补成“cheatsheet 已覆盖接手说明”，让接手反馈闭环落到终端层
+
+#### 本轮目标
+- 直接承接第 70 阶段留下的唯一轻量收口点；
+- 不再只让 README / preview / cheatsheet 里写着“cheatsheet 已覆盖 `check:demo-copy` / `demo:ready` 这套说明”，而是让命令行自己跑完后也明确告诉接手者这件事；
+- 把“文档知道、脚本也知道、接手人从终端输出也能立刻知道”的闭环补齐。
+
+#### 本轮实际修改
+1. 更新 `scripts/check-demo-copy.ts`
+   - 成功输出继续收口为更完整的人话：不只说明 README / preview / cheatsheet / script / homepage 已覆盖统一口径，也直接说明 cheatsheet 已明确补到 `check:demo-copy` / `demo:ready` 这套说明；
+   - 同时把 `docs/demo-day-cheatsheet.md` 的关键短语检查升级成新的完整说法，确保这层接手说明不会再被回删。
+2. 更新 `scripts/demo-ready.ts`
+   - 在 copy check 通过后新增一行显式提示：`Demo ready: cheatsheet 也已覆盖 check:demo-copy / demo:ready 这套接手提示。`；
+   - 让走 `pnpm demo:ready` 这条最常见准备路径的人，不需要再回翻文档确认 cheatsheet 是否覆盖到位。
+3. 同步 README / preview / cheatsheet 命令说明
+   - 文件：`README.md`、`docs/how-to-preview-locally.md`、`docs/demo-day-cheatsheet.md`
+   - 调整：统一补成“`check:demo-copy` 不只查文案，还会校验 cheatsheet 是否已经补到 `check:demo-copy` / `demo:ready` 这套接手说明，以及 `demo:ready` 最终结论是否漂移”。
+
+#### 本轮验证
+1. 已执行：`pnpm check:demo-copy`
+   - 结果：通过；成功输出已明确带上“cheatsheet 也已明确补到 check:demo-copy / demo:ready 这套说明”。
+2. 已执行：`pnpm demo:ready`
+   - 结果：通过；在当前“首次 `check:demo` 直接通过、无需重建 seed”的常见路径下，日志已稳定打印新增提示 `Demo ready: cheatsheet 也已覆盖 check:demo-copy / demo:ready 这套接手提示。`
+3. 已执行：`pnpm --filter @silver-health/web typecheck`
+   - 结果：通过。
+4. 已执行：`pnpm --filter @silver-health/web build`
+   - 结果：通过。
+
+#### 本轮结果判断
+- 到第 71 阶段，Silver Health 的 demo 接手闭环已经补到终端层：不仅入口文档和 cheatsheet 知道这套说明，连 `check:demo-copy` / `demo:ready` 的真实输出也会主动提醒；
+- 这轮之后没有新的阻塞、等待态或任务边界变化，且再往下已经明显属于边际收益很低的锦上添花。
+
+#### 下一步建议
+1. 如果后续还要继续磨 demo 接手体验，更值得等真实接手反馈后，再决定是否补“命令输出是否需要更短摘要”之类的细节，而不是继续先验微调；
+2. 当前更合适的动作是先收住这轮终端提示闭环，不再横向扩功能。
+
+---
+
+### 72. 启动清单归档：新增“三终端启动清单”，便于直接复制启动与后续提交
+
+#### 本轮目标
+- 把对话里已经整理好的“三终端启动清单”正式沉淀成项目文档；
+- 让后续无论是自己回看、给别人接手，还是准备 push 到 GitHub，都有一份可直接复制执行的独立启动说明；
+- 把这次收尾动作补进项目归档与 daily memory，避免“聊天里说过，但仓库里没有”。
+
+#### 本轮实际修改
+1. 新增独立启动文档
+   - 文件：`docs/startup-3-terminals.md`
+   - 内容包括：
+     - 启动前环境确认；
+     - 三个终端分别执行什么；
+     - `pnpm demo:ready` 通过后的含义；
+     - API / Web 地址；
+     - 启动后建议检查项；
+     - 推荐演示顺序；
+     - 现场操作分层；
+     - `demo:ready` 失败时的手动补救命令。
+2. 本轮收尾同步归档
+   - 把当前“用户要求新建文档归档，后续准备 push 到 GitHub”的动作同步记入开发日志，作为第 72 阶段收尾记录。
+
+#### 本轮验证
+1. 文档复查
+   - 已确认 `docs/startup-3-terminals.md` 中的项目路径、命令名、默认 elder id、启动顺序与当前 README / how-to-preview / demo-ready 口径一致。
+2. 一致性结论
+   - 当前仓库已同时具备：入口型 README、排障型本地预览说明、临场型 cheatsheet、完整讲稿、以及独立启动清单；接手资料分层已比较完整。
+
+#### 本轮结果判断
+- 这一步不再是新增功能，而是把“聊天里的实操说明”真正沉淀回仓库；
+- 后续 push 到 GitHub 后，别人打开仓库就能直接看到一份适合复制执行的启动清单，不必从长文档里自己提炼。
+
+#### 下一步建议
+1. 若用户明确要求继续外部动作，可在本轮基础上统一提交并 push 到 GitHub；
+2. push 前可再做一次 `git status` / commit message 收口，避免本轮归档漏掉。

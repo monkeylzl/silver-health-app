@@ -1,5 +1,6 @@
 import { apiBaseUrl, defaultElderUserId } from '../../../lib/config';
 import { BindForm } from './bind-form';
+import { ChecklistNotice, DataSourceNotice, DemoStepNotice, EmptyState, PageHeader, StatCard, pageStyles } from '../../ui/page-kit';
 
 type BindingItem = {
   id: string;
@@ -16,11 +17,11 @@ const relationLabelMap: Record<BindingItem['relationType'], string> = {
   son: '儿子',
   daughter: '女儿',
   spouse: '配偶',
-  other: '其他',
+  other: '其他家属',
 };
 
 const statusLabelMap: Record<BindingItem['status'], string> = {
-  pending: '待确认',
+  pending: '等待确认',
   active: '已绑定',
   unbound: '已解绑',
 };
@@ -47,7 +48,7 @@ async function getBindings(): Promise<{ bindings: BindingItem[]; source: 'api' |
     return {
       bindings: mockBindings,
       source: 'mock',
-      note: '当前未设置 NEXT_PUBLIC_DEFAULT_ELDER_USER_ID，先展示 mock 家属绑定数据。',
+      note: '当前没读到默认老人档案，所以先展示演示绑定关系，方便补讲照护链路是怎么建立的。',
     };
   }
 
@@ -69,7 +70,7 @@ async function getBindings(): Promise<{ bindings: BindingItem[]; source: 'api' |
     return {
       bindings: mockBindings,
       source: 'mock',
-      note: error instanceof Error ? `API 加载失败，当前回退到 mock 数据：${error.message}` : 'API 加载失败，当前回退到 mock 数据。',
+      note: error instanceof Error ? `刚才没拿到真实绑定信息，先用演示数据继续讲解：${error.message}` : '刚才没拿到真实绑定信息，先用演示数据继续讲解。',
     };
   }
 }
@@ -78,53 +79,61 @@ export default async function Page() {
   const { bindings, source, note } = await getBindings();
 
   return (
-    <main style={{ maxWidth: 1100, margin: '0 auto', padding: '40px 24px' }}>
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ marginBottom: 8 }}>家属绑定</h1>
-        <p style={{ color: '#667085', margin: 0 }}>
-          当前先做家属绑定第一页版，支持“发起绑定申请 + 查看当前绑定状态”。
-        </p>
-      </div>
+    <main style={pageStyles.main}>
+      <PageHeader
+        title="家属绑定"
+        description="这页更适合在演示补充环节使用：如果需要解释家属如何加入照护流程，就从这里把关系建立过程讲清楚。"
+      />
+
+      <DemoStepNotice
+        step="补充步骤"
+        current="推荐把这页放在家属看板或周报之后讲，避免一开始就把演示重心带到配置流程上。"
+        next="讲完绑定关系后，再回到家属看板或周报总结整体价值。"
+      />
+
+      <DataSourceNotice source={source} fallbackNote={note} mockLabel="当前先用演示绑定关系把照护链路讲清楚；真实 API 一恢复，这里会自动切回真实绑定列表。" />
+
+      <ChecklistNotice
+        title="这一页建议顺手讲清楚"
+        items={[
+          '把这页放在补充环节，避免一开始把演示重心带到配置流程。',
+          '先看顶部接入状态，再说明家属加入后就能查看任务、指标和周报摘要。',
+          '讲完关系建立后，回到家属看板或周报做价值总结。',
+        ]}
+      />
 
       <BindForm />
 
-      <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginBottom: 24 }}>
-        <div style={{ background: '#ffffff', borderRadius: 16, padding: 20, boxShadow: '0 8px 24px rgba(15,23,42,0.06)' }}>
-          <div style={{ color: '#667085', marginBottom: 8 }}>当前数据源</div>
-          <strong>{source === 'api' ? '真实 API' : 'Mock 回退'}</strong>
-        </div>
-        <div style={{ background: '#ffffff', borderRadius: 16, padding: 20, boxShadow: '0 8px 24px rgba(15,23,42,0.06)' }}>
-          <div style={{ color: '#667085', marginBottom: 8 }}>绑定数量</div>
-          <strong>{bindings.length} 条</strong>
-        </div>
+      <section style={pageStyles.statGrid}>
+        <StatCard label="当前接入状态" value={source === 'api' ? '真实 API' : '演示数据'} />
+        <StatCard label="绑定数量" value={`${bindings.length} 条`} />
       </section>
 
-      {note ? (
-        <div style={{ marginBottom: 20, background: '#fffaeb', border: '1px solid #fedf89', borderRadius: 12, padding: '12px 14px', color: '#b54708' }}>
-          {note}
-        </div>
-      ) : null}
-
-      <section style={{ display: 'grid', gap: 16 }}>
-        {bindings.map((binding) => (
-          <article key={binding.id} style={{ background: '#fff', borderRadius: 16, padding: 20, boxShadow: '0 8px 24px rgba(15,23,42,0.06)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 10 }}>
-              <div>
-                <h2 style={{ margin: '0 0 8px', fontSize: 20 }}>{relationLabelMap[binding.relationType]}</h2>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  <span style={{ background: '#f2f4f7', color: '#344054', borderRadius: 999, padding: '4px 10px', fontSize: 12 }}>
-                    {statusLabelMap[binding.status]}
-                  </span>
+      {bindings.length === 0 ? (
+        <EmptyState title="暂时还没有绑定关系" description="可以先发起一条绑定申请，演示时就能看到从表单提交到状态展示的完整链路。" />
+      ) : (
+        <section style={pageStyles.listSection}>
+          {bindings.map((binding) => (
+            <article key={binding.id} style={pageStyles.card}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 10 }}>
+                <div>
+                  <h2 style={{ margin: '0 0 8px', fontSize: 20 }}>{relationLabelMap[binding.relationType]}</h2>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    <span style={pageStyles.tag}>{statusLabelMap[binding.status]}</span>
+                  </div>
+                </div>
+                <div style={{ color: '#667085' }}>
+                  {binding.familyUser?.nickname ? `照护人：${binding.familyUser.nickname}` : '照护人信息待补充'}
                 </div>
               </div>
-              <div style={{ color: '#667085' }}>{binding.familyUserId}</div>
-            </div>
 
-            <p style={{ color: '#475467', margin: '0 0 6px' }}>昵称：{binding.familyUser?.nickname || '暂无'}</p>
-            <p style={{ color: '#475467', margin: 0 }}>手机号：{binding.familyUser?.mobile || '暂无'}</p>
-          </article>
-        ))}
-      </section>
+              <p style={{ color: '#475467', margin: '0 0 6px' }}>家属称呼：{binding.familyUser?.nickname || '暂未填写'}</p>
+              <p style={{ color: '#475467', margin: '0 0 6px' }}>联系手机号：{binding.familyUser?.mobile || '暂未填写'}</p>
+              <p style={{ color: '#475467', margin: 0 }}>这层关系建立后，家属就能继续查看老人任务、指标和周报摘要。</p>
+            </article>
+          ))}
+        </section>
+      )}
     </main>
   );
 }

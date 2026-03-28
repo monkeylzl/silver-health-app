@@ -1,4 +1,5 @@
 import { apiBaseUrl, defaultElderUserId } from '../../../lib/config';
+import { ChecklistNotice, DataSourceNotice, DemoStepNotice, EmptyState, PageHeader, StatCard, pageStyles } from '../../ui/page-kit';
 import { MetricForm } from './metric-form';
 
 type MetricRecord = {
@@ -49,7 +50,7 @@ const metricTypeLabelMap: Record<MetricRecord['metricType'], string> = {
 
 const createdByRoleLabelMap: Record<MetricRecord['createdByRole'], string> = {
   elder: '老人录入',
-  family: '家属录入',
+  family: '家属补录',
 };
 
 const glucosePeriodLabelMap: Record<string, string> = {
@@ -82,7 +83,7 @@ async function getMetricRecords(): Promise<{ metrics: MetricRecord[]; source: 'a
     return {
       metrics: mockMetrics,
       source: 'mock',
-      note: '当前未设置 NEXT_PUBLIC_DEFAULT_ELDER_USER_ID，先展示 mock 指标记录。',
+      note: '当前没读到默认老人档案，所以先放演示指标，保证“录入后马上回看”这段还能讲。',
     };
   }
 
@@ -104,7 +105,7 @@ async function getMetricRecords(): Promise<{ metrics: MetricRecord[]; source: 'a
     return {
       metrics: mockMetrics,
       source: 'mock',
-      note: error instanceof Error ? `API 加载失败，当前回退到 mock 数据：${error.message}` : 'API 加载失败，当前回退到 mock 数据。',
+      note: error instanceof Error ? `刚才没拿到真实指标，先用演示数据继续录入和讲解：${error.message}` : '刚才没拿到真实指标，先用演示数据继续录入和讲解。',
     };
   }
 }
@@ -113,53 +114,58 @@ export default async function Page() {
   const { metrics, source, note } = await getMetricRecords();
 
   return (
-    <main style={{ maxWidth: 1100, margin: '0 auto', padding: '40px 24px' }}>
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ marginBottom: 8 }}>健康指标录入</h1>
-        <p style={{ color: '#667085', margin: 0 }}>
-          当前先推进 MVP 第三条主链路：指标查看与录入。现在页面已经同时具备“录入表单”和“最近记录列表”两部分。
-        </p>
-      </div>
+    <main style={pageStyles.main}>
+      <PageHeader
+        title="健康指标录入"
+        description="这一步重点不是展示一堆记录，而是说明：老人刚录入的数据，马上就会进入后续家属查看与周报汇总。"
+      />
+
+      <DemoStepNotice
+        step="演示第 3 步"
+        current="建议现场补一条当天指标，再让观众看到它出现在下方列表里。"
+        next="录入完成后切到“用药提醒”，把日常管理信息补全。"
+      />
+
+      <DataSourceNotice source={source} fallbackNote={note} mockLabel="当前先用演示指标把“录入后立即回看”的体验讲完整；真实 API 一恢复，这里会自动换成真实记录。" />
+
+      <ChecklistNotice
+        title="这一页建议顺手讲清楚"
+        items={[
+          '先交代顶部接入状态，再补 1 条当天指标，观众更容易理解这不是静态页面。',
+          '补录后立刻回看列表，强调这些记录会继续进入家属看板和周报。',
+          '下一页切到“用药提醒”，把老人侧日常管理补完整。',
+        ]}
+      />
 
       <MetricForm />
 
-      <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, margin: '24px 0' }}>
-        <div style={{ background: '#ffffff', borderRadius: 16, padding: 20, boxShadow: '0 8px 24px rgba(15,23,42,0.06)' }}>
-          <div style={{ color: '#667085', marginBottom: 8 }}>当前数据源</div>
-          <strong>{source === 'api' ? '真实 API' : 'Mock 回退'}</strong>
-        </div>
-        <div style={{ background: '#ffffff', borderRadius: 16, padding: 20, boxShadow: '0 8px 24px rgba(15,23,42,0.06)' }}>
-          <div style={{ color: '#667085', marginBottom: 8 }}>最近记录数</div>
-          <strong>{metrics.length} 条</strong>
-        </div>
+      <section style={{ ...pageStyles.statGrid, margin: '24px 0' }}>
+        <StatCard label="当前接入状态" value={source === 'api' ? '真实 API' : '演示数据'} />
+        <StatCard label="最近记录数" value={`${metrics.length} 条`} />
       </section>
 
-      {note ? (
-        <div style={{ marginBottom: 20, background: '#fffaeb', border: '1px solid #fedf89', borderRadius: 12, padding: '12px 14px', color: '#b54708' }}>
-          {note}
-        </div>
-      ) : null}
-
-      <section style={{ display: 'grid', gap: 16 }}>
-        {metrics.map((metric) => (
-          <article key={metric.id} style={{ background: '#fff', borderRadius: 16, padding: 20, boxShadow: '0 8px 24px rgba(15,23,42,0.06)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 10 }}>
-              <div>
-                <h2 style={{ margin: '0 0 8px', fontSize: 20 }}>{metricTypeLabelMap[metric.metricType]}</h2>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  <span style={{ background: '#f2f4f7', color: '#344054', borderRadius: 999, padding: '4px 10px', fontSize: 12 }}>
-                    {createdByRoleLabelMap[metric.createdByRole]}
-                  </span>
+      {metrics.length === 0 ? (
+        <EmptyState title="暂时还没有指标记录" description="可以先录入一条血压、血糖或体重数据，让演示链路从“录入”到“列表回显”形成完整闭环。" />
+      ) : (
+        <section style={pageStyles.listSection}>
+          {metrics.map((metric) => (
+            <article key={metric.id} style={pageStyles.card}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 10 }}>
+                <div>
+                  <h2 style={{ margin: '0 0 8px', fontSize: 20 }}>{metricTypeLabelMap[metric.metricType]}</h2>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    <span style={pageStyles.tag}>{createdByRoleLabelMap[metric.createdByRole]}</span>
+                  </div>
                 </div>
+                <div style={{ color: '#667085' }}>{new Date(metric.measuredAt).toLocaleString('zh-CN')}</div>
               </div>
-              <div style={{ color: '#667085' }}>{new Date(metric.measuredAt).toLocaleString('zh-CN')}</div>
-            </div>
 
-            <p style={{ color: '#101828', margin: '0 0 8px', fontWeight: 600 }}>{formatMetricValue(metric)}</p>
-            <p style={{ color: '#475467', margin: 0 }}>后续这里会继续补充趋势图表和异常提示。</p>
-          </article>
-        ))}
-      </section>
+              <p style={{ color: '#101828', margin: '0 0 8px', fontWeight: 600 }}>{formatMetricValue(metric)}</p>
+              <p style={{ color: '#475467', margin: 0 }}>这些记录会继续进入家属看板与周报回顾，不需要重复整理。</p>
+            </article>
+          ))}
+        </section>
+      )}
     </main>
   );
 }
