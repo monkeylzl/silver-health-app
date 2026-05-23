@@ -47,7 +47,7 @@ const demoSteps = [
 
 export default function HomePage() {
   return (
-    <main style={pageStyles.main}>
+    <main className="app-shell" style={pageStyles.main}>
       <PageHeader
         title="Silver Health 演示入口"
         description="按固定顺序讲就行：建档 → 今日任务 → 指标录入 → 用药提醒 → 家属看板 → 家属周报。"
@@ -100,9 +100,9 @@ export default function HomePage() {
         ]}
       />
 
-      <section style={{ ...pageStyles.listSection, gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))' }}>
+      <section className="list-section demo-step-grid" style={{ ...pageStyles.listSection, gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))' }}>
         {demoSteps.map((step) => (
-          <a key={step.href} href={step.href} style={pageStyles.linkCard}>
+          <a key={step.href} href={step.href} className="link-card" style={pageStyles.linkCard}>
             <strong style={{ display: 'block', marginBottom: 10, fontSize: 18 }}>{step.title}</strong>
             <p style={{ margin: 0, color: '#475467', lineHeight: 1.6 }}>{step.summary}</p>
             <p style={{ margin: '10px 0 0', color: '#667085', fontSize: 14, lineHeight: 1.5 }}>{step.actionHint}</p>

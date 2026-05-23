@@ -78,7 +78,7 @@ export default async function Page() {
   const { tasks, source, note } = await getTasks();
 
   return (
-    <main style={pageStyles.main}>
+    <main className="app-shell" style={pageStyles.main}>
       <PageHeader
         title="老人首页"
         description="建档之后，演示自然切到这里：看看今天要做什么，并直接完成一项任务，说明产品会持续陪老人把日常管理做下去。"

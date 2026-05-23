@@ -79,7 +79,7 @@ export default async function Page() {
   const { bindings, source, note } = await getBindings();
 
   return (
-    <main style={pageStyles.main}>
+    <main className="app-shell" style={pageStyles.main}>
       <PageHeader
         title="家属绑定"
         description="这页更适合在演示补充环节使用：如果需要解释家属如何加入照护流程，就从这里把关系建立过程讲清楚。"
@@ -104,7 +104,7 @@ export default async function Page() {
 
       <BindForm />
 
-      <section style={pageStyles.statGrid}>
+      <section className="stat-grid" style={pageStyles.statGrid}>
         <StatCard label="当前接入状态" value={source === 'api' ? '真实 API' : '演示数据'} />
         <StatCard label="绑定数量" value={`${bindings.length} 条`} />
       </section>
@@ -112,9 +112,9 @@ export default async function Page() {
       {bindings.length === 0 ? (
         <EmptyState title="暂时还没有绑定关系" description="可以先发起一条绑定申请，演示时就能看到从表单提交到状态展示的完整链路。" />
       ) : (
-        <section style={pageStyles.listSection}>
+        <section className="list-section" style={pageStyles.listSection}>
           {bindings.map((binding) => (
-            <article key={binding.id} style={pageStyles.card}>
+            <article key={binding.id} className="surface-card" style={pageStyles.card}>
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 10 }}>
                 <div>
                   <h2 style={{ margin: '0 0 8px', fontSize: 20 }}>{relationLabelMap[binding.relationType]}</h2>

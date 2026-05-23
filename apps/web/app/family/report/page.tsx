@@ -122,7 +122,7 @@ export default async function Page() {
   const latestHeadline = latestReport ? buildWeeklyHeadline(latestReport) : null;
 
   return (
-    <main style={pageStyles.main}>
+    <main className="app-shell" style={pageStyles.main}>
       <PageHeader
         title="家属周报"
         description="演示最后落在这里：把老人一周的执行情况、指标记录和建议集中给家属看，说明这不是一次性记录，而是持续陪伴。"
@@ -145,7 +145,7 @@ export default async function Page() {
         ]}
       />
 
-      <section style={pageStyles.statGrid}>
+      <section className="stat-grid" style={pageStyles.statGrid}>
         <StatCard label="当前接入状态" value={source === 'api' ? '真实 API' : '演示数据'} />
         <StatCard label="周报数量" value={`${reports.length} 份`} />
       </section>
@@ -162,12 +162,12 @@ export default async function Page() {
       {reports.length === 0 ? (
         <EmptyState title="暂时还没有周报" description="建议先补一份周报数据，确保家属端能展示完整的回顾与建议信息。" />
       ) : (
-        <section style={pageStyles.listSection}>
+        <section className="list-section" style={pageStyles.listSection}>
           {reports.map((report) => {
             const headline = buildWeeklyHeadline(report);
 
             return (
-              <article key={report.id} style={pageStyles.card}>
+              <article key={report.id} className="surface-card" style={pageStyles.card}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
                   <div>
                     <h2 style={{ margin: '0 0 8px', fontSize: 20 }}>

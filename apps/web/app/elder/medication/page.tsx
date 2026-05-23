@@ -72,7 +72,7 @@ export default async function Page() {
   const { reminders, source, note } = await getMedicationReminders();
 
   return (
-    <main style={pageStyles.main}>
+    <main className="app-shell" style={pageStyles.main}>
       <PageHeader
         title="用药提醒"
         description="这一步把老人端的日常管理补完整：除了任务和指标，还要告诉老人什么时候吃什么药。"
@@ -97,7 +97,7 @@ export default async function Page() {
 
       <MedicationForm />
 
-      <section style={pageStyles.statGrid}>
+      <section className="stat-grid" style={pageStyles.statGrid}>
         <StatCard label="当前接入状态" value={source === 'api' ? '真实 API' : '演示数据'} />
         <StatCard label="提醒数量" value={`${reminders.length} 条`} />
       </section>
@@ -105,9 +105,9 @@ export default async function Page() {
       {reminders.length === 0 ? (
         <EmptyState title="暂时还没有用药提醒" description="可以先新增一条常用药提醒，让老人端记录与家属端摘要都能展示真实内容。" />
       ) : (
-        <section style={pageStyles.listSection}>
+        <section className="list-section" style={pageStyles.listSection}>
           {reminders.map((reminder) => (
-            <article key={reminder.id} style={pageStyles.card}>
+            <article key={reminder.id} className="surface-card" style={pageStyles.card}>
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 10 }}>
                 <div>
                   <h2 style={{ margin: '0 0 8px', fontSize: 20 }}>{reminder.medicineName}</h2>

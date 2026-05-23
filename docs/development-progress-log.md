@@ -848,6 +848,20 @@
 #### 本轮验证
 1. 已执行：`pnpm --filter @silver-health/web typecheck`
    - 结果：通过。
+2. 已启动本地 Web 服务检查移动端页面
+   - 首次在沙箱内启动失败，原因是本地监听端口受限；随后经授权启动成功；
+   - `3000` 端口已被占用，Next.js 自动改用 `http://localhost:3002`。
+3. 已用 390px 手机视口检查首页 `/`
+   - 结果：无横向溢出；
+   - 首页入口卡片在手机宽度下已单列展示。
+4. 已用 390px 手机视口检查老人首页 `/elder/home`
+   - 结果：无横向溢出；
+   - 统计卡已修正为三列紧凑布局；
+   - “标记完成”按钮高度为 48px，手机端宽度撑满任务卡操作区。
+5. 已再次执行：`pnpm --filter @silver-health/web typecheck`
+   - 结果：通过。
+6. 已执行：`pnpm --filter @silver-health/web build`
+   - 结果：通过。
 2. 已执行：`pnpm --filter @silver-health/web build`
    - 结果：通过。
 
@@ -1487,3 +1501,265 @@
 #### 下一步建议
 1. 若用户明确要求继续外部动作，可在本轮基础上统一提交并 push 到 GitHub；
 2. push 前可再做一次 `git status` / commit message 收口，避免本轮归档漏掉。
+
+---
+
+### 73. 拉出移动端开发分支，完成第一批手机优先基础改造
+
+#### 本轮目标
+- 响应“开始进行移动端开发”的要求，从 `main` 拉出独立分支，避免直接污染稳定演示主线；
+- 先不重开客户端项目，优先把现有 Next.js Web 改成手机优先的 H5 / PWA 基础体验；
+- 用一轮低风险的共享样式改造，让首页、老人端和家属端页面先具备更适合手机查看与触控的布局基础。
+
+#### 本轮实际修改
+1. 新建移动端开发分支
+   - 分支：`feature/mobile-first`
+2. 新增全局移动端样式
+   - 文件：`apps/web/app/globals.css`
+   - 内容包括：
+     - 全局 `box-sizing`；
+     - 移动端正文背景、页面留白、标题字号；
+     - 统计卡、列表卡、入口卡、提示块的手机端收敛；
+     - 触控按钮最小高度；
+     - 表单网格在手机端单列显示；
+     - 接口返回预览面板在手机端降噪。
+3. 接入全局样式
+   - 文件：`apps/web/app/layout.tsx`
+   - 调整：引入 `globals.css`，移除 body 上的重复 inline 基础样式。
+4. 升级共享 UI 组件
+   - 文件：`apps/web/app/ui/page-kit.tsx`
+   - 调整：为 PageHeader、StatCard、InlineNotice、EmptyState 增加稳定 className，方便统一响应式控制。
+5. 首页与各路由主容器移动端化
+   - 文件：
+     - `apps/web/app/page.tsx`
+     - `apps/web/app/elder/profile/page.tsx`
+     - `apps/web/app/elder/home/page.tsx`
+     - `apps/web/app/elder/metrics/page.tsx`
+     - `apps/web/app/elder/medication/page.tsx`
+     - `apps/web/app/family/dashboard/page.tsx`
+     - `apps/web/app/family/report/page.tsx`
+     - `apps/web/app/family/bind/page.tsx`
+   - 调整：主容器统一挂上 `app-shell`；首页入口卡片挂上移动端网格 class。
+6. 老人首页任务列表触控优化
+   - 文件：`apps/web/app/elder/home/task-list.tsx`
+   - 调整：
+     - 统计区使用手机端三列紧凑布局；
+     - 任务卡片接入统一卡片样式；
+     - “标记完成”按钮使用触控尺寸，手机端自动撑满宽度。
+7. 表单基础移动端化
+   - 文件：
+     - `apps/web/app/elder/profile/elder-profile-form.tsx`
+     - `apps/web/app/elder/metrics/metric-form.tsx`
+     - `apps/web/app/elder/medication/medication-form.tsx`
+     - `apps/web/app/family/bind/bind-form.tsx`
+   - 调整：
+     - 表单容器统一挂上 `form-card`；
+     - 表单字段网格统一挂上 `form-grid`，手机端单列；
+     - 提交按钮统一挂上触控按钮样式；
+     - 接口返回预览统一挂上 `result-panel`。
+
+#### 本轮验证
+1. 已执行：`pnpm --filter @silver-health/web typecheck`
+   - 结果：通过。
+
+#### 本轮结果判断
+- 移动端开发已经正式从 `feature/mobile-first` 分支启动；
+- 当前完成的是手机优先的基础骨架，不是最终客户端体验；
+- 这批改造先把所有核心页面统一带入同一套手机端页面宽度、卡片、表单、按钮规则，为下一步继续打磨老人端关键流程做准备。
+
+#### 下一步建议
+1. 下一阶段优先继续优化老人端三个最高频场景：建档、今日任务、指标录入；
+2. 之后再补 PWA manifest、移动端底部导航或角色入口切换；
+3. 在视觉确认前，可先启动本地 Web 并用手机宽度截图检查首页和老人首页。
+
+---
+
+### 74. 按 `silver-mobile-design` Skill 重新审视移动端基础改造，并修正第一批规范偏差
+
+#### 本轮目标
+- 根据新安装的 `silver-mobile-design` Skill，对第 73 阶段移动端基础改造做一次设计规范复审；
+- 重点检查是否真正符合：
+  - 手机优先；
+  - 老人端大按钮、少噪音、线性任务；
+  - 家属端摘要优先；
+  - 表单单列、触控高度、清晰反馈；
+  - 移动端无横向溢出；
+  - 不让开发者信息默认干扰老人端体验。
+
+#### 本轮发现
+1. 移动端 class 仍可能被旧 inline style 覆盖
+   - 第 73 阶段已经给表单、卡片、提示块、按钮挂了 class；
+   - 但项目里大量旧样式仍是 inline style，CSS class 的移动端 padding、radius、shadow 不一定能稳定覆盖；
+   - 这会造成“规范写进 CSS 了，但真实手机效果未必按规范执行”的问题。
+2. 全站移动端统计卡强制三列过于粗暴
+   - `silver-mobile-design` 里明确：三列 compact stat tiles 只适合短标签且数值仍可读的场景；
+   - 第 73 阶段把所有 `.stat-grid` 在手机端都压成三列，不适合家属看板、报告、绑定等可能文字更长的页面。
+3. 表单底部接口 JSON 预览默认展开，手机端噪音过重
+   - 对 demo 和开发有帮助；
+   - 但对老人端 / 手机端体验来说，默认展示 JSON 属于开发者信息，和“老人端简单、线性、少噪音”的规范冲突。
+
+#### 本轮实际修改
+1. 强化移动端 CSS 覆盖稳定性
+   - 文件：`apps/web/app/globals.css`
+   - 调整：
+     - 移动端 `.inline-notice`、`.surface-card`、`.link-card`、`.form-card`、`.result-panel` 的关键 padding、radius、shadow、border 使用 `!important` 覆盖旧 inline style；
+     - 移动端按钮宽度、高度也用 `!important` 稳住触控尺寸；
+     - 避免后续页面级 inline style 无意中把手机端规范顶掉。
+2. 调整移动端统计卡策略
+   - 文件：`apps/web/app/globals.css`
+   - 调整：
+     - 手机端 `.stat-grid` 默认改成两列；
+     - 新增 `.stat-grid--three`，只给适合三列短标签的场景使用。
+   - 文件：`apps/web/app/elder/home/task-list.tsx`
+   - 调整：
+     - 老人首页任务统计继续使用 `stat-grid stat-grid--three`，保留三列紧凑体验。
+3. 降低表单接口返回预览的默认噪音
+   - 文件：
+     - `apps/web/app/elder/profile/elder-profile-form.tsx`
+     - `apps/web/app/elder/metrics/metric-form.tsx`
+     - `apps/web/app/elder/medication/medication-form.tsx`
+     - `apps/web/app/family/bind/bind-form.tsx`
+   - 调整：
+     - 把默认展开的深色 `section` 改成 `details.result-panel`；
+     - 默认只显示“查看接口返回预览”，需要时再展开；
+     - 兼顾 demo / 开发确认需求和老人端手机体验的低噪音要求。
+
+#### 本轮验证
+1. 已执行：`pnpm --filter @silver-health/web typecheck`
+   - 结果：通过。
+2. 已执行：`pnpm --filter @silver-health/web build`
+   - 结果：通过。
+3. 尝试使用 Codex Browser 做手机视口复查
+   - 结果：本轮浏览器工具返回 “No active Codex browser pane available”；
+   - 因此本轮没有新增浏览器截图；
+   - 已保留代码层与构建层验证，后续浏览器面板恢复后应继续按 390px 手机视口复查。
+4. 本地 Web 服务收尾
+   - 本轮曾启动 `pnpm dev:web` 做复查准备；
+   - `3000` 端口仍被占用，Next.js 自动使用 `http://localhost:3002`；
+   - 已确认并停止本轮启动的 `next-server` 进程。
+
+#### 本轮结果判断
+- 第 73 阶段是“把移动端骨架接上”，第 74 阶段则是第一次按正式设计 Skill 做规范回看；
+- 当前移动端基础样式更接近 Skill 要求：
+  - 默认统计卡更克制；
+  - 老人首页保留短标签三列；
+  - 表单 JSON 预览不再默认打断手机端任务流；
+  - 旧 inline style 对移动端规范的干扰降低。
+
+#### 下一步建议
+1. 浏览器面板恢复后，补做 390px / 360px 手机视口截图复查；
+2. 继续按 Skill 打磨老人端建档、今日任务、指标录入三个高频流程；
+3. 下一轮可以考虑新增移动端角色入口 / 底部导航，但应先保持首页作为 demo router，不急着重做信息架构。
+
+---
+
+### 75. 引入移动端多 Tab 导航壳，让体验从“页面集合”开始变成“可切换应用”
+
+#### 本轮目标
+- 响应“想要一个能够交互的完整体验”和“设计成多 tab 的形式怎么样”的要求；
+- 先不重构业务页面，把交互入口层补起来；
+- 按 `silver-mobile-design` 的原则选择手机 App 式底部 Tab，而不是桌面式多顶栏标签。
+
+#### 本轮设计判断
+- 多 Tab 方向是对的，但不适合一次性把所有功能都塞进一个顶栏；
+- 当前更适合：
+  - 底部主 Tab：`首页 / 老人 / 家属`；
+  - 角色内二级 Tab：
+    - 老人：`建档 / 今日 / 指标 / 用药`；
+    - 家属：`看板 / 周报 / 绑定`。
+- 这样既保留首页作为 demo router，也让手机上能像 App 一样快速切换主要区域。
+
+#### 本轮实际修改
+1. 新增移动端导航组件
+   - 文件：`apps/web/app/ui/app-navigation.tsx`
+   - 内容：
+     - 底部主导航：`首页`、`老人`、`家属`；
+     - 老人端二级导航：`建档`、`今日`、`指标`、`用药`；
+     - 家属端二级导航：`看板`、`周报`、`绑定`；
+     - 使用 `usePathname()` 判断当前激活态；
+     - 使用 `aria-current="page"` 保留可访问性语义。
+2. 接入全局布局
+   - 文件：`apps/web/app/layout.tsx`
+   - 调整：在 `body` 内引入 `<AppNavigation />`，让所有路由共享同一套移动端导航壳。
+3. 增加移动端 Tab 样式
+   - 文件：`apps/web/app/globals.css`
+   - 内容：
+     - `.mobile-bottom-tabs` 固定在底部；
+     - `.mobile-context-tabs` 在老人 / 家属路由顶部 sticky；
+     - Tab 最小触控高度满足 44px+；
+     - 激活态有颜色和背景反馈；
+     - body 增加底部安全区 padding，避免内容被底部 Tab 遮挡。
+
+#### 本轮验证
+1. 已执行：`pnpm --filter @silver-health/web typecheck`
+   - 结果：通过。
+2. 已执行：`pnpm --filter @silver-health/web build`
+   - 结果：通过。
+3. 本地页面可访问性检查
+   - 当前已有 `next-server` 监听 `3000`；
+   - 已通过 `curl -I http://127.0.0.1:3000` 确认页面返回 `200 OK`；
+   - 已读取首页 HTML，确认底部主 Tab 已渲染：`首页 / 老人 / 家属`。
+4. Codex Browser 复查
+   - 用户确认 in-app browser 打开且当前 URL 为 `about:blank`；
+   - 本轮多次尝试重新获取 in-app Browser、设置可见、设置 390px 视口、新建 tab；
+   - 工具仍返回 `No active Codex browser pane available`；
+   - 因此本轮仍未能通过 Codex Browser 生成截图。
+
+#### 本轮结果判断
+- 当前移动端体验已经从“靠首页卡片跳路由”推进到“底部主 Tab + 角色内二级 Tab”的 App 壳形态；
+- 这还不是完整客户端体验，但已经是后续继续补 PWA、角色首页、任务流闭环的基础；
+- 用户现在可以在 in-app browser 手动打开 `http://127.0.0.1:3000` 直接试底部 Tab 交互。
+
+#### 下一步建议
+1. 手动在 in-app browser 打开 `http://127.0.0.1:3000`，先试底部 `首页 / 老人 / 家属`；
+2. 如果这个方向认可，下一步应把老人端做成更完整的“今日工作台”，而不是只靠各页面分散展示；
+3. 继续补家属端“看板 / 周报 / 绑定”的移动端摘要层，让家属 Tab 也像一个完整应用区域。
+
+---
+
+### 76. 修复 Next dev 缓存缺失 chunk 导致的页面报错
+
+#### 本轮问题
+- 用户在本地验证多 Tab 页面时遇到：
+  - `Error: Cannot find module './156.js'`
+  - 后续还出现 `.next/server/app/page.js` 缺失；
+- 这类错误来自 Next.js dev 生成目录 `.next` 的运行时缓存不一致，不是业务源码路由丢失。
+
+#### 本轮处理
+1. 确认当前 3000 端口进程
+   - 已确认监听 3000 的进程是 `next-server (v15.3.2)`。
+2. 停止异常 Next dev server
+   - 先停止旧的 `next-server`，避免服务仍持有旧 `.next` 文件引用。
+3. 清理 Next 生成缓存
+   - 删除自动生成目录：`apps/web/.next`。
+4. 重新启动 Web dev server
+   - 执行：`pnpm dev:web`；
+   - 服务恢复到：`http://localhost:3000`。
+
+#### 本轮验证
+1. 已确认首页恢复
+   - `curl -I http://127.0.0.1:3000`
+   - 结果：`HTTP/1.1 200 OK`
+2. 已确认老人首页恢复
+   - `curl -I http://127.0.0.1:3000/elder/home`
+   - 结果：`HTTP/1.1 200 OK`
+3. 已确认家属看板恢复
+   - `curl -I http://127.0.0.1:3000/family/dashboard`
+   - 结果：`HTTP/1.1 200 OK`
+
+#### 复用处理方式
+如果后续再遇到类似 `.next/server/...`、`Cannot find module './xxx.js'`、hot-update 残留错误，优先按这个顺序处理：
+
+```bash
+# 1. 停掉正在运行的 pnpm dev:web / next-server
+# 2. 清理 Web 构建缓存
+rm -rf apps/web/.next
+
+# 3. 重新启动
+pnpm dev:web
+```
+
+#### 本轮结果判断
+- 多 Tab 改动本身没有导致路由缺失；
+- 问题来自开发缓存和旧 dev server 状态；
+- 当前首页、老人首页、家属看板均已恢复可访问。

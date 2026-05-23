@@ -107,7 +107,7 @@ export function BindForm() {
 
   return (
     <div style={{ display: 'grid', gap: 24, marginBottom: 24 }}>
-      <form onSubmit={onSubmit} style={{ background: '#fff', borderRadius: 16, padding: 24, boxShadow: '0 8px 24px rgba(15,23,42,0.06)' }}>
+      <form onSubmit={onSubmit} className="form-card" style={{ background: '#fff', borderRadius: 16, padding: 24, boxShadow: '0 8px 24px rgba(15,23,42,0.06)' }}>
         <div style={{ marginBottom: 16 }}>
           <h2 style={{ margin: '0 0 8px' }}>发起家属绑定</h2>
           <p style={{ margin: 0, color: '#667085' }}>默认示例适合直接演示“女儿加入照护流程”，避免现场再临时想测试账号。</p>
@@ -122,7 +122,7 @@ export function BindForm() {
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
+        <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
           <label style={{ display: 'grid', gap: 8 }}>
             <span>老人档案编号 *</span>
             <input value={form.elderUserId} placeholder="默认沿用建档后的编号" onChange={(event) => onChange('elderUserId', event.target.value)} style={fieldStyle(Boolean(errors.elderUserId))} />
@@ -150,18 +150,18 @@ export function BindForm() {
           </label>
         </div>
 
-        <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 20, flexWrap: 'wrap' }}>
-          <button type="submit" disabled={loading} style={{ padding: '12px 18px', background: '#2563eb', color: '#fff', border: 0, borderRadius: 10 }}>
+        <div className="mobile-action-row" style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 20, flexWrap: 'wrap' }}>
+          <button type="submit" disabled={loading} className="touch-button primary-button" style={{ padding: '12px 18px', background: '#2563eb', color: '#fff', border: 0, borderRadius: 10 }}>
             {loading ? '提交中...' : '提交绑定申请'}
           </button>
           <span style={{ color: message.includes('失败') || message.includes('错误') ? '#b42318' : '#027a48' }}>{message}</span>
         </div>
       </form>
 
-      <section style={{ background: '#101828', color: '#f8fafc', borderRadius: 16, padding: 24, overflowX: 'auto' }}>
-        <h3 style={{ marginTop: 0 }}>接口返回预览</h3>
+      <details className="result-panel" style={{ background: '#101828', color: '#f8fafc', borderRadius: 16, padding: 24, overflowX: 'auto' }}>
+        <summary>查看接口返回预览</summary>
         <pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{result || '提交后，这里会展示接口返回结果，便于演示时确认绑定关系已创建。'}</pre>
-      </section>
+      </details>
     </div>
   );
 }

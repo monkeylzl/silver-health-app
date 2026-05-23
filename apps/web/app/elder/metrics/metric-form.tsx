@@ -209,7 +209,7 @@ export function MetricForm() {
 
   return (
     <div style={{ display: 'grid', gap: 24 }}>
-      <form onSubmit={onSubmit} style={{ background: '#fff', borderRadius: 16, padding: 24, boxShadow: '0 8px 24px rgba(15,23,42,0.06)' }}>
+      <form onSubmit={onSubmit} className="form-card" style={{ background: '#fff', borderRadius: 16, padding: 24, boxShadow: '0 8px 24px rgba(15,23,42,0.06)' }}>
         <div style={{ marginBottom: 16 }}>
           <h2 style={{ margin: '0 0 8px' }}>健康指标录入表单</h2>
           <p style={{ margin: 0, color: '#667085' }}>{typeDescription}</p>
@@ -224,7 +224,7 @@ export function MetricForm() {
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
+        <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
           {renderInput('elderUserId', '老人档案编号 *', '默认沿用建档后的编号', '若已从建档页进入，一般无需改动')}
           {renderInput('createdByUserId', '录入人编号 *', '默认使用当前老人编号', '保留接口必填字段，但页面上按“录入人”来表达')}
 
@@ -261,7 +261,7 @@ export function MetricForm() {
         </div>
 
         {form.metricType === 'blood_pressure' ? (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginTop: 16 }}>
+          <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginTop: 16 }}>
             {renderInput('systolic', '收缩压 *', '例如 128', '建议填 120~135 之间，更贴近日常演示')}
             {renderInput('diastolic', '舒张压 *', '例如 78', '建议填 70~85 之间')}
             {renderInput('pulse', '脉搏', '例如 72', '可选填，补充说明心率情况')}
@@ -269,7 +269,7 @@ export function MetricForm() {
         ) : null}
 
         {form.metricType === 'blood_glucose' ? (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginTop: 16 }}>
+          <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginTop: 16 }}>
             {renderInput('glucoseValue', '血糖值 *', '例如 6.2', '建议现场用 5.8~7.2 的自然区间')}
             <label style={{ display: 'grid', gap: 8 }}>
               <span>测量时段</span>
@@ -287,23 +287,23 @@ export function MetricForm() {
         ) : null}
 
         {form.metricType === 'weight' ? (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginTop: 16 }}>
+          <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginTop: 16 }}>
             {renderInput('weightKg', '体重 *', '例如 61.5', '适合补充“长期观察趋势”场景')}
           </div>
         ) : null}
 
-        <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 20, flexWrap: 'wrap' }}>
-          <button type="submit" disabled={loading} style={{ padding: '12px 18px', background: '#2563eb', color: '#fff', border: 0, borderRadius: 10 }}>
+        <div className="mobile-action-row" style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 20, flexWrap: 'wrap' }}>
+          <button type="submit" disabled={loading} className="touch-button primary-button" style={{ padding: '12px 18px', background: '#2563eb', color: '#fff', border: 0, borderRadius: 10 }}>
             {loading ? '提交中...' : '保存指标'}
           </button>
           <span style={{ color: message.includes('失败') || message.includes('错误') ? '#b42318' : '#027a48' }}>{message}</span>
         </div>
       </form>
 
-      <section style={{ background: '#101828', color: '#f8fafc', borderRadius: 16, padding: 24, overflowX: 'auto' }}>
-        <h3 style={{ marginTop: 0 }}>接口返回预览</h3>
+      <details className="result-panel" style={{ background: '#101828', color: '#f8fafc', borderRadius: 16, padding: 24, overflowX: 'auto' }}>
+        <summary>查看接口返回预览</summary>
         <pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{result || '提交后，这里会展示接口返回结果，适合演示时确认数据已经写入。'}</pre>
-      </section>
+      </details>
     </div>
   );
 }
