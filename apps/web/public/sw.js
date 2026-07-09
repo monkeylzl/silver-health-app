@@ -1,5 +1,14 @@
-const CACHE_NAME = 'silver-health-shell-v1';
-const SHELL_ASSETS = ['/', '/health', '/me', '/offline.html', '/manifest.webmanifest', '/icons/icon.svg'];
+const CACHE_NAME = 'silver-health-shell-v2';
+const SHELL_ASSETS = [
+  '/',
+  '/health',
+  '/me',
+  '/offline.html',
+  '/manifest.webmanifest',
+  '/icons/icon.svg',
+  '/icons/icon-192.png',
+  '/icons/icon-512.png',
+];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(

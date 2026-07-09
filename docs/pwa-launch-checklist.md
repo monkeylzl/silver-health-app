@@ -31,14 +31,16 @@ DATABASE_URL="postgresql://..."
 Railway 服务建议指向 monorepo 根目录，API 构建命令：
 
 ```bash
-pnpm --filter @silver-health/api build
+corepack pnpm --filter @silver-health/api build
 ```
 
 API 启动命令：
 
 ```bash
-pnpm --filter @silver-health/api start
+corepack pnpm --filter @silver-health/api start
 ```
+
+仓库根目录已经提供 `railway.json`，包含 Nixpacks build command、API start command、`/api/health` 健康检查和失败重启策略。Railway 导入仓库后优先确认该配置被识别。
 
 ### 3. Railway API 环境变量
 
@@ -60,10 +62,10 @@ CORS_ORIGIN="https://your-vercel-domain.vercel.app,https://your-custom-domain.co
 远程数据库迁移和 seed 建议在受控终端执行：
 
 ```bash
-pnpm prisma:generate
-pnpm --filter @silver-health/api prisma:migrate
-pnpm seed:demo
-pnpm check:demo
+corepack pnpm prisma:generate
+corepack pnpm prisma:migrate:deploy
+corepack pnpm seed:demo
+corepack pnpm check:demo
 ```
 
 执行成功后，记录 seed 输出里的默认老人 ID，并配置到 Vercel：
@@ -82,10 +84,16 @@ Vercel Root Directory 建议设为：
 apps/web
 ```
 
-Build Command：
+仓库的 `apps/web/vercel.json` 已配置安装和构建命令。如果 Vercel UI 没有自动读取，手动填：
 
 ```bash
-cd ../.. && pnpm --filter @silver-health/web build
+cd ../.. && corepack pnpm --filter @silver-health/web build
+```
+
+Install Command：
+
+```bash
+cd ../.. && corepack enable && corepack pnpm install --frozen-lockfile
 ```
 
 Output 由 Next.js 自动处理。
@@ -109,6 +117,7 @@ NEXT_PUBLIC_DEFAULT_ELDER_USER_ID="remote-seed-elder-id"
 4. 从主屏幕打开后，页面以独立应用窗口打开；
 5. 断网后刷新，能看到离线提示页；
 6. 恢复网络后，今日、健康、家属页面能继续读取数据。
+7. Application / Manifest 中能看到 `icon-192.png` 与 `icon-512.png`。
 
 ## 五、功能验收路径
 
@@ -135,10 +144,10 @@ NEXT_PUBLIC_DEFAULT_ELDER_USER_ID="remote-seed-elder-id"
 ## 六、上线前本地校验
 
 ```bash
-pnpm --filter @silver-health/web typecheck
-pnpm --filter @silver-health/web build
-pnpm --filter @silver-health/api build
-pnpm demo:ready
+corepack pnpm --filter @silver-health/web typecheck
+corepack pnpm --filter @silver-health/web build
+corepack pnpm --filter @silver-health/api build
+corepack pnpm demo:ready
 ```
 
 如果遇到 Next dev 缓存错误，例如 `.next/server/...` 或 `Cannot find module './xxx.js'`：

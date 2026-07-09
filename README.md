@@ -196,6 +196,14 @@ pnpm demo:ready     # 先 check，失败则自动 seed 并再次 check，最后�
    - 3 分钟推荐讲法
 5. `docs/development-progress-log.md`
    - 全量开发过程、阶段记录与排查归档
+6. `docs/pwa-launch-technical-solution.md`
+   - H5/PWA 可安装上线版技术实现方案，包含架构图、流程图和用户交互图
+7. `docs/pwa-launch-test-validation-plan.md`
+   - 完整测试验证方案，包含本地、移动端、PWA、线上部署验收步骤和命令
+8. `docs/pwa-launch-optimization-roadmap.md`
+   - 按 P0/P1/P2/P3 优先级整理的后续优化项
+9. `docs/pwa-launch-key-technical-details.md`
+   - 重点技术方案详解，说明关键实现决策、风险和后续重构方向
 
 ---
 
