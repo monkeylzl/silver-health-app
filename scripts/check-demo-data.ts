@@ -1,6 +1,7 @@
-import { PrismaClient } from '@prisma/client';
+import prismaPkg from '@prisma/client';
 import { formatLocalDate, getLocalDateOnly, getWeekRange } from './demo-date-utils.ts';
 
+const { PrismaClient } = prismaPkg;
 const prisma = new PrismaClient();
 
 async function main() {

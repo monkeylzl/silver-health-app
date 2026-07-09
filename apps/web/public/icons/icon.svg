@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Silver Health">
+  <rect width="512" height="512" rx="112" fill="#2563eb"/>
+  <path d="M256 124c44 50 96 58 96 126 0 58-43 104-96 138-53-34-96-80-96-138 0-68 52-76 96-126Z" fill="#ffffff"/>
+  <path d="M256 176v130M191 241h130" stroke="#2563eb" stroke-width="34" stroke-linecap="round"/>
+</svg>

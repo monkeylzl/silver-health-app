@@ -258,6 +258,53 @@
 
 #### 校验结果
 - 已执行：`pnpm --filter @silver-health/web typecheck`
+
+---
+
+## 42. PWA 可安装上线版第一轮重构
+
+### 本轮目标
+- 从 `feature/mobile-first` 新建 `feature/pwa-launch-ready`；
+- 把默认体验从开发演示入口调整为可真实试用的手机端工作台；
+- 第一阶段按 H5/PWA 形态准备上线，不做小程序、原生 App、真实登录和服务端推送。
+
+### 本轮实际修正
+1. 重构底部主导航为四个 Tab：
+   - `今日`：默认首页，展示今日任务、进度、下一项待办和快捷入口；
+   - `健康`：整合最近指标、录入指标、用药提醒入口；
+   - `家属`：保留家属看板作为主 Tab；
+   - `我的`：展示档案摘要、当前账号、数据源、API 状态和安装提示。
+
+2. 保留演示入口但从首页降级：
+   - `/` 变成上线版默认工作台；
+   - 原演示检查和讲解入口迁移到 `/demo`；
+   - README、预览文档、demo cheatsheet、3 分钟脚本同步调整口径。
+
+3. 增加 PWA 基础能力：
+   - 新增 `manifest.webmanifest`、SVG 图标、离线页、service worker；
+   - 新增客户端 service worker 注册组件；
+   - 新增安装提示组件，放到首页轻提示和 `我的` 页。
+
+4. 补齐上线部署准备：
+   - Web 增加 `.env.example`；
+   - API CORS 支持 `CORS_ORIGIN` 多域名配置；
+   - 保留 `PORT` 读取，适配 Railway；
+   - 新增 `docs/pwa-launch-checklist.md`，记录 Vercel / Railway 环境变量、远程库 seed、验收路径。
+
+5. 修正演示脚本在当前 Node / Prisma 组合下的兼容性：
+   - `demo:ready` 内部固定走 `corepack pnpm`，避免不同 pnpm 版本漂移；
+   - demo seed / check 脚本兼容 `@prisma/client` CommonJS 默认导出。
+
+### 校验结果
+- 已执行：`corepack pnpm --filter @silver-health/web typecheck`
+- 已执行：`corepack pnpm --filter @silver-health/web build`
+- 已执行：`corepack pnpm --filter @silver-health/api build`
+- 已执行：`corepack pnpm demo:ready`
+
+### 当前边界
+- 第一阶段仍使用固定演示老人 / 家属账号；
+- PWA 当前提供安装壳、图标、基础缓存和离线提示，暂不做推送；
+- 线上还需要在 Vercel / Railway 配置生产环境变量，并对远程库执行 seed。
 - 结果：通过
 
 #### 当前意义

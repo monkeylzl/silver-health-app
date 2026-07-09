@@ -1,6 +1,7 @@
-import { PrismaClient, BindingStatus, BindingRelationType, Gender, HelperMode, MetricCreatedByRole, MetricType, MobilityLevel, TaskPriority, TaskSourceType, TaskStatus, TaskType, UserRole, UserStatus } from '@prisma/client';
+import prismaPkg from '@prisma/client';
 import { formatLocalDate, getLocalDateOnly, getLocalDateTime, getWeekRange } from './demo-date-utils.ts';
 
+const { PrismaClient, BindingStatus, BindingRelationType, Gender, HelperMode, MetricCreatedByRole, MetricType, MobilityLevel, TaskPriority, TaskSourceType, TaskStatus, TaskType, UserRole, UserStatus } = prismaPkg;
 const prisma = new PrismaClient();
 
 async function upsertUsers() {

@@ -10,9 +10,10 @@ type NavItem = {
 };
 
 const primaryTabs: NavItem[] = [
-  { href: '/', label: '首页', mark: '首' },
-  { href: '/elder/home', label: '老人', mark: '老' },
+  { href: '/', label: '今日', mark: '今' },
+  { href: '/health', label: '健康', mark: '康' },
   { href: '/family/dashboard', label: '家属', mark: '家' },
+  { href: '/me', label: '我的', mark: '我' },
 ];
 
 const elderTabs: NavItem[] = [
@@ -41,8 +42,10 @@ function roleTabsFor(pathname: string) {
 
 function isPrimaryActive(pathname: string, href: string) {
   if (href === '/') return pathname === '/';
+  if (href.startsWith('/health')) return pathname.startsWith('/health') || pathname.startsWith('/elder/metrics') || pathname.startsWith('/elder/medication');
   if (href.startsWith('/elder')) return pathname.startsWith('/elder');
   if (href.startsWith('/family')) return pathname.startsWith('/family');
+  if (href.startsWith('/me')) return pathname.startsWith('/me') || pathname.startsWith('/elder/profile');
   return pathname === href;
 }
 
