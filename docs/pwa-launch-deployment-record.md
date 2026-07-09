@@ -8,7 +8,7 @@
 | --- | --- | --- | --- |
 | API | Railway | 已上线 | `silver-health-api` 服务已通过 `/api/health` 健康检查 |
 | PostgreSQL | Railway | 已上线 | 远程库已执行迁移和演示数据 seed |
-| Web | Vercel | 待发布 | 等待 Vercel CLI 设备登录授权后发布生产部署 |
+| Web | Vercel | 已上线 | 生产别名已发布，首页能读取远程 API 演示数据 |
 
 ## 2. Railway 实际配置
 
@@ -22,7 +22,8 @@
 - PostgreSQL Service：`Postgres`
 - PostgreSQL Service ID：`f2d5b80c-2cad-4b0d-971d-0bbaf0e520c9`
 - API URL：`https://silver-health-api-production.up.railway.app`
-- 当前 API Deployment ID：`5ee96701-2f27-4cf6-8b13-f91e6e7a4119`
+- 当前 API Deployment ID：`e78cd36c-000b-4b74-9c21-326f11304a20`
+- CORS Origin：`https://web-nu-blond-89.vercel.app`
 
 Railway API 采用仓库根目录的 `Dockerfile.api` 构建，`railway.json` 使用 Dockerfile builder。迁移放在 `preDeployCommand` 中执行，应用启动命令只负责启动 Nest API，避免迁移命令常驻导致健康检查卡住。
 
@@ -58,7 +59,30 @@ NEXT_PUBLIC_API_BASE_URL="https://silver-health-api-production.up.railway.app"
 NEXT_PUBLIC_DEFAULT_ELDER_USER_ID="cmre5b56p0000ij0niccn6i4n"
 ```
 
-## 4. 已执行线上验证
+Vercel 项目已持久化以上两个 production 环境变量，类型为 non-sensitive。
+
+## 4. Vercel 实际配置
+
+- Team / Scope：`monkeylzls-projects`
+- Project：`web`
+- Production Alias：`https://web-nu-blond-89.vercel.app`
+- Deployment URL：`https://web-m4057w5k7-monkeylzls-projects.vercel.app`
+- Deployment ID：`dpl_GiFkdXjPQEUXyvPjxN5ZTSQQrjSX`
+- Inspect URL：`https://vercel.com/monkeylzls-projects/web/GiFkdXjPQEUXyvPjxN5ZTSQQrjSX`
+
+本次 CLI 部署使用了本地 prebuilt 流程：
+
+```bash
+NEXT_PUBLIC_API_BASE_URL="https://silver-health-api-production.up.railway.app" \
+NEXT_PUBLIC_DEFAULT_ELDER_USER_ID="cmre5b56p0000ij0niccn6i4n" \
+corepack pnpm dlx vercel build --cwd apps/web --prod --yes
+
+corepack pnpm dlx vercel deploy --prod --prebuilt --yes
+```
+
+说明：直接 `vercel deploy --cwd apps/web` 会只上传 `apps/web` 子目录，导致远端执行 `cd ../..` 后找不到 monorepo 根目录 `package.json`。因此本次使用本地 `vercel build` 生成 `.vercel/output` 后，从仓库根目录上传 prebuilt 产物。
+
+## 5. 已执行线上验证
 
 ```bash
 curl -sS https://silver-health-api-production.up.railway.app/api/health
@@ -78,7 +102,57 @@ curl -sS https://silver-health-api-production.up.railway.app/api/reports/elder/c
 - 用药提醒返回氨氯地平、二甲双胍 2 条启用提醒。
 - 周报返回最近两周演示周报。
 
-## 5. 本地验证记录
+Web 验证：
+
+```bash
+curl -sS -I https://web-nu-blond-89.vercel.app
+curl -sS -o /dev/null -w "%{http_code} %{content_type}\n" https://web-nu-blond-89.vercel.app/
+curl -sS -o /dev/null -w "%{http_code} %{content_type}\n" https://web-nu-blond-89.vercel.app/health
+curl -sS -o /dev/null -w "%{http_code} %{content_type}\n" https://web-nu-blond-89.vercel.app/family/dashboard
+curl -sS -o /dev/null -w "%{http_code} %{content_type}\n" https://web-nu-blond-89.vercel.app/family/report
+curl -sS -o /dev/null -w "%{http_code} %{content_type}\n" https://web-nu-blond-89.vercel.app/me
+curl -sS -o /dev/null -w "%{http_code} %{content_type}\n" https://web-nu-blond-89.vercel.app/manifest.webmanifest
+curl -sS -o /dev/null -w "%{http_code} %{content_type}\n" https://web-nu-blond-89.vercel.app/offline.html
+curl -sS -o /dev/null -w "%{http_code} %{content_type}\n" https://web-nu-blond-89.vercel.app/sw.js
+```
+
+验证结果：
+
+- 首页返回 `200 text/html`。
+- `/health`、`/family/dashboard`、`/family/report`、`/me` 均返回 `200 text/html`。
+- `manifest.webmanifest` 返回 `200 application/manifest+json`。
+- `offline.html` 返回 `200 text/html`。
+- `sw.js` 返回 `200 application/javascript`。
+- 首页 HTML 能看到 `今日 / 健康 / 家属 / 我的` 四个底部 Tab。
+- 首页 HTML 能看到 `当前接入：真实 API`。
+- 首页 HTML 能看到远程任务 `晨间散步 20 分钟` 和 `记录今日血压`。
+
+CORS 验证：
+
+```bash
+curl -i \
+  -H "Origin: https://web-nu-blond-89.vercel.app" \
+  https://silver-health-api-production.up.railway.app/api/health
+
+curl -i -X OPTIONS \
+  -H "Origin: https://web-nu-blond-89.vercel.app" \
+  -H "Access-Control-Request-Method: PATCH" \
+  -H "Access-Control-Request-Headers: content-type" \
+  https://silver-health-api-production.up.railway.app/api/tasks/cmre5b6la0006ij0nf02a6kzm/complete
+```
+
+验证结果：
+
+- API 返回 `access-control-allow-origin: https://web-nu-blond-89.vercel.app`。
+- PATCH 预检返回 `204`。
+- `access-control-allow-methods` 包含 `GET,HEAD,PUT,PATCH,POST,DELETE`。
+
+移动端视口验证：
+
+- 390x844：无横向滚动，底部 Tab 固定在底部，底部 Tab 高度 56px，主操作按钮高度 48px。
+- 360x800：无横向滚动，底部 Tab 固定在底部，底部 Tab 高度 56px，主操作按钮高度 48px。
+
+## 6. 本地验证记录
 
 ```bash
 corepack pnpm --filter @silver-health/web typecheck
@@ -94,7 +168,7 @@ corepack pnpm demo:ready
 - API build：通过。
 - `demo:ready`：本地首次检查发现当天任务为空，自动执行 `seed:demo` 后复查通过。
 
-## 6. 本轮关键修复
+## 7. 本轮关键修复
 
 ### Next.js 安全升级
 
@@ -112,9 +186,9 @@ await app.listen(port, '0.0.0.0');
 
 Railway 部署区域使用 UTC 时间时，默认 `new Date()` 会让中国日期的“今日任务”在早晨前后查空。`TaskService` 现在将默认任务日期固定到 `Asia/Shanghai` 业务日期，再按 date-only 边界查询，保证首屏今日工作台能拿到当天任务。
 
-## 7. 待完成
+## 8. 待优化项
 
-1. 完成 Vercel CLI 设备登录授权。
-2. 发布 Vercel Web 生产部署。
-3. 将 Vercel 域名回填到 Railway `CORS_ORIGIN`。
-4. 用线上 Web 验证四个底部 Tab 和主要数据页。
+1. 将 Vercel 项目名从默认 `web` 调整为更清晰的 `silver-health-app-web`。
+2. 将 Vercel CLI prebuilt 部署流程整理成脚本，避免 monorepo 子目录上传路径再次踩坑。
+3. 增加端到端测试，覆盖“完成任务”“录入指标”“查看家属看板”的真实交互。
+4. 增加线上 seed/重置演示数据的受控脚本，方便演示前恢复默认状态。

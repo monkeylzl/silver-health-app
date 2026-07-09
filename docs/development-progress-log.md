@@ -1859,3 +1859,47 @@ pnpm dev:web
 3. 将 Vercel 域名回填 Railway `CORS_ORIGIN`；
 4. 用线上 Web 做移动端四 Tab 验收；
 5. commit 并 push `feature/pwa-launch-ready`。
+
+---
+
+### 78. Vercel Web 生产部署与线上验收完成
+
+#### 本轮处理
+1. 通过 Vercel 设备授权页允许 `Vercel CLI 55.0.0` 登录。
+2. 创建 Vercel 项目 `monkeylzls-projects/web`。
+3. 首次远端构建失败，原因是 CLI 只上传 `apps/web` 子目录，导致远端执行 `cd ../..` 后找不到 monorepo 根目录 `package.json`。
+4. 改用本地 prebuilt 流程：
+   - 在本机执行 `vercel build --cwd apps/web --prod`；
+   - 将 `.vercel/output` 放到仓库根目录上传；
+   - 执行 `vercel deploy --prod --prebuilt`。
+5. Vercel production 环境变量已持久化：
+   - `NEXT_PUBLIC_API_BASE_URL`
+   - `NEXT_PUBLIC_DEFAULT_ELDER_USER_ID`
+6. Railway `CORS_ORIGIN` 已回填 Vercel 生产域名。
+
+#### 当前线上信息
+- Web Production Alias：`https://web-nu-blond-89.vercel.app`
+- Web Deployment URL：`https://web-m4057w5k7-monkeylzls-projects.vercel.app`
+- Web Deployment ID：`dpl_GiFkdXjPQEUXyvPjxN5ZTSQQrjSX`
+- Railway API Deployment ID：`e78cd36c-000b-4b74-9c21-326f11304a20`
+
+#### 本轮验证
+1. Web 首页 `https://web-nu-blond-89.vercel.app` 返回 `200 text/html`。
+2. `/health`、`/family/dashboard`、`/family/report`、`/me` 均返回 `200 text/html`。
+3. `manifest.webmanifest`、`offline.html`、`sw.js` 均返回 `200`。
+4. 首页 HTML 已渲染四个底部 Tab：`今日 / 健康 / 家属 / 我的`。
+5. 首页 HTML 已显示 `当前接入：真实 API`。
+6. 首页 HTML 已显示远程任务：`晨间散步 20 分钟`、`记录今日血压`。
+7. API CORS 验证通过：
+   - `access-control-allow-origin` 等于 Vercel 生产域名；
+   - PATCH 预检返回 `204`；
+   - `access-control-allow-methods` 包含 `GET,HEAD,PUT,PATCH,POST,DELETE`。
+8. 手机视口验证：
+   - 390x844：无横向滚动，底部 Tab 固定，最小主按钮高度 48px；
+   - 360x800：无横向滚动，底部 Tab 固定，最小主按钮高度 48px。
+
+#### 后续建议
+1. 将 Vercel 项目名从 `web` 改为 `silver-health-app-web`；
+2. 增加端到端测试，覆盖真实点击完成任务和录入指标；
+3. 把 prebuilt 部署流程固化成脚本或 CI；
+4. 增加演示数据重置命令，方便上线试用前恢复初始状态。
