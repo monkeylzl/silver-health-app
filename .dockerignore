@@ -1,12 +1,11 @@
 node_modules
 .pnpm-store
-.env
-.env.*
-!.env.example
-.vercel
 .next
 dist
 coverage
 *.tsbuildinfo
+.env
+.env.*
+!.env.example
+.git
 .DS_Store
-prisma/dev.db

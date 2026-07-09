@@ -3,6 +3,33 @@ import { TaskStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateDailyTaskDto } from './dto/create-daily-task.dto';
 
+const DEFAULT_TASK_TIME_ZONE = 'Asia/Shanghai';
+
+function formatBusinessDate(date: Date) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: DEFAULT_TASK_TIME_ZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date);
+
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${values.year}-${values.month}-${values.day}`;
+}
+
+function resolveDateKey(taskDate?: string) {
+  if (!taskDate) {
+    return formatBusinessDate(new Date());
+  }
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(taskDate)) {
+    return taskDate;
+  }
+
+  const parsedDate = new Date(taskDate);
+  return Number.isNaN(parsedDate.getTime()) ? formatBusinessDate(new Date()) : formatBusinessDate(parsedDate);
+}
+
 @Injectable()
 export class TaskService {
   constructor(private readonly prisma: PrismaService) {}
@@ -25,11 +52,9 @@ export class TaskService {
   }
 
   async findTodayByElderUserId(elderUserId: string, taskDate?: string) {
-    const baseDate = taskDate ? new Date(taskDate) : new Date();
-    const startOfDay = new Date(baseDate);
-    startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date(baseDate);
-    endOfDay.setHours(23, 59, 59, 999);
+    const dateKey = resolveDateKey(taskDate);
+    const startOfDay = new Date(`${dateKey}T00:00:00.000Z`);
+    const endOfDay = new Date(`${dateKey}T23:59:59.999Z`);
 
     return this.prisma.dailyTask.findMany({
       where: {

@@ -40,7 +40,7 @@ API 启动命令：
 corepack pnpm --filter @silver-health/api start
 ```
 
-仓库根目录已经提供 `railway.json`，包含 Nixpacks build command、API start command、`/api/health` 健康检查和失败重启策略。Railway 导入仓库后优先确认该配置被识别。
+仓库根目录已经提供 `railway.json` 和 `Dockerfile.api`，Railway 使用 Dockerfile builder。`preDeployCommand` 执行数据库迁移，`startCommand` 只启动 API，健康检查路径为 `/api/health`。
 
 ### 3. Railway API 环境变量
 
@@ -106,6 +106,13 @@ NEXT_PUBLIC_DEFAULT_ELDER_USER_ID="remote-seed-elder-id"
 ```
 
 注意：`NEXT_PUBLIC_API_BASE_URL` 不要以 `/` 结尾。
+
+当前 Railway API 已上线：
+
+```env
+NEXT_PUBLIC_API_BASE_URL="https://silver-health-api-production.up.railway.app"
+NEXT_PUBLIC_DEFAULT_ELDER_USER_ID="cmre5b56p0000ij0niccn6i4n"
+```
 
 ## 四、PWA 验收
 

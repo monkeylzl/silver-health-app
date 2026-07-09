@@ -1810,3 +1810,52 @@ pnpm dev:web
 - 多 Tab 改动本身没有导致路由缺失；
 - 问题来自开发缓存和旧 dev server 状态；
 - 当前首页、老人首页、家属看板均已恢复可访问。
+
+---
+
+### 77. Railway API / PostgreSQL 上线与 PWA 发布准备
+
+#### 本轮处理
+1. 通过 Chrome 完成 Railway Terms of Service / Fair Use Policy 确认。
+2. 创建 Railway 项目 `heartfelt-transformation`，并添加 PostgreSQL。
+3. 使用 Railway CLI 将 `silver-health-api` 部署到 Railway。
+4. 新增 `Dockerfile.api`，将 API 构建稳定到 Dockerfile builder。
+5. 调整 `railway.json`：
+   - 使用 Dockerfile builder；
+   - 将 `prisma:migrate:deploy` 放到 `preDeployCommand`；
+   - `startCommand` 只启动 API；
+   - 保留 `/api/health` 健康检查。
+6. 将 API 监听地址调整为 `0.0.0.0`，适配 Railway 容器外部访问。
+7. 将 Web 的 Next.js 从 `15.3.2` 升级到 `15.3.8`，通过 Railway 安全扫描。
+8. 修复今日任务默认查询的业务时区问题，避免 Railway UTC 环境下首页任务为空。
+9. 使用远程 PostgreSQL 执行演示数据 seed，记录默认老人账号 ID。
+
+#### 当前线上信息
+- Railway API：`https://silver-health-api-production.up.railway.app`
+- 默认老人账号：`cmre5b56p0000ij0niccn6i4n`
+- 当前 API Deployment ID：`5ee96701-2f27-4cf6-8b13-f91e6e7a4119`
+
+#### 本轮验证
+1. 已执行：`corepack pnpm --filter @silver-health/api build`
+   - 结果：通过。
+2. 已执行：`corepack pnpm --filter @silver-health/web typecheck`
+   - 结果：通过。
+3. 已执行：`corepack pnpm --filter @silver-health/web build`
+   - 结果：通过。
+4. 已执行：`corepack pnpm demo:ready`
+   - 结果：本地首次检查发现当天任务为空，自动 seed 后复查通过。
+5. 已验证 Railway `/api/health`
+   - 结果：`code=0`，`status=running`。
+6. 已验证远程演示数据接口：
+   - 老人档案返回 `李阿姨`；
+   - 今日任务返回 4 条；
+   - 健康指标返回 3 条；
+   - 用药提醒返回 2 条；
+   - 家属周报返回 2 条。
+
+#### 下一步
+1. 完成 Vercel CLI 设备登录授权；
+2. 发布 Vercel Web 生产部署；
+3. 将 Vercel 域名回填 Railway `CORS_ORIGIN`；
+4. 用线上 Web 做移动端四 Tab 验收；
+5. commit 并 push `feature/pwa-launch-ready`。
