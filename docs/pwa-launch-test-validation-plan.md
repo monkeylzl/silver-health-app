@@ -203,6 +203,20 @@ corepack pnpm test:smoke-utils
 - `production smoke utils` 测试套件通过；
 - URL 规范化、路径拼接、页面文本缺失检查、API list payload 汇总逻辑均有覆盖。
 
+### 4.8 演示数据重置工具单元测试
+
+```bash
+corepack pnpm test:demo-reset-utils
+```
+
+验收标准：
+
+- 未提供确认令牌时不能重置；
+- `DATABASE_URL` 输出时会隐藏密码；
+- 可解析根目录 `.env` 中的 `DATABASE_URL`；
+- 默认重置计划包含 `seed:demo`、`check:demo`、`smoke:production`；
+- `--skip-smoke` 时只执行 `seed:demo` 和 `check:demo`。
+
 ## 5. 本地运行验证
 
 ### 5.1 启动 API
@@ -617,6 +631,8 @@ corepack pnpm --filter @silver-health/web typecheck
 corepack pnpm --filter @silver-health/web build
 corepack pnpm --filter @silver-health/api build
 corepack pnpm demo:ready
+corepack pnpm test:demo-reset-utils
+corepack pnpm test:smoke-utils
 ```
 
 如果改动涉及 Prisma schema 或 seed：
@@ -635,6 +651,19 @@ corepack pnpm check:demo
 - 主按钮高度检查；
 - 表单单列检查；
 - 截图留档。
+
+如果改动涉及演示数据恢复或线上试用前准备：
+
+```bash
+DEMO_RESET_CONFIRM=RESET_DEMO_DATA corepack pnpm demo:reset -- --skip-smoke
+corepack pnpm smoke:production
+```
+
+验收标准：
+
+- `demo:reset` 输出脱敏数据库目标；
+- `seed:demo` 和 `check:demo` 均通过；
+- 线上 smoke 仍然通过。
 
 ## 12. 常见问题排查
 

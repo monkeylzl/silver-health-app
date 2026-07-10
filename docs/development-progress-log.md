@@ -1942,3 +1942,44 @@ pnpm dev:web
 1. 增加 Playwright 端到端测试，覆盖“完成任务 / 录入指标 / 家属看板同步”；
 2. 增加线上演示数据重置脚本，避免试用多人点击后数据漂移；
 3. 将 prebuilt Vercel 部署流程固化成脚本或 GitHub Actions。
+
+---
+
+### 80. 受控演示数据重置命令
+
+#### 本轮处理
+1. 从 `feature/production-smoke-gates` 新建分支 `feature/demo-reset-command`。
+2. 新增重置工具测试：`scripts/demo-reset-utils.test.ts`。
+3. 新增重置工具函数：`scripts/demo-reset-utils.ts`。
+4. 新增受控重置脚本：`scripts/demo-reset.ts`。
+5. 根 `package.json` 新增：
+   - `demo:reset`
+   - `test:demo-reset-utils`
+6. 更新上线检查清单和测试验证方案。
+
+#### 安全策略
+- 必须显式设置 `DEMO_RESET_CONFIRM=RESET_DEMO_DATA`；
+- 未确认时命令拒绝执行；
+- 执行前打印脱敏后的 `DATABASE_URL`；
+- 默认重置后继续执行 `smoke:production`；
+- 本地恢复可使用 `--skip-smoke`。
+
+#### 本轮验证
+1. 已按 TDD 先运行失败测试：
+   - `node --test scripts/demo-reset-utils.test.ts`
+   - 失败原因：`demo-reset-utils.ts` 不存在。
+2. 已新增 `.env` 解析测试并先确认失败：
+   - 失败原因：`parseDotEnv` 未导出。
+3. 已执行：`corepack pnpm test:demo-reset-utils`
+   - 结果：5 个测试通过。
+4. 已执行未确认路径：
+   - `corepack pnpm demo:reset -- --skip-smoke`
+   - 结果：拒绝执行，并显示脱敏数据库目标。
+5. 已执行确认路径：
+   - `DEMO_RESET_CONFIRM=RESET_DEMO_DATA corepack pnpm demo:reset -- --skip-smoke`
+   - 结果：`seed:demo`、`check:demo` 通过。
+
+#### 下一轮建议
+1. 增加 Playwright E2E，覆盖真实点击完成任务；
+2. 把 Vercel prebuilt 部署流程脚本化；
+3. 将生产 smoke 与 demo reset 接入 GitHub Actions 手动工作流。

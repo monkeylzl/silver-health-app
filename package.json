@@ -17,7 +17,9 @@
     "check:demo": "node scripts/check-demo-data.ts",
     "check:demo-copy": "node scripts/check-demo-copy.ts",
     "demo:ready": "node scripts/demo-ready.ts",
+    "demo:reset": "node scripts/demo-reset.ts",
     "smoke:production": "node scripts/production-smoke.ts",
+    "test:demo-reset-utils": "node --test scripts/demo-reset-utils.test.ts",
     "test:smoke-utils": "node --test scripts/production-smoke-utils.test.ts"
   },
   "dependencies": {

@@ -74,6 +74,32 @@ corepack pnpm check:demo
 NEXT_PUBLIC_DEFAULT_ELDER_USER_ID="..."
 ```
 
+### 5. 重置演示数据
+
+当线上试用后任务状态、指标或周报被改动，可使用受控重置命令恢复演示账号数据：
+
+```bash
+DEMO_RESET_CONFIRM=RESET_DEMO_DATA corepack pnpm demo:reset
+```
+
+默认会执行：
+
+1. `corepack pnpm seed:demo`
+2. `corepack pnpm check:demo`
+3. `corepack pnpm smoke:production`
+
+本地只想恢复数据库、暂时不跑线上 smoke：
+
+```bash
+DEMO_RESET_CONFIRM=RESET_DEMO_DATA corepack pnpm demo:reset -- --skip-smoke
+```
+
+安全约束：
+
+- 未设置 `DEMO_RESET_CONFIRM=RESET_DEMO_DATA` 时命令会拒绝执行；
+- 执行前会打印脱敏后的 `DATABASE_URL`；
+- 该命令会删除并重建演示老人关联的任务、指标、用药提醒和周报。
+
 ## 三、Vercel Web
 
 ### 1. 项目设置
@@ -187,6 +213,7 @@ corepack pnpm --filter @silver-health/web typecheck
 corepack pnpm --filter @silver-health/web build
 corepack pnpm --filter @silver-health/api build
 corepack pnpm demo:ready
+corepack pnpm test:demo-reset-utils
 corepack pnpm test:smoke-utils
 ```
 
