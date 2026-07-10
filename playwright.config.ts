@@ -37,5 +37,32 @@ export default defineConfig({
         viewport: { width: 360, height: 800 },
       },
     },
+    {
+      name: 'tablet-768',
+      use: {
+        browserName: 'chromium',
+        ...(browserChannel ? { channel: browserChannel } : {}),
+        hasTouch: true,
+        viewport: { width: 768, height: 1024 },
+      },
+    },
+    {
+      name: 'tablet-1024',
+      use: {
+        browserName: 'chromium',
+        ...(browserChannel ? { channel: browserChannel } : {}),
+        hasTouch: true,
+        viewport: { width: 1024, height: 1366 },
+      },
+    },
+    {
+      name: 'tablet-landscape',
+      use: {
+        browserName: 'chromium',
+        ...(browserChannel ? { channel: browserChannel } : {}),
+        hasTouch: true,
+        viewport: { width: 1366, height: 1024 },
+      },
+    },
   ],
 });

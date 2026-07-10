@@ -2,6 +2,8 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { TaskStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateDailyTaskDto } from './dto/create-daily-task.dto';
+import { buildTaskStatusUpdate, isTaskStatusUnchanged } from './task-status';
+import { recordBelongsToElder } from '../../security/record-ownership';
 
 const DEFAULT_TASK_TIME_ZONE = 'Asia/Shanghai';
 
@@ -68,21 +70,34 @@ export class TaskService {
     });
   }
 
-  async complete(taskId: string) {
-    const task = await this.prisma.dailyTask.findUnique({
-      where: { id: taskId },
-    });
+  async complete(taskId: string, elderUserId: string) {
+    return this.updateStatus(taskId, TaskStatus.done, elderUserId);
+  }
 
-    if (!task) {
+  async updateStatus(taskId: string, status: 'done' | 'todo', elderUserId: string) {
+    const task = await this.prisma.dailyTask.findFirst({ where: { id: taskId, elderUserId } });
+
+    if (!task || !recordBelongsToElder(task.elderUserId, elderUserId)) {
       throw new NotFoundException(`task not found: ${taskId}`);
     }
 
-    return this.prisma.dailyTask.update({
-      where: { id: taskId },
-      data: {
-        status: TaskStatus.done,
-        completedAt: new Date(),
-      },
+    if (isTaskStatusUnchanged(task.status, task.completedAt, status)) return task;
+
+    const updated = await this.prisma.dailyTask.updateMany({
+      where: status === TaskStatus.done
+        ? { id: taskId, elderUserId, status: { not: TaskStatus.done } }
+        : {
+            id: taskId,
+            elderUserId,
+            OR: [{ status: { not: TaskStatus.todo } }, { completedAt: { not: null } }],
+          },
+      data: buildTaskStatusUpdate(status),
     });
+    if (updated.count === 0) {
+      const current = await this.prisma.dailyTask.findFirst({ where: { id: taskId, elderUserId } });
+      if (!current) throw new NotFoundException(`task not found: ${taskId}`);
+      return current;
+    }
+    return this.prisma.dailyTask.findUniqueOrThrow({ where: { id: taskId } });
   }
 }

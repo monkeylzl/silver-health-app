@@ -36,7 +36,9 @@ export function buildLocalWriteE2EConfig(env: NodeJS.ProcessEnv, ids: DemoIds): 
   const apiPort = readPort(env.E2E_LOCAL_API_PORT, 3201);
   const webPort = readPort(env.E2E_LOCAL_WEB_PORT, 3200);
   const apiUrl = `http://127.0.0.1:${apiPort}`;
-  const webUrl = `http://127.0.0.1:${webPort}`;
+  const webUrl = `http://localhost:${webPort}`;
+  const internalAppKey = 'silver-health-local-internal-key-2026';
+  const trialSessionSecret = 'silver-health-local-session-secret-2026';
 
   return {
     apiPort,
@@ -47,11 +49,16 @@ export function buildLocalWriteE2EConfig(env: NodeJS.ProcessEnv, ids: DemoIds): 
       ...Object.fromEntries(Object.entries(env).filter((entry): entry is [string, string] => typeof entry[1] === 'string')),
       PORT: String(apiPort),
       CORS_ORIGIN: webUrl,
-      NEXT_PUBLIC_API_BASE_URL: apiUrl,
-      NEXT_PUBLIC_DEFAULT_ELDER_USER_ID: ids.elderUserId,
+      API_BASE_URL: apiUrl,
+      DEFAULT_ELDER_USER_ID: ids.elderUserId,
+      INTERNAL_API_KEY: internalAppKey,
+      TRIAL_ACCESS_CODE_HASH: 'scrypt$16384$8$1$2uOmv8P_CH0-VR3atvkaaA$2GXqxlb2xxaX5RC7JAbPOwyXOhL11mLgFT3PJHq4brTWEsaySy0WqoFh-HtriWNdOM_T2FYMzZjqULAOlH7UUg',
+      TRIAL_SESSION_SECRET: trialSessionSecret,
+      E2E_TRIAL_ACCESS_CODE: 'silver-health-local',
+      E2E_INTERNAL_API_KEY: internalAppKey,
       ...(ids.familyUserId
         ? {
-            NEXT_PUBLIC_DEFAULT_FAMILY_USER_ID: ids.familyUserId,
+            DEFAULT_FAMILY_USER_ID: ids.familyUserId,
             E2E_FAMILY_USER_ID: ids.familyUserId,
           }
         : {}),

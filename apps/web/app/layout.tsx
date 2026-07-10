@@ -6,7 +6,7 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: 'Silver Health',
-  description: '面向老人和家属的健康管理 PWA',
+  description: '面向老人和家人的日常健康管理应用',
   manifest: '/manifest.webmanifest',
   appleWebApp: {
     capable: true,
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#2563eb',
+  themeColor: '#176b87',
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
@@ -25,7 +25,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body>
         <PwaRegister />
         <AppNavigation />
-        {children}
+        <div className="app-content">{children}</div>
       </body>
     </html>
   );

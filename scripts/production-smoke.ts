@@ -12,6 +12,7 @@ type SmokeCheck = {
 };
 
 const config = buildSmokeConfig();
+let webSessionCookie = '';
 
 async function fetchText(url: string, init?: RequestInit) {
   const response = await fetch(url, init);
@@ -27,6 +28,36 @@ async function fetchJson(url: string, init?: RequestInit) {
   return JSON.parse(text) as unknown;
 }
 
+async function authenticatedWebFetch(url: string, init: RequestInit = {}) {
+  return fetch(url, {
+    ...init,
+    headers: { Cookie: webSessionCookie, ...init.headers },
+  });
+}
+
+async function protectedApiFetch(url: string, init: RequestInit = {}) {
+  return fetch(url, {
+    ...init,
+    headers: { 'X-Silver-App-Key': config.internalApiKey, ...init.headers },
+  });
+}
+
+async function establishWebSession() {
+  if (!config.trialAccessCode || !config.internalApiKey) {
+    throw new Error('PRODUCTION_TRIAL_ACCESS_CODE and PRODUCTION_INTERNAL_API_KEY are required');
+  }
+  const response = await fetch(joinUrl(config.webUrl, '/api/session'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ accessCode: config.trialAccessCode }),
+  });
+  if (response.status !== 204) {
+    throw new Error(`web session returned ${response.status}`);
+  }
+  webSessionCookie = (response.headers.get('set-cookie') ?? '').split(';')[0];
+  if (!webSessionCookie) throw new Error('web session did not return a cookie');
+}
+
 function contentTypeIncludes(response: Response, expectedType: string) {
   const contentType = response.headers.get('content-type') ?? '';
   if (!contentType.includes(expectedType)) {
@@ -39,7 +70,7 @@ function httpCheck(path: string, expectedType: string): SmokeCheck {
     name: `web ${path}`,
     async run() {
       const url = joinUrl(config.webUrl, path);
-      const response = await fetch(url);
+      const response = await authenticatedWebFetch(url);
       if (!response.ok) {
         throw new Error(`${url} returned ${response.status}`);
       }
@@ -53,7 +84,9 @@ function apiCollectionCheck(path: string, label: string, minimumCount: number): 
   return {
     name: `api ${label}`,
     async run() {
-      const payload = await fetchJson(joinUrl(config.apiBaseUrl, path));
+      const response = await protectedApiFetch(joinUrl(config.apiBaseUrl, path));
+      if (!response.ok) throw new Error(`${path} returned ${response.status}`);
+      const payload = await response.json() as unknown;
       assertJsonOk(payload, label);
       const count = summarizeCollectionPayload(payload, label);
       if (count < minimumCount) {
@@ -68,13 +101,14 @@ const checks: SmokeCheck[] = [
   {
     name: 'config',
     async run() {
-      return `web=${config.webUrl}, api=${config.apiBaseUrl}, elder=${config.elderUserId}`;
+      await establishWebSession();
+      return `web=${config.webUrl}, api=${config.apiBaseUrl}, elder=${config.elderUserId}, protected=yes`;
     },
   },
   httpCheck('/', 'text/html'),
   httpCheck('/health', 'text/html'),
-  httpCheck('/family/dashboard', 'text/html'),
-  httpCheck('/family/report', 'text/html'),
+  httpCheck('/family', 'text/html'),
+  httpCheck('/family/reports', 'text/html'),
   httpCheck('/me', 'text/html'),
   httpCheck('/manifest.webmanifest', 'application/manifest+json'),
   httpCheck('/offline.html', 'text/html'),
@@ -82,16 +116,16 @@ const checks: SmokeCheck[] = [
   {
     name: 'home real api content',
     async run() {
-      const { response, text } = await fetchText(config.webUrl);
+      const response = await authenticatedWebFetch(config.webUrl);
+      const text = await response.text();
       if (!response.ok) {
         throw new Error(`${config.webUrl} returned ${response.status}`);
       }
       const missingText = containsAllText(text, [
         '今日',
         '健康',
-        '家属',
+        '家人',
         '我的',
-        '当前接入：真实 API',
         '晨间散步 20 分钟',
         '记录今日血压',
       ]);
@@ -129,12 +163,12 @@ const checks: SmokeCheck[] = [
   {
     name: 'api cors patch preflight',
     async run() {
-      const response = await fetch(joinUrl(config.apiBaseUrl, '/api/tasks/smoke-task/complete'), {
+      const response = await fetch(joinUrl(config.apiBaseUrl, '/api/tasks/smoke-task/status'), {
         method: 'OPTIONS',
         headers: {
           Origin: config.webUrl,
           'Access-Control-Request-Method': 'PATCH',
-          'Access-Control-Request-Headers': 'content-type',
+          'Access-Control-Request-Headers': 'content-type,x-silver-app-key',
         },
       });
       if (response.status !== 204) {

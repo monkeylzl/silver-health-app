@@ -8,11 +8,16 @@ export function PwaRegister() {
       return;
     }
 
-    window.addEventListener('load', () => {
+    const register = () => {
       navigator.serviceWorker.register('/sw.js').catch(() => {
         // Registration failure should not block the app shell.
       });
-    });
+    };
+
+    if (document.readyState === 'complete') register();
+    else window.addEventListener('load', register, { once: true });
+
+    return () => window.removeEventListener('load', register);
   }, []);
 
   return null;
