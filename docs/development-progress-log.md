@@ -2177,3 +2177,97 @@ pnpm dev:web
 1. 在 GitHub Actions 页面实际触发一次 `Silver Health release gates`，确认 GitHub Runner 侧通过；
 2. 增加本地可重置数据环境下的写入型 E2E；
 3. 整理 Node ESM warning，统一 scripts 的模块运行方式。
+
+---
+
+### 84. 本地写入型 E2E 与指标时间修复
+
+#### 本轮处理
+1. 从 `feature/manual-release-workflow` 新建分支 `feature/local-write-e2e`。
+2. 根 `package.json` 新增：
+   - `test:e2e:local-write`
+   - `test:local-e2e-utils`
+3. 新增本地写入型 E2E 编排：
+   - `scripts/local-write-e2e.ts`
+   - `scripts/local-e2e-utils.ts`
+   - `scripts/local-e2e-utils.test.ts`
+4. 新增 Playwright 写入型测试：
+   - `tests/e2e/local-write-flow.spec.ts`
+5. 调整 Playwright 配置：
+   - 默认 `test:e2e:mobile` 忽略本地写入测试；
+   - `E2E_INCLUDE_LOCAL_WRITE=1` 时启用本地写入测试。
+6. 修复健康指标表单默认测量时间：
+   - 原先使用服务端 UTC 字符串作为 `datetime-local` 默认值；
+   - 浏览器按本地时间解释后，刚录入指标可能早于 seed 指标；
+   - 改为客户端 hydrate 后设置本地 `datetime-local` 默认值。
+7. 更新上线检查清单、测试验证方案和优化路线图。
+
+#### 写入型 E2E 覆盖范围
+- 自动执行本地 `demo:reset -- --skip-smoke`；
+- 从 seed 输出解析默认 elder id；
+- 启动本地 API：默认 `http://127.0.0.1:3201`；
+- 启动本地 Web：默认 `http://127.0.0.1:3200`；
+- 老人首页点击“标记完成”；
+- API 确认任务 `done` 数量增加；
+- 指标录入页保存一条血压 `132 / 82`；
+- API 确认指标数量增加；
+- 家属看板显示更新后的任务完成数；
+- 家属看板显示最新血压 `132 / 82 mmHg`。
+
+#### 本轮验证
+1. 已按 TDD 先运行失败测试：
+   - `corepack pnpm test:local-e2e-utils`
+   - 失败原因：`local-e2e-utils.ts` 不存在。
+2. 已执行：
+   - `corepack pnpm test:local-e2e-utils`
+   - 结果：3 个测试通过。
+3. 已执行：
+   - `corepack pnpm test:e2e:mobile`
+   - 结果：4 个线上只读手机 E2E 通过，确认本地写入测试未混入默认套件。
+4. 首次执行：
+   - `corepack pnpm test:e2e:local-write`
+   - 失败原因：Web dev server 启动参数被 pnpm 传错，Next 将 `--hostname` 当作项目目录。
+5. 修复 Web 启动方式后再次执行：
+   - 失败原因：测试里把 Node `fetch` 的 `response.ok` 当函数调用。
+6. 修正测试后再次执行：
+   - 失败原因：页面真实标题为“老人首页”，测试写成“今日任务”。
+7. 修正标题后再次执行：
+   - 失败原因：`真实 API` 文案出现多处，触发 Playwright strict mode。
+8. 收紧断言后再次执行：
+   - 失败原因：家属看板仍显示 seed 指标 `128 / 78`，没有显示刚录入的 `132 / 82`。
+9. 排查数据库后确认根因：
+   - 新增指标写入成功；
+   - 但 `measuredAt` 被保存为 `2026-07-09T21:44:00.000Z`；
+   - 早于 seed 指标 `2026-07-10T00:30:00.000Z`；
+   - 根因是 `datetime-local` 默认值来自服务端 UTC。
+10. 修复客户端本地时间初始化后再次执行：
+    - 失败原因：`最近血压：132 / 82 mmHg` 同时出现在一句话近况和指标摘要中，触发 strict mode。
+11. 收紧为 exact text 后已执行：
+    - `corepack pnpm test:e2e:local-write`
+    - 结果：1 个本地写入型 E2E 通过。
+12. 已执行：
+    - `corepack pnpm test:local-e2e-utils`
+    - 结果：3 个测试通过。
+13. 已执行：
+    - `corepack pnpm test:e2e:mobile`
+    - 结果：4 个线上只读手机 E2E 通过。
+14. 已执行：
+    - `corepack pnpm --filter @silver-health/web typecheck`
+    - 结果：通过。
+15. 已执行：
+    - `corepack pnpm --filter @silver-health/api build`
+    - 结果：通过。
+16. 已执行：
+    - `corepack pnpm --filter @silver-health/web build`
+    - 结果：通过。
+17. 已执行：
+    - `corepack pnpm smoke:production`
+    - 结果：17 项线上冒烟检查通过。
+18. 已执行：
+    - `corepack pnpm test:github-workflow`
+    - 结果：1 个测试通过。
+
+#### 下一轮建议
+1. 将 `test:e2e:local-write` 评估接入 GitHub Actions 手动门禁；
+2. 继续补用药提醒、家属绑定等写入型 E2E；
+3. 整理 Node ESM warning，减少脚本运行噪音。

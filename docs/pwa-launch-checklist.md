@@ -294,10 +294,35 @@ corepack pnpm --filter @silver-health/web build
 corepack pnpm --filter @silver-health/api build
 corepack pnpm demo:ready
 corepack pnpm test:e2e:mobile
+corepack pnpm test:e2e:local-write
 corepack pnpm test:demo-reset-utils
 corepack pnpm test:github-workflow
+corepack pnpm test:local-e2e-utils
 corepack pnpm test:smoke-utils
 corepack pnpm test:vercel-deploy-utils
+```
+
+本地写入型 E2E：
+
+```bash
+corepack pnpm test:e2e:local-write
+```
+
+该命令会重置本地 demo 数据、启动本地 API/Web，并验证：
+
+- 老人首页可完成一项任务；
+- 健康指标页可保存一条血压；
+- 家属看板能同步看到任务完成数和最新血压。
+
+默认端口：
+
+- API：`http://127.0.0.1:3201`
+- Web：`http://127.0.0.1:3200`
+
+如端口被占用：
+
+```bash
+E2E_LOCAL_API_PORT=4201 E2E_LOCAL_WEB_PORT=4200 corepack pnpm test:e2e:local-write
 ```
 
 如果遇到 Next dev 缓存错误，例如 `.next/server/...` 或 `Cannot find module './xxx.js'`：

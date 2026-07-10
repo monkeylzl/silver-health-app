@@ -186,7 +186,8 @@ curl -I \
 
 - 已新增第一层 Playwright 手机视口 E2E；
 - `test:e2e:mobile` 默认检查线上 PWA；
-- 后续 UI 改动仍需要继续扩展会写数据的链路测试，避免完成任务、录入指标和家属看板联动漂移。
+- 已新增本地可重置数据环境下的写入型 E2E；
+- 后续 UI 改动可以同时用线上只读 E2E 和本地写入 E2E 双层回归。
 
 已完成：
 
@@ -196,19 +197,23 @@ curl -I \
 - 检查首页线上 demo 数据可见；
 - 检查无横向滚动；
 - 检查底部 Tab、主操作按钮、操作卡片和按钮高度不低于 44px；
-- 失败时输出 Playwright screenshot 和 trace。
+- 失败时输出 Playwright screenshot 和 trace；
+- `test:e2e:local-write` 会先执行本地 `demo:reset -- --skip-smoke`，再启动本地 API/Web；
+- 覆盖“完成任务 / 录入指标 / 家属看板同步”；
+- 修复了指标表单默认测量时间使用服务端 UTC 的问题，避免刚录入的数据早于 seed 数据。
 
 验收：
 
 ```bash
 corepack pnpm test:e2e:mobile
+corepack pnpm test:e2e:local-write
 ```
 
 下一步待做：
 
-- 增加本地可重置数据环境下的写入型 E2E；
-- 覆盖“完成任务 / 录入指标 / 家属看板同步”；
-- 将 `test:e2e:mobile` 接入 GitHub Actions 手动工作流。
+- 将 `test:e2e:local-write` 评估接入 GitHub Actions 手动工作流；
+- 继续补充用药提醒、绑定关系等写入型链路；
+- 整理 Node ESM warning，统一 scripts 的模块运行方式。
 
 ### P1-6 GitHub Actions 手动上线门禁
 

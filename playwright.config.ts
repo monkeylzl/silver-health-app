@@ -16,6 +16,7 @@ export default defineConfig({
     timeout: 10_000,
   },
   reporter: [['list']],
+  testIgnore: process.env.E2E_INCLUDE_LOCAL_WRITE ? [] : ['**/local-write-flow.spec.ts'],
   use: {
     baseURL,
     trace: 'retain-on-failure',

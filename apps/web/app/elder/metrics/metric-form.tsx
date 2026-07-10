@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiBaseUrl, defaultElderUserId } from '../../../lib/config';
 
@@ -34,7 +34,7 @@ const initialFormState: MetricFormState = {
   glucoseValue: '6.2',
   glucosePeriodType: 'before_breakfast',
   weightKg: '61.5',
-  measuredAt: new Date().toISOString().slice(0, 16),
+  measuredAt: '',
 };
 
 const metricTypeOptions: Array<{ value: MetricType; label: string; helper: string }> = [
@@ -123,6 +123,11 @@ function validateForm(form: MetricFormState): FormErrors {
   return errors;
 }
 
+function getLocalDateTimeInputValue(date = new Date()) {
+  const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+  return localDate.toISOString().slice(0, 16);
+}
+
 export function MetricForm() {
   const router = useRouter();
   const [form, setForm] = useState<MetricFormState>(initialFormState);
@@ -130,6 +135,10 @@ export function MetricForm() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [result, setResult] = useState('');
+
+  useEffect(() => {
+    setForm((prev) => (prev.measuredAt ? prev : { ...prev, measuredAt: getLocalDateTimeInputValue() }));
+  }, []);
 
   const typeDescription = useMemo(() => {
     if (form.metricType === 'blood_pressure') return '默认示例已填好一条晨起血压，适合现场一键讲解“录入后立即回显”。';

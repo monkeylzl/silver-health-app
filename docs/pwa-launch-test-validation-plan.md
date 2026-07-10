@@ -734,10 +734,43 @@ corepack pnpm --filter @silver-health/web build
 corepack pnpm --filter @silver-health/api build
 corepack pnpm demo:ready
 corepack pnpm test:e2e:mobile
+corepack pnpm test:e2e:local-write
 corepack pnpm test:demo-reset-utils
 corepack pnpm test:github-workflow
+corepack pnpm test:local-e2e-utils
 corepack pnpm test:smoke-utils
 corepack pnpm test:vercel-deploy-utils
+```
+
+如果改动涉及老人端写入、指标表单、家属看板联动：
+
+```bash
+corepack pnpm test:e2e:local-write
+```
+
+执行流程：
+
+1. 读取根目录 `.env` 中的 `DATABASE_URL`；
+2. 自动执行 `DEMO_RESET_CONFIRM=RESET_DEMO_DATA corepack pnpm demo:reset -- --skip-smoke`；
+3. 从 seed 输出中解析 `NEXT_PUBLIC_DEFAULT_ELDER_USER_ID`；
+4. 启动本地 API：默认 `http://127.0.0.1:3201`；
+5. 启动本地 Web：默认 `http://127.0.0.1:3200`；
+6. 执行 Playwright 写入型测试；
+7. 测试结束后关闭本地 API/Web。
+
+覆盖范围：
+
+- 老人首页点击“标记完成”；
+- API 确认任务 `done` 数量增加；
+- 指标录入页保存一条血压指标；
+- API 确认指标数量增加；
+- 家属看板显示更新后的任务完成数；
+- 家属看板显示刚录入的最新血压。
+
+可覆盖端口：
+
+```bash
+E2E_LOCAL_API_PORT=4201 E2E_LOCAL_WEB_PORT=4200 corepack pnpm test:e2e:local-write
 ```
 
 如果改动涉及 Prisma schema 或 seed：
