@@ -18,6 +18,12 @@ type MetricRecord = {
   diastolic?: number | null;
 };
 
+type MedicationReminder = {
+  id: string;
+  medicineName: string;
+  enabled: boolean;
+};
+
 const apiBaseUrl = process.env.E2E_API_BASE_URL;
 const elderUserId = process.env.E2E_ELDER_USER_ID;
 
@@ -32,11 +38,13 @@ async function fetchApiList<T>(path: string): Promise<T[]> {
   return payload.data;
 }
 
-test('completes a task, records a metric, and reflects both on family dashboard', async ({ page }) => {
+test('completes a task, records health data, creates medication reminder, and reflects all on family dashboard', async ({ page }) => {
   const tasksBefore = await fetchApiList<TaskItem>(`/api/tasks/elder/${elderUserId}`);
   const metricsBefore = await fetchApiList<MetricRecord>(`/api/metrics/elder/${elderUserId}`);
+  const remindersBefore = await fetchApiList<MedicationReminder>(`/api/medications/elder/${elderUserId}`);
   const doneBefore = tasksBefore.filter((task) => task.status === 'done').length;
   const todoBefore = tasksBefore.filter((task) => task.status === 'todo').length;
+  const enabledRemindersBefore = remindersBefore.filter((reminder) => reminder.enabled).length;
 
   expect(todoBefore).toBeGreaterThan(0);
 
@@ -68,8 +76,25 @@ test('completes a task, records a metric, and reflects both on family dashboard'
     })
     .toBe(metricsBefore.length + 1);
 
+  await page.goto('/elder/medication');
+  await expect(page.getByRole('heading', { name: '用药提醒', exact: true })).toBeVisible();
+  await page.locator('label').filter({ hasText: '药品名称' }).locator('input').fill('阿司匹林');
+  await page.locator('label').filter({ hasText: '服用说明' }).locator('input').fill('晚饭后 1 片');
+  await page.locator('label').filter({ hasText: '提醒时间' }).locator('input').fill('21:15');
+  await page.getByRole('button', { name: '保存提醒' }).click();
+  await expect(page.getByText('用药提醒保存成功，列表已自动刷新。下一步可切到“家属看板”查看汇总。')).toBeVisible();
+
+  await expect
+    .poll(async () => {
+      const reminders = await fetchApiList<MedicationReminder>(`/api/medications/elder/${elderUserId}`);
+      return reminders.length;
+    })
+    .toBe(remindersBefore.length + 1);
+
   await page.goto('/family/dashboard');
   await expect(page.getByRole('heading', { name: '家属看板', exact: true })).toBeVisible();
   await expect(page.getByText(`今天任务已完成 ${doneBefore + 1}/${tasksBefore.length}`)).toBeVisible();
   await expect(page.getByText('最近血压：132 / 82 mmHg', { exact: true })).toBeVisible();
+  await expect(page.getByText(`${enabledRemindersBefore + 1} 条`, { exact: true })).toBeVisible();
+  await expect(page.getByText('阿司匹林 · 21:15 · 已启用')).toBeVisible();
 });

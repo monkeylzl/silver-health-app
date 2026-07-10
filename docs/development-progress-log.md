@@ -2269,5 +2269,57 @@ pnpm dev:web
 
 #### 下一轮建议
 1. 将 `test:e2e:local-write` 评估接入 GitHub Actions 手动门禁；
-2. 继续补用药提醒、家属绑定等写入型 E2E；
+2. 继续补家属绑定等写入型 E2E；
+3. 整理 Node ESM warning，减少脚本运行噪音。
+
+---
+
+### 85. 本地写入型 E2E 扩展到用药提醒
+
+#### 本轮处理
+1. 从 `feature/local-write-e2e` 新建分支 `feature/local-write-medication-e2e`。
+2. 扩展 `tests/e2e/local-write-flow.spec.ts`：
+   - 在原有“完成任务 / 录入血压 / 家属看板同步”基础上，新增用药提醒写入验证；
+   - 新增“阿司匹林 / 晚饭后 1 片 / 21:15”提醒；
+   - 验证 API 用药提醒数量增加；
+   - 验证家属看板显示新增提醒和启用提醒数量。
+3. 更新上线检查清单、测试验证方案和优化路线图。
+
+#### 覆盖范围
+- 本地重置 demo 数据；
+- 老人首页完成一项任务；
+- 指标页保存血压 `132 / 82`；
+- 用药页保存启用提醒 `阿司匹林 · 21:15`；
+- 家属看板同步展示：
+  - 任务完成数；
+  - 最新血压；
+  - 启用提醒数量；
+  - 新增用药提醒。
+
+#### 本轮验证
+1. 已执行：
+   - `corepack pnpm test:e2e:local-write`
+   - 结果：1 个本地写入型 E2E 通过。
+2. 已执行：
+   - `corepack pnpm test:e2e:mobile`
+   - 结果：4 个线上只读手机 E2E 通过。
+3. 已执行：
+   - `corepack pnpm test:local-e2e-utils`
+   - 结果：3 个测试通过。
+4. 已执行：
+   - `corepack pnpm --filter @silver-health/web typecheck`
+   - 结果：通过。
+5. 已执行：
+   - `corepack pnpm --filter @silver-health/api build`
+   - 结果：通过。
+6. 已执行：
+   - `corepack pnpm --filter @silver-health/web build`
+   - 结果：通过。
+7. 已执行：
+   - `corepack pnpm smoke:production`
+   - 结果：17 项线上冒烟检查通过。
+
+#### 下一轮建议
+1. 继续补家属绑定写入型 E2E；
+2. 将本地写入型 E2E 接入 GitHub Actions 手动门禁前，先确认 GitHub Runner 是否能访问测试数据库；
 3. 整理 Node ESM warning，减少脚本运行噪音。
