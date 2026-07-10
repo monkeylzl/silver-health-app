@@ -59,6 +59,7 @@ corepack pnpm test:github-workflow
 - 指标类型与字段组合的领域校验；
 - 404、401、400、500 技术错误映射；
 - 本地 E2E 主机、端口、档案 ID 和安全变量传播；
+- UTC Runner 上的 seed 日期、测量时间和周范围仍按 `Asia/Shanghai` 生成；
 - GitHub Actions 是否使用 PostgreSQL 服务和当前分支 E2E。
 
 验收：退出码 0，失败数为 0。

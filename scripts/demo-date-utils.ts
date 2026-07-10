@@ -1,47 +1,54 @@
-export function getLocalAnchorDate(daysFromToday = 0) {
-  const date = new Date();
-  date.setHours(12, 0, 0, 0);
-  date.setDate(date.getDate() + daysFromToday);
-  return date;
+const BUSINESS_TIME_ZONE = 'Asia/Shanghai';
+const BUSINESS_UTC_OFFSET = '+08:00';
+
+function dateKey(date: Date) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: BUSINESS_TIME_ZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date);
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${values.year}-${values.month}-${values.day}`;
 }
 
-export function getLocalDateOnly(daysFromToday = 0) {
-  const date = getLocalAnchorDate(daysFromToday);
-  date.setHours(12, 0, 0, 0);
-  return date;
+function shiftedDateKey(daysFromToday: number, now: Date) {
+  const anchor = new Date(`${dateKey(now)}T12:00:00.000Z`);
+  anchor.setUTCDate(anchor.getUTCDate() + daysFromToday);
+  return anchor.toISOString().slice(0, 10);
 }
 
-export function getLocalDateTime(daysFromToday: number, hour: number, minute = 0) {
-  const date = getLocalAnchorDate(daysFromToday);
-  date.setHours(hour, minute, 0, 0);
-  return date;
+export function getLocalAnchorDate(daysFromToday = 0, now = new Date()) {
+  return new Date(`${shiftedDateKey(daysFromToday, now)}T12:00:00.000Z`);
+}
+
+export function getLocalDateOnly(daysFromToday = 0, now = new Date()) {
+  return getLocalAnchorDate(daysFromToday, now);
+}
+
+export function getLocalDateTime(daysFromToday: number, hour: number, minute = 0, now = new Date()) {
+  const time = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00.000`;
+  return new Date(`${shiftedDateKey(daysFromToday, now)}T${time}${BUSINESS_UTC_OFFSET}`);
 }
 
 export function getStartOfWeek(date = getLocalAnchorDate()) {
-  const start = new Date(date);
-  const day = start.getDay();
-  const diff = day === 0 ? -6 : 1 - day;
-  start.setDate(start.getDate() + diff);
-  start.setHours(12, 0, 0, 0);
+  const start = new Date(`${dateKey(date)}T12:00:00.000Z`);
+  const day = start.getUTCDay();
+  start.setUTCDate(start.getUTCDate() + (day === 0 ? -6 : 1 - day));
   return start;
 }
 
-export function getWeekRange(weeksAgo = 0) {
-  const currentWeekStart = getStartOfWeek();
+export function getWeekRange(weeksAgo = 0, now = new Date()) {
+  const currentWeekStart = getStartOfWeek(getLocalAnchorDate(0, now));
   const start = new Date(currentWeekStart);
-  start.setDate(start.getDate() - weeksAgo * 7);
-  start.setHours(12, 0, 0, 0);
+  start.setUTCDate(start.getUTCDate() - weeksAgo * 7);
 
   const end = new Date(start);
-  end.setDate(end.getDate() + 6);
-  end.setHours(12, 0, 0, 0);
+  end.setUTCDate(end.getUTCDate() + 6);
 
   return { start, end };
 }
 
 export function formatLocalDate(date: Date) {
-  const year = date.getFullYear();
-  const month = `${date.getMonth() + 1}`.padStart(2, '0');
-  const day = `${date.getDate()}`.padStart(2, '0');
-  return `${year}-${month}-${day}`;
+  return dateKey(date);
 }
