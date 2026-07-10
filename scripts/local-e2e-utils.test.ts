@@ -30,7 +30,9 @@ test('builds isolated local write e2e endpoints and environment', () => {
   assert.equal(config.webUrl, 'http://127.0.0.1:4100');
   assert.equal(config.env.NEXT_PUBLIC_API_BASE_URL, 'http://127.0.0.1:4101');
   assert.equal(config.env.NEXT_PUBLIC_DEFAULT_ELDER_USER_ID, 'elder_123');
+  assert.equal(config.env.NEXT_PUBLIC_DEFAULT_FAMILY_USER_ID, 'family_456');
   assert.equal(config.env.E2E_ELDER_USER_ID, 'elder_123');
+  assert.equal(config.env.E2E_FAMILY_USER_ID, 'family_456');
   assert.equal(config.env.E2E_API_BASE_URL, 'http://127.0.0.1:4101');
   assert.equal(config.env.E2E_BASE_URL, 'http://127.0.0.1:4100');
 });

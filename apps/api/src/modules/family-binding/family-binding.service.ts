@@ -8,8 +8,18 @@ export class FamilyBindingService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(dto: CreateFamilyBindingDto) {
-    return this.prisma.familyBinding.create({
-      data: {
+    return this.prisma.familyBinding.upsert({
+      where: {
+        elderUserId_familyUserId: {
+          elderUserId: dto.elderUserId,
+          familyUserId: dto.familyUserId,
+        },
+      },
+      update: {
+        relationType: dto.relationType,
+        status: BindingStatus.pending,
+      },
+      create: {
         elderUserId: dto.elderUserId,
         familyUserId: dto.familyUserId,
         relationType: dto.relationType,

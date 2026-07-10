@@ -24,10 +24,17 @@ type MedicationReminder = {
   enabled: boolean;
 };
 
+type FamilyBinding = {
+  id: string;
+  familyUserId: string;
+  status: 'pending' | 'active' | 'unbound';
+};
+
 const apiBaseUrl = process.env.E2E_API_BASE_URL;
 const elderUserId = process.env.E2E_ELDER_USER_ID;
+const familyUserId = process.env.E2E_FAMILY_USER_ID;
 
-test.skip(!apiBaseUrl || !elderUserId, 'local write E2E requires E2E_API_BASE_URL and E2E_ELDER_USER_ID');
+test.skip(!apiBaseUrl || !elderUserId || !familyUserId, 'local write E2E requires E2E_API_BASE_URL, E2E_ELDER_USER_ID, and E2E_FAMILY_USER_ID');
 
 async function fetchApiList<T>(path: string): Promise<T[]> {
   const response = await fetch(`${apiBaseUrl}${path}`);
@@ -97,4 +104,17 @@ test('completes a task, records health data, creates medication reminder, and re
   await expect(page.getByText('最近血压：132 / 82 mmHg', { exact: true })).toBeVisible();
   await expect(page.getByText(`${enabledRemindersBefore + 1} 条`, { exact: true })).toBeVisible();
   await expect(page.getByText('阿司匹林 · 21:15 · 已启用')).toBeVisible();
+
+  await page.goto('/family/bind');
+  await expect(page.getByRole('heading', { name: '家属绑定', exact: true })).toBeVisible();
+  await expect(page.locator('label').filter({ hasText: '家属账号编号' }).locator('input')).toHaveValue(familyUserId!);
+  await page.getByRole('button', { name: '提交绑定申请' }).click();
+  await expect(page.getByText('绑定申请已提交，列表已自动刷新。可回到家属看板继续讲“谁在照护”。')).toBeVisible();
+
+  await expect
+    .poll(async () => {
+      const bindings = await fetchApiList<FamilyBinding>(`/api/family-bindings/elder/${elderUserId}`);
+      return bindings.some((binding) => binding.familyUserId === familyUserId && binding.status === 'pending');
+    })
+    .toBe(true);
 });

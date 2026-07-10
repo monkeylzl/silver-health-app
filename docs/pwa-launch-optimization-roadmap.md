@@ -199,7 +199,7 @@ curl -I \
 - 检查底部 Tab、主操作按钮、操作卡片和按钮高度不低于 44px；
 - 失败时输出 Playwright screenshot 和 trace；
 - `test:e2e:local-write` 会先执行本地 `demo:reset -- --skip-smoke`，再启动本地 API/Web；
-- 覆盖“完成任务 / 录入指标 / 新增用药提醒 / 家属看板同步”；
+- 覆盖“完成任务 / 录入指标 / 新增用药提醒 / 家属绑定 / 家属看板同步”；
 - 修复了指标表单默认测量时间使用服务端 UTC 的问题，避免刚录入的数据早于 seed 数据。
 
 验收：
@@ -212,7 +212,7 @@ corepack pnpm test:e2e:local-write
 下一步待做：
 
 - 将 `test:e2e:local-write` 评估接入 GitHub Actions 手动工作流；
-- 继续补充家属绑定等写入型链路；
+- 继续补充周报生成、档案编辑等写入型链路；
 - 整理 Node ESM warning，统一 scripts 的模块运行方式。
 
 ### P1-6 GitHub Actions 手动上线门禁

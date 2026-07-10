@@ -2323,3 +2323,58 @@ pnpm dev:web
 1. 继续补家属绑定写入型 E2E；
 2. 将本地写入型 E2E 接入 GitHub Actions 手动门禁前，先确认 GitHub Runner 是否能访问测试数据库；
 3. 整理 Node ESM warning，减少脚本运行噪音。
+
+---
+
+### 86. 本地写入型 E2E 扩展到家属绑定
+
+#### 本轮处理
+1. 从 `feature/local-write-medication-e2e` 新建分支 `feature/local-write-binding-e2e`。
+2. 扩展本地 E2E 环境变量：
+   - `NEXT_PUBLIC_DEFAULT_FAMILY_USER_ID`
+   - `E2E_FAMILY_USER_ID`
+3. Web 配置新增：
+   - `defaultFamilyUserId`
+4. 家属绑定表单默认使用 seed 输出的真实 family user id。
+5. 扩展 `tests/e2e/local-write-flow.spec.ts`：
+   - 原有任务、指标、用药、家属看板同步继续覆盖；
+   - 新增家属绑定页提交绑定申请；
+   - 验证 API 中老人 / 家属绑定关系存在且状态为 `pending`。
+6. 修复后端重复绑定提交：
+   - `FamilyBindingService.create()` 从 `create` 改为 `upsert`；
+   - 重复提交同一老人 / 家属绑定时不再触发 Prisma 唯一约束 500；
+   - 统一恢复为 `pending` 状态，适合演示和真实试用中的重复提交。
+7. 更新上线检查清单、测试验证方案和优化路线图。
+
+#### 本轮验证
+1. 已先扩展 `test:local-e2e-utils` 断言 family id 注入，并确认失败：
+   - 失败原因：`NEXT_PUBLIC_DEFAULT_FAMILY_USER_ID` 尚未写入本地 E2E env。
+2. 补齐 family id 注入后已执行：
+   - `corepack pnpm test:local-e2e-utils`
+   - 结果：3 个测试通过。
+3. 已执行：
+   - `corepack pnpm --filter @silver-health/web typecheck`
+   - 结果：通过。
+4. 首次执行扩展后的：
+   - `corepack pnpm test:e2e:local-write`
+   - 失败原因：重复提交同一老人 / 家属绑定触发 Prisma `P2002` 唯一约束错误。
+5. 将绑定创建改为 upsert，并调整 E2E 断言为“关系存在且状态为 pending”后，已执行：
+   - `corepack pnpm test:e2e:local-write`
+   - 结果：1 个本地写入型 E2E 通过。
+6. 已执行：
+   - `corepack pnpm test:e2e:mobile`
+   - 结果：4 个线上只读手机 E2E 通过。
+7. 已执行：
+   - `corepack pnpm --filter @silver-health/api build`
+   - 结果：通过。
+8. 已执行：
+   - `corepack pnpm --filter @silver-health/web build`
+   - 结果：通过。
+9. 已执行：
+   - `corepack pnpm smoke:production`
+   - 结果：17 项线上冒烟检查通过。
+
+#### 下一轮建议
+1. 将 `test:e2e:local-write` 接入 GitHub Actions 前，准备可访问的测试数据库或服务容器；
+2. 继续补档案编辑、周报生成等写入型链路；
+3. 整理 Node ESM warning，减少脚本运行噪音。

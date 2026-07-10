@@ -49,6 +49,12 @@ export function buildLocalWriteE2EConfig(env: NodeJS.ProcessEnv, ids: DemoIds): 
       CORS_ORIGIN: webUrl,
       NEXT_PUBLIC_API_BASE_URL: apiUrl,
       NEXT_PUBLIC_DEFAULT_ELDER_USER_ID: ids.elderUserId,
+      ...(ids.familyUserId
+        ? {
+            NEXT_PUBLIC_DEFAULT_FAMILY_USER_ID: ids.familyUserId,
+            E2E_FAMILY_USER_ID: ids.familyUserId,
+          }
+        : {}),
       E2E_API_BASE_URL: apiUrl,
       E2E_BASE_URL: webUrl,
       E2E_ELDER_USER_ID: ids.elderUserId,

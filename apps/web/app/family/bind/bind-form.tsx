@@ -2,7 +2,7 @@
 
 import { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { apiBaseUrl, defaultElderUserId } from '../../../lib/config';
+import { apiBaseUrl, defaultElderUserId, defaultFamilyUserId } from '../../../lib/config';
 
 type RelationType = 'son' | 'daughter' | 'spouse' | 'other';
 
@@ -23,7 +23,7 @@ const relationOptions: Array<{ value: RelationType; label: string; helper: strin
 
 const initialFormState: BindFormState = {
   elderUserId: defaultElderUserId,
-  familyUserId: 'family_demo_daughter',
+  familyUserId: defaultFamilyUserId || 'family_demo_daughter',
   relationType: 'daughter',
 };
 
