@@ -2671,3 +2671,57 @@ pnpm dev:web
 1. 合并 PR #1 到 `main`；
 2. 合并后确认 `main` 上的生产部署状态；
 3. PR 合并且线上确认后，删除旧的细分 feature 分支。
+
+---
+
+### 92. PR 合并、Main 同步与线上 Smoke
+
+#### 本轮处理
+1. 复查 PR #1：
+   - state：open；
+   - draft：false；
+   - mergeable：true；
+   - head：`b8d43a7`；
+   - release gate run `29096957950`：success。
+2. 使用 GitHub 连接器合并 PR #1 到 `main`：
+   - merge commit：`408fe68`
+   - merge method：merge commit
+3. 本地切换并同步 `main`：
+   - `git fetch origin`
+   - `git switch main`
+   - `git pull --ff-only`
+4. 确认本地 `main`：
+   - `HEAD -> main, origin/main`
+   - 工作区 clean。
+5. 合并后执行线上 smoke：
+   - `corepack pnpm smoke:production`
+   - 17 项通过，覆盖 Web 页面、PWA 资源、Railway API、数据集合和 CORS。
+6. 查询 merge commit：
+   - merge commit 本身没有新的 workflow run；
+   - release gate 已在 PR final head `b8d43a7` 上通过。
+7. 更新分支整理文档为“已合入 main”状态。
+
+#### 本轮验证
+1. 已确认 PR #1：
+   - merged：true；
+   - merge commit：`408fe68`。
+2. 已执行：
+   - `corepack pnpm smoke:production`
+   - 结果：17 项通过。
+3. 已确认旧 feature 分支均已 merged into `main`，可清理：
+   - `feature/mobile-first`
+   - `feature/pwa-launch-ready`
+   - `feature/production-smoke-gates`
+   - `feature/demo-reset-command`
+   - `feature/vercel-prebuilt-deploy-script`
+   - `feature/mobile-e2e-interactions`
+   - `feature/manual-release-workflow`
+   - `feature/local-write-e2e`
+   - `feature/local-write-medication-e2e`
+   - `feature/local-write-binding-e2e`
+   - `feature/pwa-launch-release-candidate`
+
+#### 下一轮建议
+1. 清理本地和远端旧 feature 分支；
+2. 如 Vercel / Railway 有自动部署日志，再对照生产 smoke 做最终上线记录；
+3. 进入真实账号体系或通知提醒的下一阶段规划。

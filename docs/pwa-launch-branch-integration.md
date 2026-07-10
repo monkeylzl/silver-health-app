@@ -2,16 +2,19 @@
 
 本文档记录第一阶段 PWA 可上线版的分支整理状态。
 
-## Current Integration Branch
+## Current Integration State
 
-- 集成分支：`feature/pwa-launch-release-candidate`
+- 主分支：`main`
+- 合并提交：`408fe68`
+- 原集成分支：`feature/pwa-launch-release-candidate`
 - 基准分支：`main`
-- 当前集成头：`feature/pwa-launch-release-candidate`
+- 当前集成头：已合入 `main`
 - 整理起点：`5e2362b`（`feature/local-write-binding-e2e`）
 - GitHub compare：`main...feature/local-write-binding-e2e`
 - 状态：相对 `main` ahead 13、behind 0。
-- PR：[#1 Prepare Silver Health PWA launch candidate](https://github.com/monkeylzl/silver-health-app/pull/1)（ready for review）
+- PR：[#1 Prepare Silver Health PWA launch candidate](https://github.com/monkeylzl/silver-health-app/pull/1)（merged）
 - GitHub Actions：`Silver Health release gates` run `29096789384` 已通过。
+- 合并后线上 smoke：`corepack pnpm smoke:production` 17 项通过。
 
 ## Included Branch Stack
 
@@ -56,7 +59,7 @@
 
 Use `feature/pwa-launch-release-candidate` as the single PR source branch into `main`.
 
-Keep the older feature branches for traceability until the release-candidate PR is merged. After merge, they can be deleted from GitHub if no active review references them.
+The older feature branches were kept for traceability until the release-candidate PR merged. After merge and smoke verification, they can be deleted from GitHub if no active review references them.
 
 ## Pre-PR Verification
 
