@@ -7,9 +7,10 @@ import { parseDotEnv } from './demo-reset-utils.ts';
 const dotEnv = existsSync('.env') ? parseDotEnv(readFileSync('.env', 'utf8')) : {};
 const baseEnv = { ...dotEnv, ...process.env };
 
-function runAndCapture(command: string, args: string[], env: NodeJS.ProcessEnv) {
+function runAndCapture(command: string, args: string[], env: NodeJS.ProcessEnv, cwd = process.cwd()) {
   console.log(`\n> ${[command, ...args].join(' ')}`);
   const result = spawnSync(command, args, {
+    cwd,
     env,
     encoding: 'utf8',
   });
@@ -114,16 +115,31 @@ async function main() {
     children.push(startServer('api', 'corepack', ['pnpm', '--filter', '@silver-health/api', 'dev'], config.env));
     await waitForUrl(`${config.apiUrl}/api/health`, 'API');
 
-    children.push(startServer('web', 'corepack', ['pnpm', 'dev', '--hostname', '127.0.0.1', '--port', String(config.webPort)], config.env, 'apps/web'));
+    runAndCapture('corepack', ['pnpm', 'build'], config.env, 'apps/web');
+    children.push(startServer('web', 'corepack', ['pnpm', 'start', '--hostname', '127.0.0.1', '--port', String(config.webPort)], config.env, 'apps/web'));
     await waitForUrl(config.webUrl, 'Web');
+
+    if (baseEnv.E2E_PWA_ONLY !== '1') {
+      runAndCapture(
+        'corepack',
+        ['pnpm', 'exec', 'playwright', 'test', '--config', 'playwright.config.ts', 'tests/e2e/mobile-navigation.spec.ts'],
+        config.env,
+      );
+
+      runAndCapture(
+        'corepack',
+        ['pnpm', 'exec', 'playwright', 'test', '--config', 'playwright.config.ts', 'tests/e2e/local-write-flow.spec.ts', '--project', 'mobile-390'],
+        config.env,
+      );
+    }
 
     runAndCapture(
       'corepack',
-      ['pnpm', 'exec', 'playwright', 'test', '--config', 'playwright.config.ts', 'tests/e2e/local-write-flow.spec.ts', '--project', 'mobile-390'],
+      ['pnpm', 'exec', 'playwright', 'test', '--config', 'playwright.config.ts', 'tests/e2e/pwa-offline.spec.ts', '--project', 'mobile-390'],
       config.env,
     );
 
-    console.log('\nLocal write E2E passed.');
+    console.log('\nLocal responsive and write E2E passed.');
   } finally {
     await stopServers(children);
   }

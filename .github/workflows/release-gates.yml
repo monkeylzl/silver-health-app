@@ -45,11 +45,28 @@ jobs:
   release-gates:
     name: Build, smoke, and mobile E2E
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: silver_health
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d silver_health"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     env:
+      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/silver_health
       PRODUCTION_WEB_URL: ${{ inputs.web_url || 'https://web-nu-blond-89.vercel.app' }}
       PRODUCTION_API_BASE_URL: ${{ inputs.api_url || 'https://silver-health-api-production.up.railway.app' }}
       PRODUCTION_ELDER_USER_ID: ${{ inputs.elder_user_id || 'cmre5b56p0000ij0niccn6i4n' }}
+      PRODUCTION_TRIAL_ACCESS_CODE: ${{ secrets.PRODUCTION_TRIAL_ACCESS_CODE }}
+      PRODUCTION_INTERNAL_API_KEY: ${{ secrets.PRODUCTION_INTERNAL_API_KEY }}
       E2E_BASE_URL: ${{ inputs.web_url || 'https://web-nu-blond-89.vercel.app' }}
       CI: true
 
@@ -73,6 +90,9 @@ jobs:
       - name: Generate Prisma client
         run: corepack pnpm prisma:generate
 
+      - name: Apply database migrations
+        run: corepack pnpm prisma:migrate:deploy
+
       - name: Web production build
         run: corepack pnpm --filter @silver-health/web build
 
@@ -84,6 +104,7 @@ jobs:
 
       - name: Utility tests
         run: |
+          corepack pnpm test:unit
           corepack pnpm test:demo-reset-utils
           corepack pnpm test:smoke-utils
           corepack pnpm test:vercel-deploy-utils
@@ -91,16 +112,16 @@ jobs:
           corepack pnpm test:report-generation-utils
 
       - name: Production smoke
-        if: ${{ github.event_name == 'pull_request' || inputs.run_production_smoke }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_production_smoke }}
         run: corepack pnpm smoke:production
 
       - name: Install Playwright Chromium
         if: ${{ github.event_name == 'pull_request' || inputs.run_mobile_e2e }}
         run: corepack pnpm exec playwright install --with-deps chromium
 
-      - name: Mobile PWA E2E
+      - name: Current branch phone, tablet, accessibility, and write E2E
         if: ${{ github.event_name == 'pull_request' || inputs.run_mobile_e2e }}
-        run: corepack pnpm test:e2e:mobile
+        run: corepack pnpm test:e2e:app
 
       - name: Vercel prebuilt deploy dry-run
         if: ${{ github.event_name == 'pull_request' || inputs.run_vercel_dry_run }}

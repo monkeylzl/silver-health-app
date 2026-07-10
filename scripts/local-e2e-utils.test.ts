@@ -27,14 +27,18 @@ test('builds isolated local write e2e endpoints and environment', () => {
   );
 
   assert.equal(config.apiUrl, 'http://127.0.0.1:4101');
-  assert.equal(config.webUrl, 'http://127.0.0.1:4100');
-  assert.equal(config.env.NEXT_PUBLIC_API_BASE_URL, 'http://127.0.0.1:4101');
-  assert.equal(config.env.NEXT_PUBLIC_DEFAULT_ELDER_USER_ID, 'elder_123');
-  assert.equal(config.env.NEXT_PUBLIC_DEFAULT_FAMILY_USER_ID, 'family_456');
+  assert.equal(config.webUrl, 'http://localhost:4100');
+  assert.equal(config.env.API_BASE_URL, 'http://127.0.0.1:4101');
+  assert.equal(config.env.DEFAULT_ELDER_USER_ID, 'elder_123');
+  assert.equal(config.env.DEFAULT_FAMILY_USER_ID, 'family_456');
+  assert.equal(config.env.INTERNAL_API_KEY, 'silver-health-local-internal-key-2026');
+  assert.equal(config.env.TRIAL_SESSION_SECRET, 'silver-health-local-session-secret-2026');
+  assert.equal(config.env.E2E_TRIAL_ACCESS_CODE, 'silver-health-local');
+  assert.equal(config.env.E2E_INTERNAL_API_KEY, 'silver-health-local-internal-key-2026');
   assert.equal(config.env.E2E_ELDER_USER_ID, 'elder_123');
   assert.equal(config.env.E2E_FAMILY_USER_ID, 'family_456');
   assert.equal(config.env.E2E_API_BASE_URL, 'http://127.0.0.1:4101');
-  assert.equal(config.env.E2E_BASE_URL, 'http://127.0.0.1:4100');
+  assert.equal(config.env.E2E_BASE_URL, 'http://localhost:4100');
 });
 
 test('requires an elder id in seed output', () => {

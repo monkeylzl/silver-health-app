@@ -13,11 +13,15 @@ describe('production smoke utils', () => {
       PRODUCTION_WEB_URL: 'https://example.com/',
       PRODUCTION_API_BASE_URL: 'https://api.example.com/',
       PRODUCTION_ELDER_USER_ID: 'elder-1',
+      PRODUCTION_TRIAL_ACCESS_CODE: 'trial-code',
+      PRODUCTION_INTERNAL_API_KEY: 'internal-key',
     });
 
     assert.equal(config.webUrl, 'https://example.com');
     assert.equal(config.apiBaseUrl, 'https://api.example.com');
     assert.equal(config.elderUserId, 'elder-1');
+    assert.equal(config.trialAccessCode, 'trial-code');
+    assert.equal(config.internalApiKey, 'internal-key');
   });
 
   it('joins URL path segments without duplicate slashes', () => {

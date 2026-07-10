@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Download } from 'lucide-react';
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
@@ -48,7 +49,7 @@ export function InstallPrompt({ compact = false }: { compact?: boolean }) {
     return (
       <div className="install-card">
         <strong>已按 App 方式打开</strong>
-        <p>当前页面已经具备主屏幕应用体验，可以从底部 Tab 快速切换今日、健康、家属和我的。</p>
+        <p>当前已按应用方式打开，可以快速切换今日、健康、家人和我的。</p>
       </div>
     );
   }
@@ -58,8 +59,8 @@ export function InstallPrompt({ compact = false }: { compact?: boolean }) {
       <strong>添加到主屏幕</strong>
       <p>把 Silver Health 添加到手机主屏幕后，可以像 App 一样从桌面打开。</p>
       {installEvent ? (
-        <button type="button" className="touch-button primary-button" onClick={install}>
-          安装到手机
+        <button type="button" className="button button--primary button--block" onClick={install}>
+          <Download aria-hidden="true" />安装到当前设备
         </button>
       ) : (
         <p className="install-card__hint">如果没有出现安装按钮，请用浏览器菜单里的“添加到主屏幕”。</p>

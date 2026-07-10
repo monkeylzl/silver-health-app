@@ -4,12 +4,14 @@ import assert from 'node:assert/strict';
 
 const workflowPath = '.github/workflows/release-gates.yml';
 
-test('release gates workflow exposes manual checks for launch readiness', () => {
+test('release gates workflow validates the current branch with an isolated database', () => {
   const workflow = readFileSync(workflowPath, 'utf8');
 
   for (const expected of [
     'pull_request:',
     'workflow_dispatch:',
+    'image: postgres:16',
+    'corepack pnpm prisma:migrate:deploy',
     'corepack pnpm --filter @silver-health/web build',
     'corepack pnpm --filter @silver-health/web typecheck',
     'corepack pnpm --filter @silver-health/api build',
@@ -18,7 +20,7 @@ test('release gates workflow exposes manual checks for launch readiness', () => 
     'corepack pnpm test:vercel-deploy-utils',
     'corepack pnpm test:report-generation-utils',
     'corepack pnpm smoke:production',
-    'corepack pnpm test:e2e:mobile',
+    'corepack pnpm test:e2e:app',
     'corepack pnpm deploy:vercel',
   ]) {
     assert.match(workflow, new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));

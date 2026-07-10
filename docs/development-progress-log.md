@@ -2815,3 +2815,107 @@ pnpm dev:web
    - 通知提醒；
    - 演示数据线上重置入口；
    - 小程序或原生端路线验证。
+
+---
+
+### 95. 移动端应用产品化重构
+
+#### 本轮处理
+
+1. 从 `main` 创建 `feature/mobile-app-productization`。
+2. 将主导航统一为 `今日 / 健康 / 家人 / 我的`：
+   - 手机固定底部 Tab；
+   - 768px 起使用紧凑侧栏；
+   - 1024px 起使用展开侧栏和双栏内容。
+3. 重构四个主页面和二级流程：
+   - 今日任务预览与完整任务；
+   - 指标摘要、趋势和录入；
+   - 用药新增、编辑、启停、删除；
+   - 家人近况、绑定状态和周报；
+   - 档案、在线状态、安装和退出。
+4. 新增体验口令与签名会话：
+   - scrypt 口令哈希；
+   - HMAC-SHA256 HttpOnly Cookie；
+   - Middleware 和 BFF 双层校验。
+5. 新增 Railway 全局内部 API 密钥 Guard，health 保持公开。
+6. 新增任务状态更新、撤销完成、用药编辑与删除 API。
+7. 浏览器写操作全部切换到同源 `/api/app/*`，服务端注入档案 ID。
+8. 升级 service worker 为网络优先、已登录页面动态缓存、退出清缓存和离线只读。
+9. PR workflow 增加 PostgreSQL 16 服务，改为测试当前分支，不再用旧生产站点代替分支 E2E。
+10. 新增技术方案、测试方案、优化路线和重点技术详解文档。
+
+#### 关键问题与修复
+
+1. Next dev portal 拦截底部导航点击：
+   - 根因：开发指示器覆盖左下角；
+   - 修复：`next.config.ts` 设置 `devIndicators: false`。
+2. 本地登录后任务页重新进入口令页：
+   - 根因：Cookie 写在 `127.0.0.1`，客户端导航切到 `localhost`；
+   - 修复：E2E Web 地址统一使用 `localhost`。
+3. 新录入 132/82 后健康页仍显示 128/78：
+   - 根因：午夜运行时新记录时间早于 seed 的晨间记录；
+   - 修复：E2E 显式设置晚于最新记录的测量时间，并由 BFF `revalidatePath` 失效关联页。
+4. 后端英文 404 暴露到页面：
+   - 修复：按 HTTP 状态统一映射为中文用户提示。
+
+#### 本轮验证
+
+1. `corepack pnpm test:unit`：9 项通过。
+2. `corepack pnpm --filter @silver-health/web typecheck`：通过。
+3. `corepack pnpm --filter @silver-health/web build`：通过，26 个 App Router 路由生成成功。
+4. `corepack pnpm --filter @silver-health/api typecheck`：通过。
+5. `corepack pnpm --filter @silver-health/api build`：通过。
+6. 手机 390x844 Browser 复查：
+   - 无横向滚动；
+   - 首页任务预览 3 条；
+   - 业务触控目标均不小于 44px。
+7. iPad 1024x1366 Browser 复查：
+   - 232px 侧栏可见；
+   - 底部导航隐藏；
+   - 内容无横向溢出；
+   - 健康与家人页使用双栏。
+8. `corepack pnpm test:e2e:app`：
+   - 5 个设备项目；
+   - 20 条导航/布局/无障碍用例通过；
+   - 1 条完整写入闭环通过。
+
+#### 下一步
+
+1. 执行完整 `test:release`；
+2. 配置 Vercel/Railway 新增安全环境变量；
+3. 提交并推送分支；
+4. 部署预览并执行受保护 production smoke；
+5. Android、iPhone 和 iPad 真机安装验收。
+
+---
+
+### 96. 上线前安全复审与生产 PWA 门禁
+
+#### 本轮处理
+
+1. 修复 Service Worker 缓存边界：公开静态资源进入 `STATIC_CACHE`，受保护页面和 RSC 只进入退出时可清除的 `PAGE_CACHE`。
+2. 修复生产环境 Service Worker 注册竞态：页面已完成 load 时立即注册，否则监听一次 load。
+3. 任务重复设置 `done` 直接返回原记录，保留原 `completedAt`，满足幂等要求。
+4. BFF 为任务和用药更新注入固定老人 ID，API 校验记录归属，错误归属返回 404。
+5. 新增指标领域校验，拒绝缺少必填值或跨指标类型混填。
+6. `/api/session` 增加 1KB 请求体、128 字符口令和每 IP 每分钟 8 次限制。
+7. 修复 `access-code:hash` 对 pnpm `--` 分隔符的解析。
+8. 本地 E2E 改为 `next build + next start`，新增 Service Worker 离线、RSC 缓存和退出清缓存验证。
+9. GitHub Actions utility gate 增加 `test:unit`。
+
+#### 验证结果
+
+1. `corepack pnpm test:unit`：16 项通过，包含无 Content-Length 的超大流式请求。
+2. Web/API typecheck：通过。
+3. 生产模式响应式 E2E：5 个设备项目、20 项通过。
+4. 生产模式完整写入 E2E：1 项通过，新增非法指标、错误老人归属和任务重复完成校验。
+5. 生产模式 PWA E2E：1 项通过，覆盖离线读取、离线写入阻止、静态缓存无 RSC 和退出清缓存。
+6. 任务状态改为条件更新，E2E 使用 4 个并发 `done` 请求验证只生成一个 `completedAt`。
+7. GitHub Actions 首次运行在 5 个设备项目的首页任务预览失败：Runner 为 UTC，seed 生成 `2026-07-10`，API 按上海时区查询 `2026-07-11`。已将 demo 日期、时间和周范围统一为 `Asia/Shanghai`，并新增 UTC 跨日测试。
+
+#### 下一步
+
+1. 执行最终 `corepack pnpm test:release`；
+2. 提交并推送 `feature/mobile-app-productization`；
+3. 配置 Vercel/Railway/GitHub Secrets，合并后部署；
+4. 执行生产 smoke 和手机真机安装验收。

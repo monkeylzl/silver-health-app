@@ -1,13 +1,12 @@
 {
   "name": "Silver Health",
   "short_name": "银发健康",
-  "description": "面向老人和家属的健康管理 PWA",
+  "description": "面向老人和家人的日常健康管理应用",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#2563eb",
-  "orientation": "portrait",
+  "theme_color": "#176b87",
   "icons": [
     {
       "src": "/icons/icon-192.png",
@@ -40,8 +39,8 @@
       "description": "录入指标并查看用药提醒"
     },
     {
-      "name": "家属看板",
-      "url": "/family/dashboard",
+      "name": "家人近况",
+      "url": "/family",
       "description": "查看老人近况摘要"
     }
   ]

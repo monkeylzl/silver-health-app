@@ -2,9 +2,14 @@ export type SmokeConfig = {
   webUrl: string;
   apiBaseUrl: string;
   elderUserId: string;
+  trialAccessCode: string;
+  internalApiKey: string;
 };
 
-type SmokeEnv = Partial<Record<'PRODUCTION_WEB_URL' | 'PRODUCTION_API_BASE_URL' | 'PRODUCTION_ELDER_USER_ID', string>>;
+type SmokeEnv = Partial<Record<
+  'PRODUCTION_WEB_URL' | 'PRODUCTION_API_BASE_URL' | 'PRODUCTION_ELDER_USER_ID' | 'PRODUCTION_TRIAL_ACCESS_CODE' | 'PRODUCTION_INTERNAL_API_KEY',
+  string
+>>;
 
 const DEFAULT_WEB_URL = 'https://web-nu-blond-89.vercel.app';
 const DEFAULT_API_BASE_URL = 'https://silver-health-api-production.up.railway.app';
@@ -27,6 +32,8 @@ export function buildSmokeConfig(env: SmokeEnv = process.env): SmokeConfig {
     webUrl: requireUrl('PRODUCTION_WEB_URL', env.PRODUCTION_WEB_URL ?? DEFAULT_WEB_URL),
     apiBaseUrl: requireUrl('PRODUCTION_API_BASE_URL', env.PRODUCTION_API_BASE_URL ?? DEFAULT_API_BASE_URL),
     elderUserId: env.PRODUCTION_ELDER_USER_ID ?? DEFAULT_ELDER_USER_ID,
+    trialAccessCode: env.PRODUCTION_TRIAL_ACCESS_CODE ?? '',
+    internalApiKey: env.PRODUCTION_INTERNAL_API_KEY ?? '',
   };
 }
 

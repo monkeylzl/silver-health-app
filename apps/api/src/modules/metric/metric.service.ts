@@ -1,12 +1,16 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateHealthMetricDto } from './dto/create-health-metric.dto';
+import { validateMetricPayload } from './metric-validation';
 
 @Injectable()
 export class MetricService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(dto: CreateHealthMetricDto) {
+    const validationMessage = validateMetricPayload(dto);
+    if (validationMessage) throw new BadRequestException(validationMessage);
+
     return this.prisma.healthMetric.create({
       data: {
         elderUserId: dto.elderUserId,
