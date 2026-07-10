@@ -198,3 +198,66 @@ Railway 部署区域使用 UTC 时间时，默认 `new Date()` 会让中国日�
 2. 将 Vercel CLI prebuilt 部署流程整理成脚本，避免 monorepo 子目录上传路径再次踩坑。
 3. 增加端到端测试，覆盖“完成任务”“录入指标”“查看家属看板”的真实交互。
 4. 增加线上 seed/重置演示数据的受控脚本，方便演示前恢复默认状态。
+
+## 9. 2026-07-10 平台侧复核
+
+PR #1 合并到 `main` 并清理旧 feature 分支后，对当前生产平台做了一次非破坏性复核。
+
+### Vercel
+
+```bash
+corepack pnpm dlx vercel whoami
+corepack pnpm dlx vercel inspect https://web-nu-blond-89.vercel.app
+```
+
+复核结果：
+
+- Vercel CLI 登录账号：`monkeylzl`。
+- 生产别名：`https://web-nu-blond-89.vercel.app`。
+- 当前生产部署：`dpl_8AkzX95njUQTcCHh9qUzrDjx6D4V`。
+- 部署状态：`Ready`。
+- 部署目标：`production`。
+- 创建时间：`2026-07-10 12:33:34 +0800`。
+
+### Railway
+
+```bash
+railway whoami
+railway status
+railway logs --deployment e78cd36c-000b-4b74-9c21-326f11304a20 --lines 80
+```
+
+复核结果：
+
+- Railway CLI 登录账号：`zhongliang liu (monkeylzl)`。
+- Workspace：`zhongliang liu (monkeylzl)'s Projects`。
+- Project：`heartfelt-transformation`。
+- Environment：`production`。
+- API Service：`silver-health-api`。
+- API URL：`https://silver-health-api-production.up.railway.app`。
+- 当前 API Deployment ID：`e78cd36c-000b-4b74-9c21-326f11304a20`。
+- 服务状态：`Online`。
+- 日志显示 `prisma migrate deploy` 已执行，结果为 `No pending migrations to apply`。
+- 日志显示 Nest API 已完成路由映射并输出 `Nest application successfully started`。
+
+Railway 环境变量已通过 CLI 复核，但文档只记录非敏感结论：
+
+- `NODE_ENV=production`。
+- `PORT=3001`。
+- `CORS_ORIGIN=https://web-nu-blond-89.vercel.app`。
+- `DATABASE_URL` 已配置为 Railway 内部 PostgreSQL 地址，具体值不写入仓库。
+
+### 线上 Smoke
+
+```bash
+corepack pnpm smoke:production
+```
+
+复核结果：
+
+- 17 项检查通过。
+- Web 覆盖 `/`、`/health`、`/family/dashboard`、`/family/report`、`/me`。
+- PWA 覆盖 `manifest.webmanifest`、`offline.html`、`sw.js`。
+- API 覆盖健康检查、任务、指标、用药、周报。
+- CORS 覆盖健康检查 origin 和 PATCH preflight。
+- 首页能读取真实 API，并能看到 seeded 任务。

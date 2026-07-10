@@ -2758,3 +2758,60 @@ pnpm dev:web
 #### 下一轮建议
 1. 对接 Vercel / Railway 部署日志，确认 `main` 后续自动部署是否已完成；
 2. 若线上部署确认无误，进入下一阶段：真实账号体系、通知提醒或小程序/原生端路线。
+
+---
+
+### 94. 平台部署状态复核
+
+#### 本轮处理
+1. 确认本地分支状态：
+   - 当前分支：`main`；
+   - 远端跟踪：`origin/main`；
+   - 工作区：clean。
+2. 复核 Vercel CLI 登录状态：
+   - 登录账号：`monkeylzl`。
+3. 复核当前 Vercel 生产部署：
+   - 生产别名：`https://web-nu-blond-89.vercel.app`；
+   - deployment id：`dpl_8AkzX95njUQTcCHh9qUzrDjx6D4V`；
+   - target：`production`；
+   - status：`Ready`。
+4. 复核 Railway CLI 登录和服务状态：
+   - 登录账号：`zhongliang liu (monkeylzl)`；
+   - project：`heartfelt-transformation`；
+   - environment：`production`；
+   - service：`silver-health-api`；
+   - deployment id：`e78cd36c-000b-4b74-9c21-326f11304a20`；
+   - status：`Online`。
+5. 复核 Railway 日志：
+   - `prisma migrate deploy` 已执行；
+   - 当前无 pending migrations；
+   - Nest API 已成功启动。
+6. 更新部署记录：
+   - `docs/pwa-launch-deployment-record.md` 增加 2026-07-10 平台侧复核；
+   - 只记录非敏感配置，不写入 `DATABASE_URL` 具体值。
+
+#### 本轮验证
+1. 已执行：
+   - `corepack pnpm dlx vercel whoami`
+   - 结果：登录账号为 `monkeylzl`。
+2. 已执行：
+   - `corepack pnpm dlx vercel inspect https://web-nu-blond-89.vercel.app`
+   - 结果：生产部署 `Ready`。
+3. 已执行：
+   - `railway whoami`
+   - `railway status`
+   - 结果：Railway production API 服务 `Online`。
+4. 已执行：
+   - `railway logs --deployment e78cd36c-000b-4b74-9c21-326f11304a20 --lines 80`
+   - 结果：迁移无待执行项，API 启动成功。
+5. 已执行：
+   - `corepack pnpm smoke:production`
+   - 结果：17 项线上 smoke 全部通过。
+
+#### 下一轮建议
+1. 提交并推送平台复核文档；
+2. 进入下一阶段产品化优先项：
+   - 真实账号体系；
+   - 通知提醒；
+   - 演示数据线上重置入口；
+   - 小程序或原生端路线验证。
