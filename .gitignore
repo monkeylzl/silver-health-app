@@ -7,6 +7,8 @@ node_modules
 .next
 dist
 coverage
+test-results
+playwright-report
 *.tsbuildinfo
 .DS_Store
 prisma/dev.db

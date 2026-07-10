@@ -18,6 +18,7 @@
 - 远程 Vercel + Railway 部署后冒烟测试。
 - 生产 Web/API/PWA/CORS 自动冒烟脚本。
 - Vercel monorepo prebuilt 部署脚本。
+- Playwright 手机视口 E2E，覆盖线上 PWA 首页、底部 Tab、横向滚动和触控目标。
 
 ### 1.2 不包含范围
 
@@ -26,7 +27,7 @@
 - 真实登录 / 注册 / 权限验收；
 - 服务端推送；
 - 医疗告警合规认证；
-- 自动化 E2E 全覆盖。
+- 自动化 E2E 全覆盖。当前 E2E 先覆盖只读导航、布局和线上数据可见性，尚未覆盖会写数据的完成任务、录入指标和家属联动。
 
 ## 2. 测试环境
 
@@ -674,6 +675,7 @@ corepack pnpm --filter @silver-health/web typecheck
 corepack pnpm --filter @silver-health/web build
 corepack pnpm --filter @silver-health/api build
 corepack pnpm demo:ready
+corepack pnpm test:e2e:mobile
 corepack pnpm test:demo-reset-utils
 corepack pnpm test:smoke-utils
 corepack pnpm test:vercel-deploy-utils
@@ -689,12 +691,26 @@ corepack pnpm check:demo
 
 如果改动涉及移动端 UI：
 
-- 390x844 检查；
-- 360x800 检查；
-- 横向滚动检查；
-- 主按钮高度检查；
+```bash
+corepack pnpm test:e2e:mobile
+```
+
+当前自动覆盖：
+
+- 390x844；
+- 360x800；
+- 四个底部主 Tab 切换；
+- 首页线上 demo 数据可见；
+- 无横向滚动；
+- 底部 Tab、主操作按钮、操作卡片和按钮高度不低于 44px；
+- 失败时保留 Playwright screenshot 和 trace。
+
+仍需手工补充：
+
 - 表单单列检查；
-- 截图留档。
+- 安装到主屏幕后独立窗口检查；
+- 离线刷新检查；
+- 涉及真实写入的数据联动检查。
 
 如果改动涉及演示数据恢复或线上试用前准备：
 

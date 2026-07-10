@@ -2024,3 +2024,71 @@ pnpm dev:web
 1. 增加 Playwright E2E，覆盖“完成任务 / 录入指标 / 家属看板同步”；
 2. 将 smoke、demo reset、Vercel deploy 串成 GitHub Actions 手动工作流；
 3. 整理 Node ESM warning，统一 scripts 的运行方式。
+
+---
+
+### 82. Playwright 手机视口 E2E 回归
+
+#### 本轮处理
+1. 从 `feature/vercel-prebuilt-deploy-script` 新建分支 `feature/mobile-e2e-interactions`。
+2. 根 `package.json` 新增：
+   - `test:e2e:mobile`
+3. 新增 Playwright 配置：
+   - `playwright.config.ts`
+4. 新增移动端 E2E：
+   - `tests/e2e/mobile-navigation.spec.ts`
+5. 新增忽略规则：
+   - `test-results`
+   - `playwright-report`
+6. 更新上线检查清单、测试验证方案和优化路线图。
+
+#### 覆盖范围
+- 默认线上 PWA：`https://web-nu-blond-89.vercel.app`；
+- 390x844 和 360x800 两个手机视口；
+- `/` 今日工作台线上 demo 数据可见；
+- `今日 / 健康 / 家属 / 我的` 四个底部 Tab 可点击切换；
+- 当前 Tab `aria-current="page"` 激活态正确；
+- 页面无横向滚动；
+- 底部 Tab、主操作按钮、操作卡片和按钮高度不低于 44px；
+- 失败时保留 Playwright screenshot 和 trace。
+
+#### 本轮验证
+1. 已按 TDD 先运行失败测试：
+   - `corepack pnpm test:e2e:mobile`
+   - 失败原因：`playwright` 命令不存在。
+2. 补充 `@playwright/test` 后再次运行：
+   - 失败原因：设备预设与 Chrome channel 不兼容，且失败视频需要 ffmpeg。
+3. 调整为 Chromium 手机视口并关闭失败视频后再次运行：
+   - 失败原因：heading 与文本断言过宽，引发 Playwright strict mode。
+4. 收紧断言后已执行：
+   - `corepack pnpm test:e2e:mobile`
+   - 结果：4 个 E2E 测试通过。
+5. 已执行：
+   - `corepack pnpm test:smoke-utils`
+   - 结果：4 个测试通过。
+6. 已执行：
+   - `corepack pnpm test:demo-reset-utils`
+   - 结果：5 个测试通过。
+7. 已执行：
+   - `corepack pnpm test:vercel-deploy-utils`
+   - 结果：3 个测试通过。
+8. 已执行：
+   - `corepack pnpm --filter @silver-health/web typecheck`
+   - 结果：通过。
+9. 已执行：
+   - `corepack pnpm --filter @silver-health/api build`
+   - 结果：通过。
+10. 已执行：
+    - `corepack pnpm --filter @silver-health/web build`
+    - 结果：通过。
+11. 已执行：
+    - `corepack pnpm smoke:production`
+    - 结果：17 项线上冒烟检查通过。
+12. 文档更新后已再次执行：
+    - `corepack pnpm test:e2e:mobile`
+    - 结果：4 个 E2E 测试通过。
+
+#### 下一轮建议
+1. 增加本地可重置数据环境下的写入型 E2E，覆盖“完成任务 / 录入指标 / 家属看板同步”；
+2. 将 `smoke:production`、`demo:reset`、`deploy:vercel`、`test:e2e:mobile` 串成 GitHub Actions 手动工作流；
+3. 整理 Node ESM warning，统一 scripts 的模块运行方式。

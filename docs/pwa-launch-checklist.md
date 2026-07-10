@@ -172,6 +172,27 @@ NEXT_PUBLIC_DEFAULT_ELDER_USER_ID="cmre5b56p0000ij0niccn6i4n"
 6. 恢复网络后，今日、健康、家属页面能继续读取数据。
 7. Application / Manifest 中能看到 `icon-192.png` 与 `icon-512.png`。
 
+自动化手机视口回归：
+
+```bash
+corepack pnpm test:e2e:mobile
+```
+
+当前脚本默认检查线上 `https://web-nu-blond-89.vercel.app`，覆盖：
+
+- 390x844 和 360x800 两个手机视口；
+- `/` 今日工作台线上 demo 数据可见；
+- `今日 / 健康 / 家属 / 我的` 四个底部 Tab 可点击切换；
+- 当前 Tab `aria-current="page"` 激活态正确；
+- 页面无横向滚动；
+- 底部 Tab、主操作按钮、操作卡片和按钮高度不低于 44px。
+
+如需检查其他环境：
+
+```bash
+E2E_BASE_URL="https://your-web-domain" corepack pnpm test:e2e:mobile
+```
+
 ## 五、功能验收路径
 
 上线后至少跑一遍：
@@ -233,6 +254,7 @@ corepack pnpm --filter @silver-health/web typecheck
 corepack pnpm --filter @silver-health/web build
 corepack pnpm --filter @silver-health/api build
 corepack pnpm demo:ready
+corepack pnpm test:e2e:mobile
 corepack pnpm test:demo-reset-utils
 corepack pnpm test:smoke-utils
 corepack pnpm test:vercel-deploy-utils

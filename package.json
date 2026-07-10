@@ -20,6 +20,7 @@
     "demo:reset": "node scripts/demo-reset.ts",
     "deploy:vercel": "node scripts/vercel-prebuilt-deploy.ts",
     "smoke:production": "node scripts/production-smoke.ts",
+    "test:e2e:mobile": "playwright test --config playwright.config.ts",
     "test:demo-reset-utils": "node --test scripts/demo-reset-utils.test.ts",
     "test:smoke-utils": "node --test scripts/production-smoke-utils.test.ts",
     "test:vercel-deploy-utils": "node --test scripts/vercel-deploy-utils.test.ts"
@@ -28,6 +29,7 @@
     "@prisma/client": "^6.6.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "prettier": "^3.6.2",
     "prisma": "^6.6.0",
     "turbo": "^2.5.6"
