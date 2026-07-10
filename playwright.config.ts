@@ -1,7 +1,13 @@
 import { defineConfig } from '@playwright/test';
 
 const baseURL = process.env.E2E_BASE_URL ?? 'https://web-nu-blond-89.vercel.app';
-const browserChannel = process.env.E2E_BROWSER_CHANNEL ?? 'chrome';
+const browserChannel = process.env.E2E_BROWSER_CHANNEL ?? (process.env.CI ? undefined : 'chrome');
+const chromiumMobile = {
+  browserName: 'chromium' as const,
+  ...(browserChannel ? { channel: browserChannel } : {}),
+  hasTouch: true,
+  isMobile: true,
+};
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -19,20 +25,14 @@ export default defineConfig({
     {
       name: 'mobile-390',
       use: {
-        browserName: 'chromium',
-        channel: browserChannel,
-        hasTouch: true,
-        isMobile: true,
+        ...chromiumMobile,
         viewport: { width: 390, height: 844 },
       },
     },
     {
       name: 'mobile-360',
       use: {
-        browserName: 'chromium',
-        channel: browserChannel,
-        hasTouch: true,
-        isMobile: true,
+        ...chromiumMobile,
         viewport: { width: 360, height: 800 },
       },
     },

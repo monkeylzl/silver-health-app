@@ -247,7 +247,46 @@ corepack pnpm smoke:production
 - API health、任务、指标、用药、周报接口均正常；
 - CORS health 与 PATCH preflight 均通过。
 
-## 七、上线前本地校验
+## 七、GitHub Actions 手动门禁
+
+仓库已提供手动 workflow：
+
+```text
+.github/workflows/release-gates.yml
+```
+
+在 GitHub 页面进入 `Actions` -> `Silver Health release gates` -> `Run workflow`。
+
+默认输入：
+
+- Web：`https://web-nu-blond-89.vercel.app`
+- API：`https://silver-health-api-production.up.railway.app`
+- 默认老人账号：`cmre5b56p0000ij0niccn6i4n`
+- `run_production_smoke`：true
+- `run_mobile_e2e`：true
+- `run_vercel_dry_run`：true
+
+workflow 会执行：
+
+1. 安装依赖并生成 Prisma Client；
+2. Web typecheck；
+3. Web production build；
+4. API production build；
+5. `test:demo-reset-utils`；
+6. `test:smoke-utils`；
+7. `test:vercel-deploy-utils`；
+8. `test:github-workflow`；
+9. 可选 `smoke:production`；
+10. 可选安装 Playwright Chromium 并执行 `test:e2e:mobile`；
+11. 可选 `deploy:vercel` dry-run。
+
+注意：
+
+- 这个 workflow 不会执行生产部署，只做 `deploy:vercel` dry-run；
+- 真正发版仍需本地或受控环境执行 `corepack pnpm deploy:vercel -- --execute`；
+- 线上 smoke 和 E2E 使用 workflow 输入的 Web/API/elder id，可用于正式环境或预发环境。
+
+## 八、上线前本地校验
 
 ```bash
 corepack pnpm --filter @silver-health/web typecheck
@@ -256,6 +295,7 @@ corepack pnpm --filter @silver-health/api build
 corepack pnpm demo:ready
 corepack pnpm test:e2e:mobile
 corepack pnpm test:demo-reset-utils
+corepack pnpm test:github-workflow
 corepack pnpm test:smoke-utils
 corepack pnpm test:vercel-deploy-utils
 ```

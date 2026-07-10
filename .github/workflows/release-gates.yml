@@ -1,0 +1,103 @@
+name: Silver Health release gates
+
+on:
+  workflow_dispatch:
+    inputs:
+      web_url:
+        description: Production or preview Web URL to validate
+        required: true
+        default: https://web-nu-blond-89.vercel.app
+      api_url:
+        description: Railway API base URL to validate
+        required: true
+        default: https://silver-health-api-production.up.railway.app
+      elder_user_id:
+        description: Demo elder user id used by smoke checks
+        required: true
+        default: cmre5b56p0000ij0niccn6i4n
+      run_production_smoke:
+        description: Run Web/API/PWA/CORS production smoke
+        required: true
+        type: boolean
+        default: true
+      run_mobile_e2e:
+        description: Run Playwright mobile PWA E2E
+        required: true
+        type: boolean
+        default: true
+      run_vercel_dry_run:
+        description: Run Vercel prebuilt deploy dry-run only
+        required: true
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: silver-health-release-gates-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release-gates:
+    name: Build, smoke, and mobile E2E
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      PRODUCTION_WEB_URL: ${{ inputs.web_url }}
+      PRODUCTION_API_BASE_URL: ${{ inputs.api_url }}
+      PRODUCTION_ELDER_USER_ID: ${{ inputs.elder_user_id }}
+      E2E_BASE_URL: ${{ inputs.web_url }}
+      CI: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.0.0 --activate
+
+      - name: Install dependencies
+        run: corepack pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: corepack pnpm prisma:generate
+
+      - name: Web typecheck
+        run: corepack pnpm --filter @silver-health/web typecheck
+
+      - name: Web production build
+        run: corepack pnpm --filter @silver-health/web build
+
+      - name: API production build
+        run: corepack pnpm --filter @silver-health/api build
+
+      - name: Utility tests
+        run: |
+          corepack pnpm test:demo-reset-utils
+          corepack pnpm test:smoke-utils
+          corepack pnpm test:vercel-deploy-utils
+          corepack pnpm test:github-workflow
+
+      - name: Production smoke
+        if: ${{ inputs.run_production_smoke }}
+        run: corepack pnpm smoke:production
+
+      - name: Install Playwright Chromium
+        if: ${{ inputs.run_mobile_e2e }}
+        run: corepack pnpm exec playwright install --with-deps chromium
+
+      - name: Mobile PWA E2E
+        if: ${{ inputs.run_mobile_e2e }}
+        run: corepack pnpm test:e2e:mobile
+
+      - name: Vercel prebuilt deploy dry-run
+        if: ${{ inputs.run_vercel_dry_run }}
+        run: corepack pnpm deploy:vercel

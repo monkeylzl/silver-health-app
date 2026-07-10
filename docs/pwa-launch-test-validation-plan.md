@@ -666,7 +666,65 @@ corepack pnpm smoke:production
 - 生产别名仍为 `https://web-nu-blond-89.vercel.app`；
 - `smoke:production` 通过 17 项检查。
 
-## 12. 回归测试清单
+## 12. GitHub Actions 手动门禁
+
+### 12.1 触发方式
+
+进入 GitHub：
+
+```text
+Actions -> Silver Health release gates -> Run workflow
+```
+
+默认输入：
+
+```text
+web_url=https://web-nu-blond-89.vercel.app
+api_url=https://silver-health-api-production.up.railway.app
+elder_user_id=cmre5b56p0000ij0niccn6i4n
+run_production_smoke=true
+run_mobile_e2e=true
+run_vercel_dry_run=true
+```
+
+### 12.2 覆盖命令
+
+workflow 会执行：
+
+```bash
+corepack pnpm prisma:generate
+corepack pnpm --filter @silver-health/web typecheck
+corepack pnpm --filter @silver-health/web build
+corepack pnpm --filter @silver-health/api build
+corepack pnpm test:demo-reset-utils
+corepack pnpm test:smoke-utils
+corepack pnpm test:vercel-deploy-utils
+corepack pnpm test:github-workflow
+corepack pnpm smoke:production
+corepack pnpm exec playwright install --with-deps chromium
+corepack pnpm test:e2e:mobile
+corepack pnpm deploy:vercel
+```
+
+### 12.3 验收标准
+
+- workflow 可手动触发；
+- Web/API 构建通过；
+- 工具测试通过；
+- `smoke:production` 通过 17 项检查；
+- `test:e2e:mobile` 通过 4 项手机视口 E2E；
+- `deploy:vercel` 仅执行 dry-run，不产生生产发布。
+
+### 12.4 本地验证 workflow
+
+```bash
+corepack pnpm test:github-workflow
+ruby -e "require 'yaml'; YAML.load_file('.github/workflows/release-gates.yml'); puts :ok"
+```
+
+说明：本轮尝试用 `corepack pnpm dlx actionlint .github/workflows/release-gates.yml` 校验，但当前 npm 包没有可执行 bin，未作为必跑命令。
+
+## 13. 回归测试清单
 
 每次修改 PWA、导航、首页、API 配置后至少跑：
 
@@ -677,6 +735,7 @@ corepack pnpm --filter @silver-health/api build
 corepack pnpm demo:ready
 corepack pnpm test:e2e:mobile
 corepack pnpm test:demo-reset-utils
+corepack pnpm test:github-workflow
 corepack pnpm test:smoke-utils
 corepack pnpm test:vercel-deploy-utils
 ```
@@ -725,9 +784,9 @@ corepack pnpm smoke:production
 - `seed:demo` 和 `check:demo` 均通过；
 - 线上 smoke 仍然通过。
 
-## 13. 常见问题排查
+## 14. 常见问题排查
 
-### 13.1 Cannot find module './xxx.js'
+### 14.1 Cannot find module './xxx.js'
 
 通常是 Next `.next` 缓存或 chunk 产物不一致。
 
@@ -740,7 +799,7 @@ corepack pnpm --filter @silver-health/web build
 corepack pnpm --filter @silver-health/web dev
 ```
 
-### 13.2 Cannot find module '.prisma/client/default'
+### 14.2 Cannot find module '.prisma/client/default'
 
 通常是 Prisma Client 未生成或 node_modules 被重建。
 
@@ -775,7 +834,7 @@ curl http://localhost:3001/api/health
 - CORS 是否允许当前 Web 域名；
 - `DATABASE_URL` 是否指向正确数据库。
 
-## 14. 测试结论模板
+## 15. 测试结论模板
 
 ```markdown
 ## Silver Health PWA 验收结论

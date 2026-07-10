@@ -2092,3 +2092,88 @@ pnpm dev:web
 1. 增加本地可重置数据环境下的写入型 E2E，覆盖“完成任务 / 录入指标 / 家属看板同步”；
 2. 将 `smoke:production`、`demo:reset`、`deploy:vercel`、`test:e2e:mobile` 串成 GitHub Actions 手动工作流；
 3. 整理 Node ESM warning，统一 scripts 的模块运行方式。
+
+---
+
+### 83. GitHub Actions 手动上线门禁
+
+#### 本轮处理
+1. 从 `feature/mobile-e2e-interactions` 新建分支 `feature/manual-release-workflow`。
+2. 新增 workflow：
+   - `.github/workflows/release-gates.yml`
+3. 新增 workflow 内容测试：
+   - `scripts/github-workflow.test.ts`
+4. 根 `package.json` 新增：
+   - `test:github-workflow`
+5. 调整 Playwright 配置：
+   - 本地默认使用 Chrome channel；
+   - CI 环境不指定 channel，配合 workflow 安装 Playwright Chromium。
+6. 更新上线检查清单、测试验证方案和优化路线图。
+
+#### Workflow 覆盖范围
+- `workflow_dispatch` 手动触发；
+- 可输入 Web URL、API URL、默认老人账号；
+- 可开关生产 smoke、移动 E2E、Vercel dry-run；
+- 生成 Prisma Client；
+- Web typecheck；
+- Web production build；
+- API production build；
+- `test:demo-reset-utils`；
+- `test:smoke-utils`；
+- `test:vercel-deploy-utils`；
+- `test:github-workflow`；
+- 可选 `smoke:production`；
+- 可选安装 Playwright Chromium 并执行 `test:e2e:mobile`；
+- 可选 `deploy:vercel` dry-run。
+
+#### 安全策略
+- workflow 不执行生产部署；
+- `deploy:vercel` 在 workflow 中只做 dry-run；
+- 真正生产发布仍需受控执行 `corepack pnpm deploy:vercel -- --execute`；
+- 远程 seed/reset 不放进本轮 workflow，避免误改线上演示数据。
+
+#### 本轮验证
+1. 已按 TDD 先运行失败测试：
+   - `corepack pnpm test:github-workflow`
+   - 失败原因：`.github/workflows/release-gates.yml` 不存在。
+2. 新增 workflow 后已执行：
+   - `corepack pnpm test:github-workflow`
+   - 结果：1 个测试通过。
+3. 已执行：
+   - `corepack pnpm test:e2e:mobile`
+   - 结果：4 个 E2E 测试通过。
+4. 已执行：
+   - `corepack pnpm test:vercel-deploy-utils`
+   - 结果：3 个测试通过。
+5. 尝试执行：
+   - `corepack pnpm dlx actionlint .github/workflows/release-gates.yml`
+   - 结果：失败，npm 包没有可执行 bin，未纳入必跑门禁。
+6. 已执行：
+   - `ruby -e "require 'yaml'; YAML.load_file('.github/workflows/release-gates.yml'); puts :ok"`
+   - 结果：YAML 可解析，输出 `ok`。
+7. 已执行：
+   - `corepack pnpm test:smoke-utils`
+   - 结果：4 个测试通过。
+8. 已执行：
+   - `corepack pnpm test:demo-reset-utils`
+   - 结果：5 个测试通过。
+9. 已执行：
+   - `corepack pnpm smoke:production`
+   - 结果：17 项线上冒烟检查通过。
+10. 已执行：
+    - `corepack pnpm deploy:vercel`
+    - 结果：dry-run 成功，不创建生产发布。
+11. 已执行：
+    - `corepack pnpm --filter @silver-health/web typecheck`
+    - 结果：通过。
+12. 已执行：
+    - `corepack pnpm --filter @silver-health/api build`
+    - 结果：通过。
+13. 已执行：
+    - `corepack pnpm --filter @silver-health/web build`
+    - 结果：通过。
+
+#### 下一轮建议
+1. 在 GitHub Actions 页面实际触发一次 `Silver Health release gates`，确认 GitHub Runner 侧通过；
+2. 增加本地可重置数据环境下的写入型 E2E；
+3. 整理 Node ESM warning，统一 scripts 的模块运行方式。

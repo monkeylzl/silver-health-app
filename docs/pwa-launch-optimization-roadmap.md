@@ -210,6 +210,43 @@ corepack pnpm test:e2e:mobile
 - 覆盖“完成任务 / 录入指标 / 家属看板同步”；
 - 将 `test:e2e:mobile` 接入 GitHub Actions 手动工作流。
 
+### P1-6 GitHub Actions 手动上线门禁
+
+现状：
+
+- 已新增 `.github/workflows/release-gates.yml`；
+- workflow 使用 `workflow_dispatch` 手动触发；
+- 支持输入 Web URL、API URL、默认老人账号；
+- 支持开关生产 smoke、移动 E2E、Vercel dry-run；
+- 当前只做门禁和 dry-run，不自动生产发布。
+
+已完成：
+
+- 安装依赖并生成 Prisma Client；
+- Web typecheck；
+- Web production build；
+- API production build；
+- `test:demo-reset-utils`；
+- `test:smoke-utils`；
+- `test:vercel-deploy-utils`；
+- `test:github-workflow`；
+- 可选 `smoke:production`；
+- 可选 `test:e2e:mobile`；
+- 可选 `deploy:vercel` dry-run。
+
+验收：
+
+```bash
+corepack pnpm test:github-workflow
+ruby -e "require 'yaml'; YAML.load_file('.github/workflows/release-gates.yml'); puts :ok"
+```
+
+下一步待做：
+
+- 在 GitHub Actions 页面实际触发一次 workflow；
+- 如需自动发布，再单独增加受保护的 production deploy workflow；
+- 为 GitHub Actions 配置 Vercel/Railway secrets 后，再考虑远程 seed/reset 的受控工作流。
+
 ## P2 试用反馈后推进
 
 ### P2-1 真实账号体系
