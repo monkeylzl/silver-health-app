@@ -9,17 +9,30 @@ export class ElderProfileService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(dto: CreateElderProfileDto) {
-    const ensuredUserId = dto.userId?.trim()
-      ? dto.userId.trim()
+    const requestedUserId = dto.userId?.trim();
+    const nickname = dto.nickname?.trim();
+    const mobile = dto.mobile?.trim();
+    const ensuredUserId = requestedUserId
+      ? requestedUserId
       : (
           await this.prisma.user.create({
             data: {
               role: UserRole.elder,
-              nickname: dto.nickname?.trim() || dto.name,
-              mobile: dto.mobile?.trim() || undefined,
+              nickname: nickname || dto.name,
+              mobile: mobile || undefined,
             },
           })
         ).id;
+
+    if (requestedUserId && (nickname || mobile)) {
+      await this.prisma.user.update({
+        where: { id: ensuredUserId },
+        data: {
+          ...(nickname ? { nickname } : {}),
+          ...(mobile ? { mobile } : {}),
+        },
+      });
+    }
 
     const profile = await this.prisma.elderProfile.upsert({
       where: { userId: ensuredUserId },

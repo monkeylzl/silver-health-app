@@ -2442,3 +2442,53 @@ pnpm dev:web
 1. 在 PR #1 中确认 GitHub mergeability 和 Actions 状态；
 2. 将手动 release gate 在 GitHub Actions 中跑一遍，确认远端 CI 环境变量和数据库访问；
 3. 若继续开发，优先补档案编辑或周报生成的写入型 E2E。
+
+---
+
+### 88. 档案编辑写入闭环与 PR 状态复查
+
+#### 本轮处理
+1. 复查 PR #1：
+   - PR 状态：open draft；
+   - mergeable：true；
+   - 当前 head：`8b6df17`；
+   - commit status：暂无；
+   - pull-request workflow runs：暂无。
+2. 当前 GitHub 连接器可查询 Actions run、job、日志和重跑失败任务，但没有手动触发 `workflow_dispatch` 的工具入口；手动 release gate 仍需要在 GitHub UI 中触发。
+3. 扩展 `tests/e2e/local-write-flow.spec.ts`，在现有写入闭环后继续覆盖：
+   - 进入老人档案页；
+   - 载入已有档案；
+   - 更新页面称呼、联系手机号和老人姓名；
+   - 保存档案；
+   - 通过 API 验证 profile name、user nickname、user mobile 均已更新；
+   - 进入“我的”页验证新称呼和手机号已经反映到移动端账号摘要。
+4. 使用 TDD 验证缺口：
+   - 首次运行扩展后的本地写入 E2E 失败；
+   - 失败原因：`POST /api/profile/elder` 的 upsert 更新了 `elderProfile.name`，但没有同步更新关联 `user.nickname` 和 `user.mobile`。
+5. 修复 `ElderProfileService.create()`：
+   - 对已有 `userId` 的保存请求，先规范化 `nickname` 和 `mobile`；
+   - 在 profile upsert 前同步更新关联 user；
+   - 新建档案路径继续保持原有自动创建 user 行为。
+6. 更新分支整理文档，补充档案编辑覆盖范围和 E2E 发现的修复项。
+
+#### 本轮验证
+1. 已先执行：
+   - `corepack pnpm test:e2e:local-write`
+   - 结果：按预期失败，失败点为 `nickname` 和 `mobile` 未同步到关联 user。
+2. 修复服务层后再次执行：
+   - `corepack pnpm test:e2e:local-write`
+   - 结果：1 个移动端写入型 E2E 通过，覆盖任务、指标、用药、家属绑定、档案编辑和“我的”页同步。
+3. 已执行：
+   - `corepack pnpm --filter @silver-health/api build`
+   - 结果：通过。
+4. 已执行：
+   - `corepack pnpm --filter @silver-health/web typecheck`
+   - 结果：通过。
+5. 已执行：
+   - `corepack pnpm test:e2e:mobile`
+   - 结果：4 个移动端只读 E2E 通过。
+
+#### 下一轮建议
+1. 在 GitHub UI 中手动触发 release gate，确认远端 CI 与环境变量；
+2. 继续补周报生成或周报可视化的写入/展示闭环；
+3. 进入 Node TS 脚本 ESM warning 清理，降低演示和 CI 输出噪音。

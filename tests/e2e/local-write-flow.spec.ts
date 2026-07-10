@@ -30,6 +30,16 @@ type FamilyBinding = {
   status: 'pending' | 'active' | 'unbound';
 };
 
+type ElderProfile = {
+  userId: string;
+  name: string;
+  age: number;
+  user?: {
+    nickname?: string | null;
+    mobile?: string | null;
+  } | null;
+};
+
 const apiBaseUrl = process.env.E2E_API_BASE_URL;
 const elderUserId = process.env.E2E_ELDER_USER_ID;
 const familyUserId = process.env.E2E_FAMILY_USER_ID;
@@ -45,7 +55,15 @@ async function fetchApiList<T>(path: string): Promise<T[]> {
   return payload.data;
 }
 
-test('completes a task, records health data, creates medication reminder, and reflects all on family dashboard', async ({ page }) => {
+async function fetchApiData<T>(path: string): Promise<T> {
+  const response = await fetch(`${apiBaseUrl}${path}`);
+  expect(response.ok).toBe(true);
+  const payload = (await response.json()) as { code: number; data: T };
+  expect(payload.code).toBe(0);
+  return payload.data;
+}
+
+test('completes a task, records health data, creates medication reminder, updates profile, and reflects all on family dashboard', async ({ page }) => {
   const tasksBefore = await fetchApiList<TaskItem>(`/api/tasks/elder/${elderUserId}`);
   const metricsBefore = await fetchApiList<MetricRecord>(`/api/metrics/elder/${elderUserId}`);
   const remindersBefore = await fetchApiList<MedicationReminder>(`/api/medications/elder/${elderUserId}`);
@@ -117,4 +135,34 @@ test('completes a task, records health data, creates medication reminder, and re
       return bindings.some((binding) => binding.familyUserId === familyUserId && binding.status === 'pending');
     })
     .toBe(true);
+
+  await page.goto('/elder/profile');
+  await expect(page.getByRole('heading', { name: '老人建档', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: '载入已有档案' }).click();
+  await expect(page.getByText('档案已载入，可以直接补充或调整信息。')).toBeVisible();
+  await page.locator('label').filter({ hasText: '页面称呼' }).locator('input').fill('李阿姨 E2E');
+  await page.locator('label').filter({ hasText: '联系手机号' }).locator('input').fill('13900001111');
+  await page.locator('label').filter({ hasText: '老人姓名' }).locator('input').fill('李秀兰 E2E');
+  await page.getByRole('button', { name: '保存档案' }).click();
+  await expect(page.getByText('档案已保存，下一步可直接去“今日任务”继续演示。')).toBeVisible();
+
+  await expect
+    .poll(async () => {
+      const profile = await fetchApiData<ElderProfile>(`/api/profile/elder/${elderUserId}`);
+      return {
+        name: profile.name,
+        nickname: profile.user?.nickname,
+        mobile: profile.user?.mobile,
+      };
+    })
+    .toEqual({
+      name: '李秀兰 E2E',
+      nickname: '李阿姨 E2E',
+      mobile: '13900001111',
+    });
+
+  await page.goto('/me');
+  await expect(page.getByRole('heading', { name: '我的', exact: true })).toBeVisible();
+  await expect(page.getByText('李阿姨 E2E')).toBeVisible();
+  await expect(page.getByText('68 岁 · 13900001111')).toBeVisible();
 });
