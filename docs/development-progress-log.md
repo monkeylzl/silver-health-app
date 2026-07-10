@@ -2633,3 +2633,41 @@ pnpm dev:web
 1. 推送后观察 PR #1 的 GitHub Actions run；
 2. 若 release gate 通过，将 PR #1 从 draft 转为 ready for review；
 3. 如 Actions 失败，优先根据 GitHub logs 修 CI 环境差异。
+
+---
+
+### 91. Release Gate 远端通过与 PR Ready
+
+#### 本轮处理
+1. 推送 `2dabd98` 后，PR #1 自动触发 GitHub Actions：
+   - workflow：`Silver Health release gates`
+   - run id：`29096789384`
+2. 远端 release gate 完整通过：
+   - Checkout / Node / pnpm / install；
+   - Prisma client generate；
+   - Web production build；
+   - Web typecheck；
+   - API production build；
+   - utility tests；
+   - production smoke；
+   - Playwright Chromium install；
+   - mobile PWA E2E；
+   - Vercel prebuilt deploy dry-run。
+3. 使用 GitHub 连接器将 PR #1 从 draft 转为 ready for review。
+4. 更新分支整理文档，记录 PR ready 和远端 Actions 通过。
+
+#### 本轮验证
+1. 已通过 GitHub Actions jobs 查询确认：
+   - job：`Build, smoke, and mobile E2E`
+   - status：`completed`
+   - conclusion：`success`
+2. 已确认 PR #1：
+   - state：open；
+   - draft：false；
+   - mergeable：true；
+   - head：`2dabd98`。
+
+#### 下一轮建议
+1. 合并 PR #1 到 `main`；
+2. 合并后确认 `main` 上的生产部署状态；
+3. PR 合并且线上确认后，删除旧的细分 feature 分支。
