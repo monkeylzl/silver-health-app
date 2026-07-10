@@ -2395,6 +2395,8 @@ pnpm dev:web
 4. 新增分支整理文档：
    - `docs/pwa-launch-branch-integration.md`
 5. 在发布候选分支上完成完整 Pre-PR 验证，并把验证矩阵补入分支整理文档。
+6. 通过 GitHub 连接器创建 Draft PR：
+   - [#1 Prepare Silver Health PWA launch candidate](https://github.com/monkeylzl/silver-health-app/pull/1)
 
 #### 分支策略
 - 后续 PR 建议只从 `feature/pwa-launch-release-candidate` 合入 `main`；
@@ -2437,6 +2439,6 @@ pnpm dev:web
     - 结果：17 项线上冒烟检查通过，覆盖 Vercel Web、Railway API、PWA 资源、真实 API 内容、健康检查、任务/指标/用药/周报数据和 CORS。
 
 #### 下一轮建议
-1. 创建 `feature/pwa-launch-release-candidate` 到 `main` 的 PR；
+1. 在 PR #1 中确认 GitHub mergeability 和 Actions 状态；
 2. 将手动 release gate 在 GitHub Actions 中跑一遍，确认远端 CI 环境变量和数据库访问；
 3. 若继续开发，优先补档案编辑或周报生成的写入型 E2E。

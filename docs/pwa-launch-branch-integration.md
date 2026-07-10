@@ -10,6 +10,7 @@
 - 整理起点：`5e2362b`（`feature/local-write-binding-e2e`）
 - GitHub compare：`main...feature/local-write-binding-e2e`
 - 状态：相对 `main` ahead 13、behind 0。
+- Draft PR：[#1 Prepare Silver Health PWA launch candidate](https://github.com/monkeylzl/silver-health-app/pull/1)
 
 ## Included Branch Stack
 
