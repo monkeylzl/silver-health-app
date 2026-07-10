@@ -35,7 +35,7 @@
 - Railway API deployment config and Vercel prebuilt deployment script.
 - Production smoke check for Web/API/PWA/CORS.
 - Controlled demo reset command.
-- GitHub Actions manual release gate.
+- GitHub Actions release gate with automatic PR runs and manual dispatch support.
 - Playwright mobile read-only E2E.
 - Local write E2E covering:
   - completing a task;
@@ -67,10 +67,11 @@ corepack pnpm test:e2e:mobile
 corepack pnpm test:local-e2e-utils
 corepack pnpm test:github-workflow
 corepack pnpm test:demo-reset-utils
+corepack pnpm test:report-generation-utils
 corepack pnpm test:smoke-utils
 corepack pnpm test:vercel-deploy-utils
-corepack pnpm --filter @silver-health/web typecheck
 corepack pnpm --filter @silver-health/web build
+corepack pnpm --filter @silver-health/web typecheck
 corepack pnpm --filter @silver-health/api build
 corepack pnpm smoke:production
 ```
@@ -82,6 +83,7 @@ Verification result:
 - `test:local-e2e-utils`：3 个测试通过。
 - `test:github-workflow`：1 个测试通过。
 - `test:demo-reset-utils`：5 个测试通过。
+- `test:report-generation-utils`：3 个测试通过。
 - `test:smoke-utils`：4 个测试通过。
 - `test:vercel-deploy-utils`：3 个测试通过。
 - Web typecheck：通过。
@@ -89,4 +91,4 @@ Verification result:
 - API build：通过。
 - `smoke:production`：17 项线上检查通过，覆盖 Vercel Web、Railway API、PWA 资源、真实 API 内容、健康检查、任务/指标/用药/周报数据和 CORS。
 
-Known note: Node currently prints `MODULE_TYPELESS_PACKAGE_JSON` warnings for TS scripts. They are noisy but non-blocking; a later cleanup should standardize script module execution.
+Current note: Node TS script `MODULE_TYPELESS_PACKAGE_JSON` warnings have been cleaned up for root scripts and report-generation unit tests. Keep Web build and Web typecheck sequential because Next.js `.next/types` is generated during build.

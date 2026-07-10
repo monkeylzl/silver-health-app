@@ -2552,3 +2552,84 @@ pnpm dev:web
 1. 将 Web build 与 Web typecheck 在本地和 CI 中保持串行，避免 `.next/types` 竞态；
 2. 清理 Node TS 脚本 ESM warning；
 3. 继续补周报生成逻辑的单元测试，特别是日期范围、重复生成 upsert、空数据建议文案。
+
+---
+
+### 90. Release Gate 自动化、ESM Warning 清理与周报单测
+
+#### 本轮处理
+1. 按建议顺序先处理 release gate：
+   - 确认 GitHub 连接器仍只能查询 workflow runs/jobs/logs 和重跑失败任务，不能直接触发 `workflow_dispatch`；
+   - 当前 workflow 文件仍在 PR 分支，尚未进入 `main`，手动 dispatch 入口不稳定；
+   - 将 `.github/workflows/release-gates.yml` 扩展为同时支持 `pull_request` 和 `workflow_dispatch`；
+   - 后续 PR 分支 push 后，release gate 可自动跑；合入 `main` 后仍可手动 dispatch。
+2. 调整 release gate 执行顺序：
+   - Web production build 先跑；
+   - Web typecheck 在 build 后跑，避免 `.next/types` 生成文件竞态；
+   - PR 触发时使用默认线上 Web/API/elder 参数；
+   - 手动触发时继续支持自定义 Web/API/elder 参数和开关项。
+3. 清理 Node TS script ESM warning：
+   - 根 `package.json` 增加 `"type": "module"`；
+   - root scripts、demo ready、smoke、工具测试不再打印 `MODULE_TYPELESS_PACKAGE_JSON` warning；
+   - API 包保持 CommonJS，不改 `apps/api/package.json`，避免影响 Nest `dist/main.js` 运行；
+   - 为 `apps/api/src/modules/report` 增加局部 `package.json`，只让 Node 测试识别 report 纯函数模块为 ESM。
+4. 给周报生成逻辑补单元测试：
+   - 新增 `apps/api/src/modules/report/report-generation.ts`，抽出当前周范围和摘要生成逻辑；
+   - `ReportService.generateCurrentWeek()` 只负责数据库查询和 upsert；
+   - 新增 `scripts/report-generation-utils.test.ts`；
+   - 根脚本新增 `test:report-generation-utils`；
+   - GitHub release gate utility tests 中加入该脚本。
+5. 更新 workflow 自测：
+   - 检查 `pull_request` 触发；
+   - 检查新增周报单测；
+   - 检查 Web build 在 Web typecheck 之前执行。
+6. 执行 `corepack pnpm demo:ready`：
+   - 首次本地 `check:demo` 因本地库缺演示账号失败；
+   - `demo:ready` 自动 seed；
+   - 二次 `check:demo` 通过；
+   - `check:demo-copy` 通过；
+   - 输出不再包含 Node TS module warning。
+
+#### 本轮验证
+1. 已执行：
+   - `corepack pnpm test:report-generation-utils`
+   - 结果：3 个测试通过，覆盖 Asia/Shanghai 当前周、正常摘要、空数据摘要。
+2. 已执行：
+   - `corepack pnpm test:github-workflow`
+   - 结果：1 个测试通过，覆盖 PR 自动 gate、手动 gate、构建顺序和 utility tests。
+3. 已执行：
+   - `corepack pnpm test:local-e2e-utils`
+   - 结果：3 个测试通过。
+4. 已执行：
+   - `corepack pnpm test:demo-reset-utils`
+   - 结果：5 个测试通过。
+5. 已执行：
+   - `corepack pnpm test:smoke-utils`
+   - 结果：4 个测试通过。
+6. 已执行：
+   - `corepack pnpm test:vercel-deploy-utils`
+   - 结果：3 个测试通过。
+7. 已执行：
+   - `corepack pnpm --filter @silver-health/api build`
+   - 结果：通过。
+8. 已按顺序执行：
+   - `corepack pnpm --filter @silver-health/web build`
+   - `corepack pnpm --filter @silver-health/web typecheck`
+   - 结果：均通过。
+9. 已执行：
+   - `corepack pnpm test:e2e:mobile`
+   - 结果：4 个移动端 E2E 通过。
+10. 已执行：
+    - `corepack pnpm smoke:production`
+    - 结果：17 项线上 smoke 通过，且无 Node TS module warning。
+11. 已执行：
+    - `corepack pnpm test:e2e:local-write`
+    - 结果：1 个本地写入型 E2E 通过，覆盖任务、指标、用药、家属绑定、档案编辑、我的页同步、家属看板和周报生成。
+12. 已执行：
+    - `corepack pnpm demo:ready`
+    - 结果：自动 seed 后通过 demo 数据检查和文案一致性检查，且无 Node TS module warning。
+
+#### 下一轮建议
+1. 推送后观察 PR #1 的 GitHub Actions run；
+2. 若 release gate 通过，将 PR #1 从 draft 转为 ready for review；
+3. 如 Actions 失败，优先根据 GitHub logs 修 CI 环境差异。

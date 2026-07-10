@@ -1,6 +1,9 @@
 name: Silver Health release gates
 
 on:
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       web_url:
@@ -44,10 +47,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      PRODUCTION_WEB_URL: ${{ inputs.web_url }}
-      PRODUCTION_API_BASE_URL: ${{ inputs.api_url }}
-      PRODUCTION_ELDER_USER_ID: ${{ inputs.elder_user_id }}
-      E2E_BASE_URL: ${{ inputs.web_url }}
+      PRODUCTION_WEB_URL: ${{ inputs.web_url || 'https://web-nu-blond-89.vercel.app' }}
+      PRODUCTION_API_BASE_URL: ${{ inputs.api_url || 'https://silver-health-api-production.up.railway.app' }}
+      PRODUCTION_ELDER_USER_ID: ${{ inputs.elder_user_id || 'cmre5b56p0000ij0niccn6i4n' }}
+      E2E_BASE_URL: ${{ inputs.web_url || 'https://web-nu-blond-89.vercel.app' }}
       CI: true
 
     steps:
@@ -70,11 +73,11 @@ jobs:
       - name: Generate Prisma client
         run: corepack pnpm prisma:generate
 
-      - name: Web typecheck
-        run: corepack pnpm --filter @silver-health/web typecheck
-
       - name: Web production build
         run: corepack pnpm --filter @silver-health/web build
+
+      - name: Web typecheck
+        run: corepack pnpm --filter @silver-health/web typecheck
 
       - name: API production build
         run: corepack pnpm --filter @silver-health/api build
@@ -85,19 +88,20 @@ jobs:
           corepack pnpm test:smoke-utils
           corepack pnpm test:vercel-deploy-utils
           corepack pnpm test:github-workflow
+          corepack pnpm test:report-generation-utils
 
       - name: Production smoke
-        if: ${{ inputs.run_production_smoke }}
+        if: ${{ github.event_name == 'pull_request' || inputs.run_production_smoke }}
         run: corepack pnpm smoke:production
 
       - name: Install Playwright Chromium
-        if: ${{ inputs.run_mobile_e2e }}
+        if: ${{ github.event_name == 'pull_request' || inputs.run_mobile_e2e }}
         run: corepack pnpm exec playwright install --with-deps chromium
 
       - name: Mobile PWA E2E
-        if: ${{ inputs.run_mobile_e2e }}
+        if: ${{ github.event_name == 'pull_request' || inputs.run_mobile_e2e }}
         run: corepack pnpm test:e2e:mobile
 
       - name: Vercel prebuilt deploy dry-run
-        if: ${{ inputs.run_vercel_dry_run }}
+        if: ${{ github.event_name == 'pull_request' || inputs.run_vercel_dry_run }}
         run: corepack pnpm deploy:vercel

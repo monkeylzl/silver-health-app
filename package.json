@@ -2,6 +2,7 @@
   "name": "silver-health-app",
   "private": true,
   "version": "0.1.0",
+  "type": "module",
   "packageManager": "pnpm@10.0.0",
   "scripts": {
     "dev": "turbo run dev",
@@ -25,6 +26,7 @@
     "test:demo-reset-utils": "node --test scripts/demo-reset-utils.test.ts",
     "test:github-workflow": "node --test scripts/github-workflow.test.ts",
     "test:local-e2e-utils": "node --test scripts/local-e2e-utils.test.ts",
+    "test:report-generation-utils": "node --test scripts/report-generation-utils.test.ts",
     "test:smoke-utils": "node --test scripts/production-smoke-utils.test.ts",
     "test:vercel-deploy-utils": "node --test scripts/vercel-deploy-utils.test.ts"
   },
