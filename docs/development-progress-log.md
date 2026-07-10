@@ -2378,3 +2378,29 @@ pnpm dev:web
 1. 将 `test:e2e:local-write` 接入 GitHub Actions 前，准备可访问的测试数据库或服务容器；
 2. 继续补档案编辑、周报生成等写入型链路；
 3. 整理 Node ESM warning，减少脚本运行噪音。
+
+---
+
+### 87. 分支整理与发布候选分支
+
+#### 本轮处理
+1. 检查当前分支拓扑，确认 `feature/local-write-binding-e2e` 是线性集成头。
+2. 使用 GitHub compare 确认：
+   - base：`main`
+   - head：`feature/local-write-binding-e2e`
+   - ahead：13
+   - behind：0
+3. 新建集成分支：
+   - `feature/pwa-launch-release-candidate`
+4. 新增分支整理文档：
+   - `docs/pwa-launch-branch-integration.md`
+
+#### 分支策略
+- 后续 PR 建议只从 `feature/pwa-launch-release-candidate` 合入 `main`；
+- 旧的细分 feature 分支暂时保留，便于追踪每轮迭代；
+- release candidate 合并后，再删除旧远端分支。
+
+#### 下一轮建议
+1. 在 `feature/pwa-launch-release-candidate` 上跑完整 Pre-PR 验证；
+2. 创建 PR 到 `main`；
+3. 若继续开发，优先补档案编辑或周报生成的写入型 E2E。
