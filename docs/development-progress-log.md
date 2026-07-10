@@ -2725,3 +2725,36 @@ pnpm dev:web
 1. 清理本地和远端旧 feature 分支；
 2. 如 Vercel / Railway 有自动部署日志，再对照生产 smoke 做最终上线记录；
 3. 进入真实账号体系或通知提醒的下一阶段规划。
+
+---
+
+### 93. 合并后分支清理
+
+#### 本轮处理
+1. 确认所有旧 feature 分支均已 merged into `main`。
+2. 删除远端旧分支：
+   - `feature/mobile-first`
+   - `feature/pwa-launch-ready`
+   - `feature/production-smoke-gates`
+   - `feature/demo-reset-command`
+   - `feature/vercel-prebuilt-deploy-script`
+   - `feature/mobile-e2e-interactions`
+   - `feature/manual-release-workflow`
+   - `feature/local-write-e2e`
+   - `feature/local-write-medication-e2e`
+   - `feature/local-write-binding-e2e`
+   - `feature/pwa-launch-release-candidate`
+3. 删除对应本地旧分支。
+4. 执行 `git fetch --prune` 清理远端跟踪引用。
+
+#### 本轮验证
+1. 已执行：
+   - `git branch --all`
+   - 结果：仅剩 `main` 和 `origin/main`。
+2. 已执行：
+   - `git status --short --branch`
+   - 结果：`main...origin/main`，工作区 clean。
+
+#### 下一轮建议
+1. 对接 Vercel / Railway 部署日志，确认 `main` 后续自动部署是否已完成；
+2. 若线上部署确认无误，进入下一阶段：真实账号体系、通知提醒或小程序/原生端路线。
