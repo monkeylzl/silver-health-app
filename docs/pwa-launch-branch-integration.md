@@ -43,11 +43,13 @@
   - creating a medication reminder;
   - submitting a family binding request;
   - updating the elder profile and confirming the My page reflects nickname and mobile changes;
+  - generating the current weekly report from the latest tasks, metrics, and medication reminders;
   - verifying family dashboard sync.
 - Fixes discovered by E2E:
   - metric form default measured time now uses client local datetime;
   - repeated family binding submit uses upsert instead of unique-constraint failure.
   - elder profile save now also updates the linked user nickname and mobile number.
+  - local write E2E now uses a unique mobile number per run so repeated demo resets do not collide with old user records.
 
 ## Recommended Merge Path
 
@@ -75,7 +77,7 @@ corepack pnpm smoke:production
 
 Verification result:
 
-- `test:e2e:local-write`：1 个移动端写入型 E2E 通过，覆盖任务完成、指标录入、用药提醒、家属绑定、档案编辑、我的页同步和家属看板同步。
+- `test:e2e:local-write`：1 个移动端写入型 E2E 通过，覆盖任务完成、指标录入、用药提醒、家属绑定、档案编辑、我的页同步、家属看板同步和本周周报生成。
 - `test:e2e:mobile`：4 个移动端只读 E2E 通过，覆盖 390x844 与 360x800 视口、四个底部 Tab 和移动布局。
 - `test:local-e2e-utils`：3 个测试通过。
 - `test:github-workflow`：1 个测试通过。

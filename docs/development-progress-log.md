@@ -2492,3 +2492,63 @@ pnpm dev:web
 1. 在 GitHub UI 中手动触发 release gate，确认远端 CI 与环境变量；
 2. 继续补周报生成或周报可视化的写入/展示闭环；
 3. 进入 Node TS 脚本 ESM warning 清理，降低演示和 CI 输出噪音。
+
+---
+
+### 89. 周报生成写入闭环
+
+#### 本轮处理
+1. 扩展 `tests/e2e/local-write-flow.spec.ts`，在已有任务、指标、用药、家属绑定、档案编辑之后继续覆盖：
+   - 进入家属周报页；
+   - 点击“生成本周周报”；
+   - 验证 API 周报数量增加；
+   - 验证页面出现由当前任务、指标、用药提醒汇总出的摘要。
+2. 首次执行扩展后的 E2E 时先暴露一个测试数据问题：
+   - 固定手机号 `13900001111` 在多次 demo reset 后可能和历史 user 记录冲突；
+   - 将 E2E 改为每次生成唯一手机号，避免本地反复验证时被旧用户数据影响。
+3. 再次执行 E2E 后按预期失败在周报页：
+   - 页面没有“生成本周周报”按钮；
+   - API 没有生成本周周报的写入入口。
+4. 新增后端接口：
+   - `POST /api/reports/elder/:elderUserId/generate`
+5. 新增 `ReportService.generateCurrentWeek()`：
+   - 按当前周统计老人任务完成数；
+   - 统计本周健康指标记录数；
+   - 读取启用中的用药提醒；
+   - 生成家属可读的 `summaryText` 和 `suggestionList`；
+   - 使用 `weeklyReport.upsert()`，重复点击同一周只刷新，不重复创建。
+6. 新增周报页客户端组件：
+   - `apps/web/app/family/report/generate-report-button.tsx`
+   - 成功后显示“本周周报已生成，页面已刷新。”并调用 `router.refresh()`。
+7. 更新分支整理文档，将本周周报生成纳入发布候选分支覆盖范围。
+
+#### 本轮验证
+1. 已先执行：
+   - `corepack pnpm test:e2e:local-write`
+   - 结果：失败，先暴露固定手机号重复运行冲突。
+2. 修复 E2E 手机号数据后再次执行：
+   - `corepack pnpm test:e2e:local-write`
+   - 结果：按预期失败在缺少“生成本周周报”按钮。
+3. 实现周报生成接口和页面按钮后执行：
+   - `corepack pnpm test:e2e:local-write`
+   - 结果：1 个移动端写入型 E2E 通过，覆盖任务、指标、用药、家属绑定、档案编辑、我的页同步、家属看板和周报生成。
+4. 已执行：
+   - `corepack pnpm --filter @silver-health/api build`
+   - 结果：通过。
+5. 已执行：
+   - `corepack pnpm --filter @silver-health/web build`
+   - 结果：通过。
+6. 首次并行执行 Web build 与 Web typecheck 时：
+   - `corepack pnpm --filter @silver-health/web typecheck`
+   - 结果：失败，原因为 build 正在重建 `.next/types`，typecheck 读取到缺失的生成文件。
+7. Web build 完成后单独重跑：
+   - `corepack pnpm --filter @silver-health/web typecheck`
+   - 结果：通过。
+8. 已执行：
+   - `corepack pnpm test:e2e:mobile`
+   - 结果：4 个移动端只读 E2E 通过。
+
+#### 下一轮建议
+1. 将 Web build 与 Web typecheck 在本地和 CI 中保持串行，避免 `.next/types` 竞态；
+2. 清理 Node TS 脚本 ESM warning；
+3. 继续补周报生成逻辑的单元测试，特别是日期范围、重复生成 upsert、空数据建议文案。

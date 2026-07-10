@@ -40,6 +40,13 @@ type ElderProfile = {
   } | null;
 };
 
+type WeeklyReport = {
+  id: string;
+  metricRecordCount: number;
+  summaryText?: string | null;
+  suggestionList?: string[] | null;
+};
+
 const apiBaseUrl = process.env.E2E_API_BASE_URL;
 const elderUserId = process.env.E2E_ELDER_USER_ID;
 const familyUserId = process.env.E2E_FAMILY_USER_ID;
@@ -64,9 +71,11 @@ async function fetchApiData<T>(path: string): Promise<T> {
 }
 
 test('completes a task, records health data, creates medication reminder, updates profile, and reflects all on family dashboard', async ({ page }) => {
+  const updatedMobile = `139${Date.now().toString().slice(-8)}`;
   const tasksBefore = await fetchApiList<TaskItem>(`/api/tasks/elder/${elderUserId}`);
   const metricsBefore = await fetchApiList<MetricRecord>(`/api/metrics/elder/${elderUserId}`);
   const remindersBefore = await fetchApiList<MedicationReminder>(`/api/medications/elder/${elderUserId}`);
+  const reportsBefore = await fetchApiList<WeeklyReport>(`/api/reports/elder/${elderUserId}`);
   const doneBefore = tasksBefore.filter((task) => task.status === 'done').length;
   const todoBefore = tasksBefore.filter((task) => task.status === 'todo').length;
   const enabledRemindersBefore = remindersBefore.filter((reminder) => reminder.enabled).length;
@@ -141,7 +150,7 @@ test('completes a task, records health data, creates medication reminder, update
   await page.getByRole('button', { name: '载入已有档案' }).click();
   await expect(page.getByText('档案已载入，可以直接补充或调整信息。')).toBeVisible();
   await page.locator('label').filter({ hasText: '页面称呼' }).locator('input').fill('李阿姨 E2E');
-  await page.locator('label').filter({ hasText: '联系手机号' }).locator('input').fill('13900001111');
+  await page.locator('label').filter({ hasText: '联系手机号' }).locator('input').fill(updatedMobile);
   await page.locator('label').filter({ hasText: '老人姓名' }).locator('input').fill('李秀兰 E2E');
   await page.getByRole('button', { name: '保存档案' }).click();
   await expect(page.getByText('档案已保存，下一步可直接去“今日任务”继续演示。')).toBeVisible();
@@ -158,11 +167,27 @@ test('completes a task, records health data, creates medication reminder, update
     .toEqual({
       name: '李秀兰 E2E',
       nickname: '李阿姨 E2E',
-      mobile: '13900001111',
+      mobile: updatedMobile,
     });
 
   await page.goto('/me');
   await expect(page.getByRole('heading', { name: '我的', exact: true })).toBeVisible();
   await expect(page.getByText('李阿姨 E2E')).toBeVisible();
-  await expect(page.getByText('68 岁 · 13900001111')).toBeVisible();
+  await expect(page.getByText(`68 岁 · ${updatedMobile}`)).toBeVisible();
+
+  await page.goto('/family/report');
+  await expect(page.getByRole('heading', { name: '家属周报', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: '生成本周周报' }).click();
+  await expect(page.getByText('本周周报已生成，页面已刷新。')).toBeVisible();
+
+  await expect
+    .poll(async () => {
+      const reports = await fetchApiList<WeeklyReport>(`/api/reports/elder/${elderUserId}`);
+      return reports.length;
+    })
+    .toBe(reportsBefore.length + 1);
+
+  await expect(page.getByText('本周任务已完成')).toBeVisible();
+  await expect(page.getByText('新增指标 4 次')).toBeVisible();
+  await expect(page.getByText('启用提醒 3 条（阿司匹林')).toBeVisible();
 });

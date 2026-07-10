@@ -1,5 +1,6 @@
 import { apiBaseUrl, defaultElderUserId } from '../../../lib/config';
 import { ChecklistNotice, DataSourceNotice, DemoStepNotice, EmptyState, InlineNotice, PageHeader, StatCard, pageStyles } from '../../ui/page-kit';
+import { GenerateReportButton } from './generate-report-button';
 
 type WeeklyReport = {
   id: string;
@@ -144,6 +145,10 @@ export default async function Page() {
           '如果对方继续追问关系建立流程，再补讲“家属绑定”即可。',
         ]}
       />
+
+      {source === 'api' && defaultElderUserId ? (
+        <GenerateReportButton apiBaseUrl={apiBaseUrl} elderUserId={defaultElderUserId} />
+      ) : null}
 
       <section className="stat-grid" style={pageStyles.statGrid}>
         <StatCard label="当前接入状态" value={source === 'api' ? '真实 API' : '演示数据'} />
