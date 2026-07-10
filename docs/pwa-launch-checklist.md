@@ -124,6 +124,26 @@ cd ../.. && corepack enable && corepack pnpm install --frozen-lockfile
 
 Output 由 Next.js 自动处理。
 
+当前 monorepo 已提供脚本化 prebuilt 部署命令：
+
+```bash
+corepack pnpm deploy:vercel
+```
+
+默认是 dry-run，只打印将要执行的步骤。确认无误后执行生产发布：
+
+```bash
+corepack pnpm deploy:vercel -- --execute
+```
+
+该命令会：
+
+1. 在 `apps/web` 下执行 `vercel build --prod`；
+2. 将 `apps/web/.vercel/project.json` 和 `apps/web/.vercel/output` 同步到仓库根 `.vercel`；
+3. 从仓库根执行 `vercel deploy --prod --prebuilt`。
+
+这样可以避免直接 `vercel deploy --cwd apps/web` 时只上传子目录、远端找不到 monorepo 根 `package.json` 的问题。
+
 ### 2. Vercel 环境变量
 
 ```env
@@ -215,6 +235,7 @@ corepack pnpm --filter @silver-health/api build
 corepack pnpm demo:ready
 corepack pnpm test:demo-reset-utils
 corepack pnpm test:smoke-utils
+corepack pnpm test:vercel-deploy-utils
 ```
 
 如果遇到 Next dev 缓存错误，例如 `.next/server/...` 或 `Cannot find module './xxx.js'`：

@@ -1983,3 +1983,44 @@ pnpm dev:web
 1. 增加 Playwright E2E，覆盖真实点击完成任务；
 2. 把 Vercel prebuilt 部署流程脚本化；
 3. 将生产 smoke 与 demo reset 接入 GitHub Actions 手动工作流。
+
+---
+
+### 81. Vercel prebuilt 部署流程脚本化
+
+#### 本轮处理
+1. 从 `feature/demo-reset-command` 新建分支 `feature/vercel-prebuilt-deploy-script`。
+2. 新增部署工具测试：`scripts/vercel-deploy-utils.test.ts`。
+3. 新增部署工具函数：`scripts/vercel-deploy-utils.ts`。
+4. 新增部署脚本：`scripts/vercel-prebuilt-deploy.ts`。
+5. 根 `package.json` 新增：
+   - `deploy:vercel`
+   - `test:vercel-deploy-utils`
+6. 更新上线检查清单、测试验证方案、部署记录。
+
+#### 部署策略
+- `corepack pnpm deploy:vercel` 默认 dry-run；
+- `corepack pnpm deploy:vercel -- --execute` 才执行生产部署；
+- 先在 `apps/web` 执行 `vercel build --prod`；
+- 再将 `apps/web/.vercel/project.json` 和 `apps/web/.vercel/output` 同步到仓库根 `.vercel`；
+- 最后从仓库根执行 `vercel deploy --prod --prebuilt`。
+
+#### 本轮验证
+1. 已按 TDD 先运行失败测试：
+   - `node --test scripts/vercel-deploy-utils.test.ts`
+   - 失败原因：`vercel-deploy-utils.ts` 不存在。
+2. 已执行：`corepack pnpm test:vercel-deploy-utils`
+   - 结果：3 个测试通过。
+3. 已执行：`corepack pnpm deploy:vercel`
+   - 结果：dry-run 只打印命令，不发版。
+4. 已执行：`corepack pnpm deploy:vercel -- --execute`
+   - 结果：Vercel 生产部署成功。
+   - 新 deployment：`dpl_8AkzX95njUQTcCHh9qUzrDjx6D4V`。
+   - Production alias：`https://web-nu-blond-89.vercel.app`。
+5. 已执行：`corepack pnpm smoke:production`
+   - 结果：17 项线上冒烟检查通过。
+
+#### 下一轮建议
+1. 增加 Playwright E2E，覆盖“完成任务 / 录入指标 / 家属看板同步”；
+2. 将 smoke、demo reset、Vercel deploy 串成 GitHub Actions 手动工作流；
+3. 整理 Node ESM warning，统一 scripts 的运行方式。

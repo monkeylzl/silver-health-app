@@ -66,11 +66,17 @@ Vercel 项目已持久化以上两个 production 环境变量，类型为 non-se
 - Team / Scope：`monkeylzls-projects`
 - Project：`web`
 - Production Alias：`https://web-nu-blond-89.vercel.app`
-- Deployment URL：`https://web-m4057w5k7-monkeylzls-projects.vercel.app`
-- Deployment ID：`dpl_GiFkdXjPQEUXyvPjxN5ZTSQQrjSX`
-- Inspect URL：`https://vercel.com/monkeylzls-projects/web/GiFkdXjPQEUXyvPjxN5ZTSQQrjSX`
+- Deployment URL：`https://web-fy1dh8fg5-monkeylzls-projects.vercel.app`
+- Deployment ID：`dpl_8AkzX95njUQTcCHh9qUzrDjx6D4V`
+- Inspect URL：`https://vercel.com/monkeylzls-projects/web/8AkzX95njUQTcCHh9qUzrDjx6D4V`
 
-本次 CLI 部署使用了本地 prebuilt 流程：
+CLI 部署使用本地 prebuilt 流程，已固化为：
+
+```bash
+corepack pnpm deploy:vercel -- --execute
+```
+
+等价核心流程：
 
 ```bash
 NEXT_PUBLIC_API_BASE_URL="https://silver-health-api-production.up.railway.app" \

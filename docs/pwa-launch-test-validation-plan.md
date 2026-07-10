@@ -17,6 +17,7 @@
 - API health；
 - 远程 Vercel + Railway 部署后冒烟测试。
 - 生产 Web/API/PWA/CORS 自动冒烟脚本。
+- Vercel monorepo prebuilt 部署脚本。
 
 ### 1.2 不包含范围
 
@@ -216,6 +217,18 @@ corepack pnpm test:demo-reset-utils
 - 可解析根目录 `.env` 中的 `DATABASE_URL`；
 - 默认重置计划包含 `seed:demo`、`check:demo`、`smoke:production`；
 - `--skip-smoke` 时只执行 `seed:demo` 和 `check:demo`。
+
+### 4.9 Vercel 部署工具单元测试
+
+```bash
+corepack pnpm test:vercel-deploy-utils
+```
+
+验收标准：
+
+- 能规范化 Web/API URL；
+- 能生成 Vercel build 所需的 `NEXT_PUBLIC_*` 环境变量；
+- 能输出固定的 prebuilt 部署步骤，包含从 `apps/web/.vercel/output` 同步到根 `.vercel/output`。
 
 ## 5. 本地运行验证
 
@@ -622,7 +635,37 @@ corepack pnpm smoke:production
 - 远程数据库重新 seed 后默认老人 ID 变化；
 - 预发环境需要使用同一套检查脚本。
 
-## 11. 回归测试清单
+## 11. Vercel prebuilt 部署
+
+### 11.1 dry-run
+
+```bash
+corepack pnpm deploy:vercel
+```
+
+验收标准：
+
+- 输出 `mode: dry-run`；
+- 只打印 `DRY-RUN` 命令；
+- 不创建新的 Vercel deployment。
+
+### 11.2 生产部署
+
+```bash
+corepack pnpm deploy:vercel -- --execute
+corepack pnpm smoke:production
+```
+
+验收标准：
+
+- `vercel build --cwd apps/web --prod --yes` 成功；
+- 根目录 `.vercel/output` 被更新；
+- `vercel deploy --prod --prebuilt --yes` 成功；
+- 输出新的 deployment id；
+- 生产别名仍为 `https://web-nu-blond-89.vercel.app`；
+- `smoke:production` 通过 17 项检查。
+
+## 12. 回归测试清单
 
 每次修改 PWA、导航、首页、API 配置后至少跑：
 
@@ -633,6 +676,7 @@ corepack pnpm --filter @silver-health/api build
 corepack pnpm demo:ready
 corepack pnpm test:demo-reset-utils
 corepack pnpm test:smoke-utils
+corepack pnpm test:vercel-deploy-utils
 ```
 
 如果改动涉及 Prisma schema 或 seed：
@@ -665,9 +709,9 @@ corepack pnpm smoke:production
 - `seed:demo` 和 `check:demo` 均通过；
 - 线上 smoke 仍然通过。
 
-## 12. 常见问题排查
+## 13. 常见问题排查
 
-### 12.1 Cannot find module './xxx.js'
+### 13.1 Cannot find module './xxx.js'
 
 通常是 Next `.next` 缓存或 chunk 产物不一致。
 
@@ -680,7 +724,7 @@ corepack pnpm --filter @silver-health/web build
 corepack pnpm --filter @silver-health/web dev
 ```
 
-### 12.2 Cannot find module '.prisma/client/default'
+### 13.2 Cannot find module '.prisma/client/default'
 
 通常是 Prisma Client 未生成或 node_modules 被重建。
 
@@ -690,7 +734,7 @@ corepack pnpm --filter @silver-health/web dev
 corepack pnpm prisma:generate
 ```
 
-### 12.3 pnpm ignored builds
+### 13.3 pnpm ignored builds
 
 如果环境里有多个 pnpm 版本，优先使用：
 
@@ -700,7 +744,7 @@ corepack pnpm <command>
 
 避免直接调用被运行时劫持的 `pnpm`。
 
-### 12.4 API 请求 fetch failed
+### 13.4 API 请求 fetch failed
 
 检查：
 
@@ -715,7 +759,7 @@ curl http://localhost:3001/api/health
 - CORS 是否允许当前 Web 域名；
 - `DATABASE_URL` 是否指向正确数据库。
 
-## 13. 测试结论模板
+## 14. 测试结论模板
 
 ```markdown
 ## Silver Health PWA 验收结论

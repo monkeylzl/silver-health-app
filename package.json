@@ -18,9 +18,11 @@
     "check:demo-copy": "node scripts/check-demo-copy.ts",
     "demo:ready": "node scripts/demo-ready.ts",
     "demo:reset": "node scripts/demo-reset.ts",
+    "deploy:vercel": "node scripts/vercel-prebuilt-deploy.ts",
     "smoke:production": "node scripts/production-smoke.ts",
     "test:demo-reset-utils": "node --test scripts/demo-reset-utils.test.ts",
-    "test:smoke-utils": "node --test scripts/production-smoke-utils.test.ts"
+    "test:smoke-utils": "node --test scripts/production-smoke-utils.test.ts",
+    "test:vercel-deploy-utils": "node --test scripts/vercel-deploy-utils.test.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.6.0"
