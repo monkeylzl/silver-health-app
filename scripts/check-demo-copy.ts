@@ -23,11 +23,23 @@ const checks = [
   },
   {
     path: 'apps/web/app/page.tsx',
-    includes: ['今日', '上线版默认体验', 'TaskList', 'InstallPrompt'],
+    includes: ['今日', 'ProgressBar', '今日任务', '查看全部任务'],
+  },
+  {
+    path: 'apps/web/app/health/page.tsx',
+    includes: ['健康', '最近健康指标', '今日用药'],
+  },
+  {
+    path: 'apps/web/app/family/page.tsx',
+    includes: ['家人', '今日近况', '本周报告'],
+  },
+  {
+    path: 'apps/web/app/me/page.tsx',
+    includes: ['我的', 'InstallPrompt', '健康档案'],
   },
   {
     path: 'apps/web/app/demo/page.tsx',
-    includes: ['演示入口', '演示前 30 秒检查', 'pnpm demo:ready', '正式手机体验默认从“今日”工作台开始'],
+    includes: ["redirect('/')"],
   },
   {
     path: 'scripts/demo-ready.ts',
@@ -55,4 +67,4 @@ if (errors.length > 0) {
   process.exit(1);
 }
 
-console.log('Demo 文案一致性检查通过：README / preview / cheatsheet / script / homepage 已覆盖统一口径；cheatsheet 也已明确补到 check:demo-copy / demo:ready 这套说明，且 demo:ready 最终结论未漂移。');
+console.log('Demo 文案一致性检查通过：README / preview / cheatsheet / script 已覆盖统一口径；四个产品工作台和旧 demo 重定向契约完整，且 demo:ready 最终结论未漂移。');

@@ -2919,3 +2919,37 @@ pnpm dev:web
 2. 提交并推送 `feature/mobile-app-productization`；
 3. 配置 Vercel/Railway/GitHub Secrets，合并后部署；
 4. 执行生产 smoke 和手机真机安装验收。
+
+---
+
+### 97. 产品化版本合并与生产部署
+
+#### 本轮处理
+
+1. `feature/mobile-app-productization` 已通过 PR #2 合并到 `main`，合并提交为 `b9ec3b0db162c85485ef69ad8723e84228e4abcf`。
+2. GitHub Actions 最终门禁运行 `29126601774` 全部通过，包含单元测试、Web/API 构建、5 组响应式 E2E、完整写入 E2E、PWA 离线 E2E 和 Vercel dry-run。
+3. Railway API 已部署：
+   - 服务：`silver-health-api`；
+   - deployment id：`91b8ea9f-e1ee-4727-843f-7e83b59aec52`；
+   - 健康检查正常，未携带内部密钥的业务请求返回 `401`。
+4. Vercel Web 已部署到生产别名 `https://web-nu-blond-89.vercel.app`。
+5. Vercel WAF 已发布 `/api/session` 体验口令限流规则：每个 IP 每 60 秒最多 8 次，超限拒绝。
+6. 使用 Railway Postgres 公网连接执行生产 `demo:ready`，完成 2026-07-11 固定体验数据初始化。
+7. 将 `check:demo-copy` 从旧演示页文案检查调整为四个正式产品工作台及 `/demo` 重定向契约检查。
+
+#### 本轮验证
+
+1. `corepack pnpm test:release`：全部通过。
+2. GitHub Actions `29126601774`：全部通过。
+3. `corepack pnpm smoke:production`：17 项全部通过：
+   - 四个主页面和家人周报可访问；
+   - Manifest、Service Worker、离线页可访问；
+   - 首页读取 4 项真实任务；
+   - API 指标、用药和周报读取正常；
+   - CORS 与 PATCH 预检正常。
+4. 生产体验数据：今日任务 4 项、指标 3 项、启用用药提醒 2 项、有效家人绑定 1 项、周报 2 份。
+
+#### 后续运维项
+
+1. 在 GitHub 仓库补充 `PRODUCTION_TRIAL_ACCESS_CODE` 与 `PRODUCTION_INTERNAL_API_KEY` Secrets，启用手动生产 smoke workflow；当前生产应用和部署不受影响。
+2. 使用 iPhone Safari、Android Chrome 和 iPad Safari 完成最终真机安装与桌面图标验收。
