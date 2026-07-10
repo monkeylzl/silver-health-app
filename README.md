@@ -12,7 +12,7 @@ pnpm demo:ready
 
 - 通过：说明当天 demo 数据已经可直接演示，且 README / 首页 / 提词材料的关键 demo 口径也已过一致性检查；
 - 它会自动按“先 `check`，失败再 `seed`，最后再 `check` 一次，并补做 `check:demo-copy`”的顺序准备好数据与讲法口径；
-- **最该读的结论：`pnpm demo:ready` 通过后，现在可以开 API / Web，并优先从首页 / 开讲。**
+- **最该读的结论：`pnpm demo:ready` 通过后，现在可以开 API / Web，并优先从今日工作台 / 开始体验；路演讲解再打开 /demo。**
 
 如果你只想把项目尽快跑起来，推荐顺序就是：
 
@@ -20,7 +20,7 @@ pnpm demo:ready
 2. 执行 `pnpm demo:ready`；
 3. 启动 API：`pnpm dev:api`；
 4. 启动 Web：`pnpm dev:web`；
-5. 从首页 `http://localhost:3000/` 开始演示，而不是手动记路由。
+5. 从今日工作台 `http://localhost:3000/` 开始体验；如果是路演讲解，再打开 `/demo`。
 
 > 当前稳定口径：**优先 `demo:ready`；手动分步时才是先 check，再 seed。** 不要把 `seed:demo` 当成每次启动都必须跑的默认动作。
 
@@ -74,7 +74,7 @@ pnpm check:demo
 pnpm check:demo-copy
 ```
 
-其中 `pnpm check:demo-copy` 不只是在查 README / 首页 / 提词材料有没有“文案不一致”，还会一起校验 `demo:ready` 最终那句“现在可以开 API / Web，并优先从首页 / 开讲。”有没有和入口文档漂移。
+其中 `pnpm check:demo-copy` 不只是在查 README / 今日工作台 / 提词材料有没有“文案不一致”，还会一起校验 `demo:ready` 最终那句“现在可以开 API / Web，并优先从今日工作台 / 开始体验；路演讲解再打开 /demo。”有没有和入口文档漂移。
 
 ### 5. 启动服务
 
@@ -91,13 +91,17 @@ pnpm dev:web
 
 ---
 
-## 推荐演示入口
+## 推荐体验入口
 
-推荐总是从首页开始：
+推荐正式体验从今日工作台开始：
 
 - `http://localhost:3000/`
 
-首页已经固定好当前最顺手的 demo 顺序：
+路演或交接讲解再打开：
+
+- `http://localhost:3000/demo`
+
+`/demo` 已经固定好当前最顺手的讲解顺序：
 
 1. 老人建档 `/elder/profile`
 2. 今日任务 `/elder/home`
@@ -167,7 +171,8 @@ pnpm demo:ready     # 先 check，失败则自动 seed 并再次 check，最后�
 - 家属绑定
 - 真实 API 联调
 - 滚动 demo seed
-- demo 自检脚本与演示入口页
+- demo 自检脚本与 `/demo` 演示入口页
+- H5/PWA 安装壳、今日工作台、底部多 Tab 导航
 
 当前目标不是继续铺大功能，而是优先保证：
 
@@ -191,6 +196,14 @@ pnpm demo:ready     # 先 check，失败则自动 seed 并再次 check，最后�
    - 3 分钟推荐讲法
 5. `docs/development-progress-log.md`
    - 全量开发过程、阶段记录与排查归档
+6. `docs/pwa-launch-technical-solution.md`
+   - H5/PWA 可安装上线版技术实现方案，包含架构图、流程图和用户交互图
+7. `docs/pwa-launch-test-validation-plan.md`
+   - 完整测试验证方案，包含本地、移动端、PWA、线上部署验收步骤和命令
+8. `docs/pwa-launch-optimization-roadmap.md`
+   - 按 P0/P1/P2/P3 优先级整理的后续优化项
+9. `docs/pwa-launch-key-technical-details.md`
+   - 重点技术方案详解，说明关键实现决策、风险和后续重构方向
 
 ---
 

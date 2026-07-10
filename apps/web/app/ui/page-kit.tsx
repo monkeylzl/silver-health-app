@@ -53,16 +53,16 @@ export const pageStyles = {
 
 export function PageHeader({ title, description }: { title: string; description: string }) {
   return (
-    <div style={pageStyles.header}>
-      <h1 style={pageStyles.title}>{title}</h1>
-      <p style={pageStyles.description}>{description}</p>
+    <div className="page-header" style={pageStyles.header}>
+      <h1 className="page-title" style={pageStyles.title}>{title}</h1>
+      <p className="page-description" style={pageStyles.description}>{description}</p>
     </div>
   );
 }
 
 export function StatCard({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <div style={pageStyles.card}>
+    <div className="surface-card" style={pageStyles.card}>
       <div style={{ color: '#667085', marginBottom: 8 }}>{label}</div>
       <strong>{value}</strong>
     </div>
@@ -77,7 +77,7 @@ export function InlineNotice({ tone = 'warning', children }: { tone?: 'warning' 
       : { background: '#fffaeb', border: '1px solid #fedf89', color: '#b54708' };
 
   return (
-    <div style={{ marginBottom: 20, borderRadius: 12, padding: '12px 14px', ...toneStyle }}>
+    <div className="inline-notice" style={{ marginBottom: 20, borderRadius: 12, padding: '12px 14px', ...toneStyle }}>
       {children}
     </div>
   );
@@ -86,6 +86,7 @@ export function InlineNotice({ tone = 'warning', children }: { tone?: 'warning' 
 export function EmptyState({ title, description }: { title: string; description: string }) {
   return (
     <div
+      className="surface-card"
       style={{
         ...pageStyles.card,
         border: '1px dashed #d0d5dd',

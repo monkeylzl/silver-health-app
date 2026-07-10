@@ -1,0 +1,48 @@
+{
+  "name": "Silver Health",
+  "short_name": "银发健康",
+  "description": "面向老人和家属的健康管理 PWA",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "今日任务",
+      "url": "/",
+      "description": "查看和完成今天的健康任务"
+    },
+    {
+      "name": "健康中心",
+      "url": "/health",
+      "description": "录入指标并查看用药提醒"
+    },
+    {
+      "name": "家属看板",
+      "url": "/family/dashboard",
+      "description": "查看老人近况摘要"
+    }
+  ]
+}

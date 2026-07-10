@@ -270,7 +270,7 @@ export function ElderProfileForm() {
 
   return (
     <div style={{ display: 'grid', gap: 24 }}>
-      <form onSubmit={onSubmit} style={{ background: '#fff', borderRadius: 16, padding: 24, boxShadow: '0 8px 24px rgba(15,23,42,0.06)' }}>
+      <form onSubmit={onSubmit} className="form-card" style={{ background: '#fff', borderRadius: 16, padding: 24, boxShadow: '0 8px 24px rgba(15,23,42,0.06)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 16 }}>
           <div>
             <h2 style={{ margin: 0 }}>老人建档表单</h2>
@@ -278,7 +278,7 @@ export function ElderProfileForm() {
               默认已填好一份适合演示的示例资料。可直接保存生成档案，也可先输入已有档案编号再回填修改。
             </p>
           </div>
-          <button type="button" onClick={loadProfile} disabled={loadingProfile || !canLoad} style={{ padding: '10px 16px' }}>
+          <button type="button" onClick={loadProfile} disabled={loadingProfile || !canLoad} className="touch-button" style={{ padding: '10px 16px' }}>
             {loadingProfile ? '加载中...' : '载入已有档案'}
           </button>
         </div>
@@ -292,7 +292,7 @@ export function ElderProfileForm() {
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
+        <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
           {renderInput('userId', '档案编号（可留空自动生成）', '留空即可由系统自动生成', '如果已经建过档，可输入原编号后载入')}
           {renderInput('nickname', '页面称呼', '例如 李阿姨', '用于首页、看板等友好称呼')}
           {renderInput('mobile', '联系手机号', '例如 13800138000')}
@@ -348,18 +348,18 @@ export function ElderProfileForm() {
           </label>
         </div>
 
-        <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 20, flexWrap: 'wrap' }}>
-          <button type="submit" disabled={loading} style={{ padding: '12px 18px', background: '#2563eb', color: '#fff', border: 0, borderRadius: 10 }}>
+        <div className="mobile-action-row" style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 20, flexWrap: 'wrap' }}>
+          <button type="submit" disabled={loading} className="touch-button primary-button" style={{ padding: '12px 18px', background: '#2563eb', color: '#fff', border: 0, borderRadius: 10 }}>
             {loading ? '提交中...' : '保存档案'}
           </button>
           <span style={{ color: message.includes('失败') || message.includes('错误') ? '#b42318' : '#027a48' }}>{message}</span>
         </div>
       </form>
 
-      <section style={{ background: '#101828', color: '#f8fafc', borderRadius: 16, padding: 24, overflowX: 'auto' }}>
-        <h3 style={{ marginTop: 0 }}>接口返回预览</h3>
+      <details className="result-panel" style={{ background: '#101828', color: '#f8fafc', borderRadius: 16, padding: 24, overflowX: 'auto' }}>
+        <summary>查看接口返回预览</summary>
         <pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{result || '保存或载入后，这里会展示接口返回结果，便于演示时确认档案已生效。'}</pre>
-      </section>
+      </details>
     </div>
   );
 }

@@ -129,7 +129,7 @@ export default async function Page() {
   const dashboardNarrative = buildStatusNarrative(tasks, latestMetric, reminders);
 
   return (
-    <main style={pageStyles.main}>
+    <main className="app-shell" style={pageStyles.main}>
       <PageHeader
         title="家属看板"
         description="这里是演示从老人端切到家属端的关键一页：不用重复录入，家属就能直接看到老人今天的任务、指标和用药近况。"
@@ -152,7 +152,7 @@ export default async function Page() {
         ]}
       />
 
-      <section style={pageStyles.statGrid}>
+      <section className="stat-grid" style={pageStyles.statGrid}>
         <StatCard label="当前接入状态" value={source === 'api' ? '真实 API' : '演示数据'} />
         <StatCard label="今日任务完成情况" value={`${doneCount} / ${tasks.length} 已完成`} />
         <StatCard label="待完成任务" value={`${todoCount} 项`} />
@@ -166,8 +166,8 @@ export default async function Page() {
         <div style={{ marginTop: 6, opacity: 0.92 }}>收尾就讲这一句：家属不用翻原始记录，先看这里就知道今天要不要跟进。</div>
       </InlineNotice>
 
-      <section style={pageStyles.listSection}>
-        <article style={pageStyles.card}>
+      <section className="list-section" style={pageStyles.listSection}>
+        <article className="surface-card" style={pageStyles.card}>
           <h2 style={{ marginTop: 0 }}>任务摘要</h2>
           {tasks.length > 0 ? (
             <ul style={{ margin: 0, paddingLeft: 18, color: '#475467' }}>
@@ -182,7 +182,7 @@ export default async function Page() {
           )}
         </article>
 
-        <article style={pageStyles.card}>
+        <article className="surface-card" style={pageStyles.card}>
           <h2 style={{ marginTop: 0 }}>指标摘要</h2>
           <p style={{ margin: 0, color: '#475467' }}>{formatMetricSummary(latestMetric)}</p>
           {latestMetric ? (
@@ -191,7 +191,7 @@ export default async function Page() {
           <p style={{ color: '#667085', margin: '8px 0 0' }}>这里适合补一句“家属不用翻原始记录，只看最近一次状态就能先判断要不要跟进”。</p>
         </article>
 
-        <article style={pageStyles.card}>
+        <article className="surface-card" style={pageStyles.card}>
           <h2 style={{ marginTop: 0 }}>用药提醒摘要</h2>
           {reminders.length > 0 ? (
             <ul style={{ margin: 0, paddingLeft: 18, color: '#475467' }}>

@@ -151,7 +151,7 @@ export function MedicationForm() {
 
   return (
     <div style={{ display: 'grid', gap: 24, marginBottom: 24 }}>
-      <form onSubmit={onSubmit} style={{ background: '#fff', borderRadius: 16, padding: 24, boxShadow: '0 8px 24px rgba(15,23,42,0.06)' }}>
+      <form onSubmit={onSubmit} className="form-card" style={{ background: '#fff', borderRadius: 16, padding: 24, boxShadow: '0 8px 24px rgba(15,23,42,0.06)' }}>
         <div style={{ marginBottom: 16 }}>
           <h2 style={{ margin: '0 0 8px' }}>新增用药提醒</h2>
           <p style={{ margin: 0, color: '#667085' }}>默认示例已是慢病常见场景，现场只需微调时间或药名即可完成演示。</p>
@@ -166,7 +166,7 @@ export function MedicationForm() {
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
+        <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
           {renderInput('elderUserId', '老人档案编号 *', '默认沿用建档后的编号', '如果前面已建档，一般无需修改')}
           {renderInput('medicineName', '药品名称 *', '例如 氨氯地平', '建议填写家属和老人都熟悉的常用药')}
           {renderInput('dosageText', '服用说明 *', '例如 早餐后 1 片', '建议用“什么时候 + 吃多少”的自然表达')}
@@ -194,18 +194,18 @@ export function MedicationForm() {
           </label>
         </div>
 
-        <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 20, flexWrap: 'wrap' }}>
-          <button type="submit" disabled={loading} style={{ padding: '12px 18px', background: '#2563eb', color: '#fff', border: 0, borderRadius: 10 }}>
+        <div className="mobile-action-row" style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 20, flexWrap: 'wrap' }}>
+          <button type="submit" disabled={loading} className="touch-button primary-button" style={{ padding: '12px 18px', background: '#2563eb', color: '#fff', border: 0, borderRadius: 10 }}>
             {loading ? '提交中...' : '保存提醒'}
           </button>
           <span style={{ color: message.includes('失败') || message.includes('错误') ? '#b42318' : '#027a48' }}>{message}</span>
         </div>
       </form>
 
-      <section style={{ background: '#101828', color: '#f8fafc', borderRadius: 16, padding: 24, overflowX: 'auto' }}>
-        <h3 style={{ marginTop: 0 }}>接口返回预览</h3>
+      <details className="result-panel" style={{ background: '#101828', color: '#f8fafc', borderRadius: 16, padding: 24, overflowX: 'auto' }}>
+        <summary>查看接口返回预览</summary>
         <pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{result || '提交后，这里会展示接口返回结果，便于演示时确认提醒已保存。'}</pre>
-      </section>
+      </details>
     </div>
   );
 }

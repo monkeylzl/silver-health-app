@@ -2,12 +2,12 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const root = process.cwd();
-const READY_CONCLUSION = '现在可以开 API / Web，并优先从首页 / 开讲。';
+const READY_CONCLUSION = '现在可以开 API / Web，并优先从今日工作台 / 开始体验；路演讲解再打开 /demo。';
 
 const checks = [
   {
     path: 'README.md',
-    includes: ['演示前 30 秒检查', '现场操作分层', '优先只讲即可', 'pnpm demo:ready', READY_CONCLUSION],
+    includes: ['今日工作台', 'PWA', 'pnpm demo:ready', READY_CONCLUSION],
   },
   {
     path: 'docs/how-to-preview-locally.md',
@@ -23,7 +23,11 @@ const checks = [
   },
   {
     path: 'apps/web/app/page.tsx',
-    includes: ['演示前 30 秒检查', '现场操作分层', '优先只讲即可', 'pnpm demo:ready', '如果现场没连上真实 API', READY_CONCLUSION],
+    includes: ['今日', '上线版默认体验', 'TaskList', 'InstallPrompt'],
+  },
+  {
+    path: 'apps/web/app/demo/page.tsx',
+    includes: ['演示入口', '演示前 30 秒检查', 'pnpm demo:ready', '正式手机体验默认从“今日”工作台开始'],
   },
   {
     path: 'scripts/demo-ready.ts',

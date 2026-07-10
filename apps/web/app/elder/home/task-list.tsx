@@ -106,7 +106,7 @@ export function TaskList({ initialTasks, source }: { initialTasks: TaskItem[]; s
 
   return (
     <>
-      <section style={pageStyles.statGrid}>
+      <section className="stat-grid stat-grid--three" style={pageStyles.statGrid}>
         <StatCard label="当前接入状态" value={source === 'api' ? '真实 API' : '演示数据'} />
         <StatCard label="待完成任务" value={`${todoCount} 项`} />
         <StatCard label="已完成任务" value={`${doneCount} 项`} />
@@ -117,9 +117,9 @@ export function TaskList({ initialTasks, source }: { initialTasks: TaskItem[]; s
       {tasks.length === 0 ? (
         <EmptyState title="今天还没有待办任务" description="正常情况下新的 demo seed 会自动把任务对齐到当天；如果这里仍然空白，优先跑 pnpm check:demo 确认演示数据是否失稳，再按提示决定是否重跑 pnpm seed:demo 或先补一条今日任务。" />
       ) : (
-        <section style={pageStyles.listSection}>
+        <section className="list-section" style={pageStyles.listSection}>
           {tasks.map((task) => (
-            <article key={task.id} style={pageStyles.card}>
+            <article key={task.id} className="surface-card" style={pageStyles.card}>
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 10 }}>
                 <div>
                   <h2 style={{ margin: '0 0 8px', fontSize: 20 }}>{task.title}</h2>
@@ -138,21 +138,21 @@ export function TaskList({ initialTasks, source }: { initialTasks: TaskItem[]; s
 
               <p style={{ color: '#475467', margin: '0 0 14px' }}>{task.description || '这项任务暂时还没有补充说明。'}</p>
 
-              <button
-                type="button"
-                disabled={task.status === 'done' || pendingTaskId === task.id}
-                onClick={() => completeTask(task.id)}
-                style={{
-                  padding: '10px 16px',
-                  borderRadius: 10,
-                  border: 0,
-                  background: task.status === 'done' ? '#d0d5dd' : '#2563eb',
-                  color: '#fff',
-                  cursor: task.status === 'done' ? 'not-allowed' : 'pointer',
-                }}
-              >
-                {pendingTaskId === task.id ? '处理中...' : task.status === 'done' ? '已完成' : '标记完成'}
-              </button>
+              <div className="mobile-action-row">
+                <button
+                  type="button"
+                  disabled={task.status === 'done' || pendingTaskId === task.id}
+                  onClick={() => completeTask(task.id)}
+                  className="touch-button"
+                  style={{
+                    background: task.status === 'done' ? '#d0d5dd' : '#2563eb',
+                    color: '#fff',
+                    cursor: task.status === 'done' ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  {pendingTaskId === task.id ? '处理中...' : task.status === 'done' ? '已完成' : '标记完成'}
+                </button>
+              </div>
             </article>
           ))}
         </section>

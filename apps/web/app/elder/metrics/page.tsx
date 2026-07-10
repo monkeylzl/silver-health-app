@@ -114,7 +114,7 @@ export default async function Page() {
   const { metrics, source, note } = await getMetricRecords();
 
   return (
-    <main style={pageStyles.main}>
+    <main className="app-shell" style={pageStyles.main}>
       <PageHeader
         title="健康指标录入"
         description="这一步重点不是展示一堆记录，而是说明：老人刚录入的数据，马上就会进入后续家属查看与周报汇总。"
@@ -139,7 +139,7 @@ export default async function Page() {
 
       <MetricForm />
 
-      <section style={{ ...pageStyles.statGrid, margin: '24px 0' }}>
+      <section className="stat-grid" style={{ ...pageStyles.statGrid, margin: '24px 0' }}>
         <StatCard label="当前接入状态" value={source === 'api' ? '真实 API' : '演示数据'} />
         <StatCard label="最近记录数" value={`${metrics.length} 条`} />
       </section>
@@ -147,9 +147,9 @@ export default async function Page() {
       {metrics.length === 0 ? (
         <EmptyState title="暂时还没有指标记录" description="可以先录入一条血压、血糖或体重数据，让演示链路从“录入”到“列表回显”形成完整闭环。" />
       ) : (
-        <section style={pageStyles.listSection}>
+        <section className="list-section" style={pageStyles.listSection}>
           {metrics.map((metric) => (
-            <article key={metric.id} style={pageStyles.card}>
+            <article key={metric.id} className="surface-card" style={pageStyles.card}>
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 10 }}>
                 <div>
                   <h2 style={{ margin: '0 0 8px', fontSize: 20 }}>{metricTypeLabelMap[metric.metricType]}</h2>

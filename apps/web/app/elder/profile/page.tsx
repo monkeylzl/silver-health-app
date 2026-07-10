@@ -3,7 +3,7 @@ import { ElderProfileForm } from './elder-profile-form';
 
 export default function Page() {
   return (
-    <main style={pageStyles.main}>
+    <main className="app-shell" style={pageStyles.main}>
       <PageHeader
         title="老人建档"
         description="演示从这里开始：先把老人基础情况录入清楚，后面的今日任务、指标和家属看板都会围绕这份档案展开。"

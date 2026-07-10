@@ -100,7 +100,7 @@ pnpm demo:ready
 
 它会自动按“先 `check`，失败再 `seed`，最后再 `check` 一次，并补做 `check:demo-copy`”的顺序完成准备。
 
-可以把它的通过结果直接理解成一句现场结论：**现在可以开 API / Web，并优先从首页 / 开讲。**
+可以把它的通过结果直接理解成一句现场结论：**现在可以开 API / Web，并优先从今日工作台 / 开始体验；路演讲解再打开 /demo。**
 
 如果你只想手动分步执行，也可以：
 ```bash
@@ -114,7 +114,7 @@ pnpm check:demo
 pnpm check:demo-copy
 ```
 
-这里的 `pnpm check:demo-copy` 不只是补查 README / 首页 / cheatsheet / 3 分钟讲稿的 demo 口径有没有漂，还会一起校验 cheatsheet 是否已经把 `check:demo-copy` / `demo:ready` 这套接手说明补进去，以及 `demo:ready` 最终那句“现在可以开 API / Web，并优先从首页 / 开讲。”是否仍和入口文档一致。
+这里的 `pnpm check:demo-copy` 不只是补查 README / 今日工作台 / cheatsheet / 3 分钟讲稿的 demo 口径有没有漂，还会一起校验 cheatsheet 是否已经把 `check:demo-copy` / `demo:ready` 这套接手说明补进去，以及 `demo:ready` 最终那句“现在可以开 API / Web，并优先从今日工作台 / 开始体验；路演讲解再打开 /demo。”是否仍和入口文档一致。
 
 推荐场景：
 - 刚切换到新机器
@@ -145,11 +145,15 @@ pnpm dev:web
 默认地址通常为：
 - `http://localhost:3000`
 
-### Step 8：先打开演示入口页，再按顺序往下看
-推荐先打开：
+### Step 8：先打开今日工作台，再按需打开演示入口
+正式体验推荐先打开：
 - `http://localhost:3000/`
 
-这一页已经把当前最顺手的 demo 顺序固定成入口卡片；如果不是你本人开发的，也能先从这里进入，减少临场记路由的负担。
+这一页是上线版默认今日工作台。路演或交接讲解再打开：
+
+- `http://localhost:3000/demo`
+
+`/demo` 已经把当前最顺手的 demo 顺序固定成入口卡片；如果不是你本人开发的，也能先从这里进入，减少临场记路由的负担。
 
 ---
 

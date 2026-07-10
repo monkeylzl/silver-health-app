@@ -258,6 +258,53 @@
 
 #### 校验结果
 - 已执行：`pnpm --filter @silver-health/web typecheck`
+
+---
+
+## 42. PWA 可安装上线版第一轮重构
+
+### 本轮目标
+- 从 `feature/mobile-first` 新建 `feature/pwa-launch-ready`；
+- 把默认体验从开发演示入口调整为可真实试用的手机端工作台；
+- 第一阶段按 H5/PWA 形态准备上线，不做小程序、原生 App、真实登录和服务端推送。
+
+### 本轮实际修正
+1. 重构底部主导航为四个 Tab：
+   - `今日`：默认首页，展示今日任务、进度、下一项待办和快捷入口；
+   - `健康`：整合最近指标、录入指标、用药提醒入口；
+   - `家属`：保留家属看板作为主 Tab；
+   - `我的`：展示档案摘要、当前账号、数据源、API 状态和安装提示。
+
+2. 保留演示入口但从首页降级：
+   - `/` 变成上线版默认工作台；
+   - 原演示检查和讲解入口迁移到 `/demo`；
+   - README、预览文档、demo cheatsheet、3 分钟脚本同步调整口径。
+
+3. 增加 PWA 基础能力：
+   - 新增 `manifest.webmanifest`、SVG 图标、离线页、service worker；
+   - 新增客户端 service worker 注册组件；
+   - 新增安装提示组件，放到首页轻提示和 `我的` 页。
+
+4. 补齐上线部署准备：
+   - Web 增加 `.env.example`；
+   - API CORS 支持 `CORS_ORIGIN` 多域名配置；
+   - 保留 `PORT` 读取，适配 Railway；
+   - 新增 `docs/pwa-launch-checklist.md`，记录 Vercel / Railway 环境变量、远程库 seed、验收路径。
+
+5. 修正演示脚本在当前 Node / Prisma 组合下的兼容性：
+   - `demo:ready` 内部固定走 `corepack pnpm`，避免不同 pnpm 版本漂移；
+   - demo seed / check 脚本兼容 `@prisma/client` CommonJS 默认导出。
+
+### 校验结果
+- 已执行：`corepack pnpm --filter @silver-health/web typecheck`
+- 已执行：`corepack pnpm --filter @silver-health/web build`
+- 已执行：`corepack pnpm --filter @silver-health/api build`
+- 已执行：`corepack pnpm demo:ready`
+
+### 当前边界
+- 第一阶段仍使用固定演示老人 / 家属账号；
+- PWA 当前提供安装壳、图标、基础缓存和离线提示，暂不做推送；
+- 线上还需要在 Vercel / Railway 配置生产环境变量，并对远程库执行 seed。
 - 结果：通过
 
 #### 当前意义
@@ -847,6 +894,20 @@
 
 #### 本轮验证
 1. 已执行：`pnpm --filter @silver-health/web typecheck`
+   - 结果：通过。
+2. 已启动本地 Web 服务检查移动端页面
+   - 首次在沙箱内启动失败，原因是本地监听端口受限；随后经授权启动成功；
+   - `3000` 端口已被占用，Next.js 自动改用 `http://localhost:3002`。
+3. 已用 390px 手机视口检查首页 `/`
+   - 结果：无横向溢出；
+   - 首页入口卡片在手机宽度下已单列展示。
+4. 已用 390px 手机视口检查老人首页 `/elder/home`
+   - 结果：无横向溢出；
+   - 统计卡已修正为三列紧凑布局；
+   - “标记完成”按钮高度为 48px，手机端宽度撑满任务卡操作区。
+5. 已再次执行：`pnpm --filter @silver-health/web typecheck`
+   - 结果：通过。
+6. 已执行：`pnpm --filter @silver-health/web build`
    - 结果：通过。
 2. 已执行：`pnpm --filter @silver-health/web build`
    - 结果：通过。
@@ -1487,3 +1548,1126 @@
 #### 下一步建议
 1. 若用户明确要求继续外部动作，可在本轮基础上统一提交并 push 到 GitHub；
 2. push 前可再做一次 `git status` / commit message 收口，避免本轮归档漏掉。
+
+---
+
+### 73. 拉出移动端开发分支，完成第一批手机优先基础改造
+
+#### 本轮目标
+- 响应“开始进行移动端开发”的要求，从 `main` 拉出独立分支，避免直接污染稳定演示主线；
+- 先不重开客户端项目，优先把现有 Next.js Web 改成手机优先的 H5 / PWA 基础体验；
+- 用一轮低风险的共享样式改造，让首页、老人端和家属端页面先具备更适合手机查看与触控的布局基础。
+
+#### 本轮实际修改
+1. 新建移动端开发分支
+   - 分支：`feature/mobile-first`
+2. 新增全局移动端样式
+   - 文件：`apps/web/app/globals.css`
+   - 内容包括：
+     - 全局 `box-sizing`；
+     - 移动端正文背景、页面留白、标题字号；
+     - 统计卡、列表卡、入口卡、提示块的手机端收敛；
+     - 触控按钮最小高度；
+     - 表单网格在手机端单列显示；
+     - 接口返回预览面板在手机端降噪。
+3. 接入全局样式
+   - 文件：`apps/web/app/layout.tsx`
+   - 调整：引入 `globals.css`，移除 body 上的重复 inline 基础样式。
+4. 升级共享 UI 组件
+   - 文件：`apps/web/app/ui/page-kit.tsx`
+   - 调整：为 PageHeader、StatCard、InlineNotice、EmptyState 增加稳定 className，方便统一响应式控制。
+5. 首页与各路由主容器移动端化
+   - 文件：
+     - `apps/web/app/page.tsx`
+     - `apps/web/app/elder/profile/page.tsx`
+     - `apps/web/app/elder/home/page.tsx`
+     - `apps/web/app/elder/metrics/page.tsx`
+     - `apps/web/app/elder/medication/page.tsx`
+     - `apps/web/app/family/dashboard/page.tsx`
+     - `apps/web/app/family/report/page.tsx`
+     - `apps/web/app/family/bind/page.tsx`
+   - 调整：主容器统一挂上 `app-shell`；首页入口卡片挂上移动端网格 class。
+6. 老人首页任务列表触控优化
+   - 文件：`apps/web/app/elder/home/task-list.tsx`
+   - 调整：
+     - 统计区使用手机端三列紧凑布局；
+     - 任务卡片接入统一卡片样式；
+     - “标记完成”按钮使用触控尺寸，手机端自动撑满宽度。
+7. 表单基础移动端化
+   - 文件：
+     - `apps/web/app/elder/profile/elder-profile-form.tsx`
+     - `apps/web/app/elder/metrics/metric-form.tsx`
+     - `apps/web/app/elder/medication/medication-form.tsx`
+     - `apps/web/app/family/bind/bind-form.tsx`
+   - 调整：
+     - 表单容器统一挂上 `form-card`；
+     - 表单字段网格统一挂上 `form-grid`，手机端单列；
+     - 提交按钮统一挂上触控按钮样式；
+     - 接口返回预览统一挂上 `result-panel`。
+
+#### 本轮验证
+1. 已执行：`pnpm --filter @silver-health/web typecheck`
+   - 结果：通过。
+
+#### 本轮结果判断
+- 移动端开发已经正式从 `feature/mobile-first` 分支启动；
+- 当前完成的是手机优先的基础骨架，不是最终客户端体验；
+- 这批改造先把所有核心页面统一带入同一套手机端页面宽度、卡片、表单、按钮规则，为下一步继续打磨老人端关键流程做准备。
+
+#### 下一步建议
+1. 下一阶段优先继续优化老人端三个最高频场景：建档、今日任务、指标录入；
+2. 之后再补 PWA manifest、移动端底部导航或角色入口切换；
+3. 在视觉确认前，可先启动本地 Web 并用手机宽度截图检查首页和老人首页。
+
+---
+
+### 74. 按 `silver-mobile-design` Skill 重新审视移动端基础改造，并修正第一批规范偏差
+
+#### 本轮目标
+- 根据新安装的 `silver-mobile-design` Skill，对第 73 阶段移动端基础改造做一次设计规范复审；
+- 重点检查是否真正符合：
+  - 手机优先；
+  - 老人端大按钮、少噪音、线性任务；
+  - 家属端摘要优先；
+  - 表单单列、触控高度、清晰反馈；
+  - 移动端无横向溢出；
+  - 不让开发者信息默认干扰老人端体验。
+
+#### 本轮发现
+1. 移动端 class 仍可能被旧 inline style 覆盖
+   - 第 73 阶段已经给表单、卡片、提示块、按钮挂了 class；
+   - 但项目里大量旧样式仍是 inline style，CSS class 的移动端 padding、radius、shadow 不一定能稳定覆盖；
+   - 这会造成“规范写进 CSS 了，但真实手机效果未必按规范执行”的问题。
+2. 全站移动端统计卡强制三列过于粗暴
+   - `silver-mobile-design` 里明确：三列 compact stat tiles 只适合短标签且数值仍可读的场景；
+   - 第 73 阶段把所有 `.stat-grid` 在手机端都压成三列，不适合家属看板、报告、绑定等可能文字更长的页面。
+3. 表单底部接口 JSON 预览默认展开，手机端噪音过重
+   - 对 demo 和开发有帮助；
+   - 但对老人端 / 手机端体验来说，默认展示 JSON 属于开发者信息，和“老人端简单、线性、少噪音”的规范冲突。
+
+#### 本轮实际修改
+1. 强化移动端 CSS 覆盖稳定性
+   - 文件：`apps/web/app/globals.css`
+   - 调整：
+     - 移动端 `.inline-notice`、`.surface-card`、`.link-card`、`.form-card`、`.result-panel` 的关键 padding、radius、shadow、border 使用 `!important` 覆盖旧 inline style；
+     - 移动端按钮宽度、高度也用 `!important` 稳住触控尺寸；
+     - 避免后续页面级 inline style 无意中把手机端规范顶掉。
+2. 调整移动端统计卡策略
+   - 文件：`apps/web/app/globals.css`
+   - 调整：
+     - 手机端 `.stat-grid` 默认改成两列；
+     - 新增 `.stat-grid--three`，只给适合三列短标签的场景使用。
+   - 文件：`apps/web/app/elder/home/task-list.tsx`
+   - 调整：
+     - 老人首页任务统计继续使用 `stat-grid stat-grid--three`，保留三列紧凑体验。
+3. 降低表单接口返回预览的默认噪音
+   - 文件：
+     - `apps/web/app/elder/profile/elder-profile-form.tsx`
+     - `apps/web/app/elder/metrics/metric-form.tsx`
+     - `apps/web/app/elder/medication/medication-form.tsx`
+     - `apps/web/app/family/bind/bind-form.tsx`
+   - 调整：
+     - 把默认展开的深色 `section` 改成 `details.result-panel`；
+     - 默认只显示“查看接口返回预览”，需要时再展开；
+     - 兼顾 demo / 开发确认需求和老人端手机体验的低噪音要求。
+
+#### 本轮验证
+1. 已执行：`pnpm --filter @silver-health/web typecheck`
+   - 结果：通过。
+2. 已执行：`pnpm --filter @silver-health/web build`
+   - 结果：通过。
+3. 尝试使用 Codex Browser 做手机视口复查
+   - 结果：本轮浏览器工具返回 “No active Codex browser pane available”；
+   - 因此本轮没有新增浏览器截图；
+   - 已保留代码层与构建层验证，后续浏览器面板恢复后应继续按 390px 手机视口复查。
+4. 本地 Web 服务收尾
+   - 本轮曾启动 `pnpm dev:web` 做复查准备；
+   - `3000` 端口仍被占用，Next.js 自动使用 `http://localhost:3002`；
+   - 已确认并停止本轮启动的 `next-server` 进程。
+
+#### 本轮结果判断
+- 第 73 阶段是“把移动端骨架接上”，第 74 阶段则是第一次按正式设计 Skill 做规范回看；
+- 当前移动端基础样式更接近 Skill 要求：
+  - 默认统计卡更克制；
+  - 老人首页保留短标签三列；
+  - 表单 JSON 预览不再默认打断手机端任务流；
+  - 旧 inline style 对移动端规范的干扰降低。
+
+#### 下一步建议
+1. 浏览器面板恢复后，补做 390px / 360px 手机视口截图复查；
+2. 继续按 Skill 打磨老人端建档、今日任务、指标录入三个高频流程；
+3. 下一轮可以考虑新增移动端角色入口 / 底部导航，但应先保持首页作为 demo router，不急着重做信息架构。
+
+---
+
+### 75. 引入移动端多 Tab 导航壳，让体验从“页面集合”开始变成“可切换应用”
+
+#### 本轮目标
+- 响应“想要一个能够交互的完整体验”和“设计成多 tab 的形式怎么样”的要求；
+- 先不重构业务页面，把交互入口层补起来；
+- 按 `silver-mobile-design` 的原则选择手机 App 式底部 Tab，而不是桌面式多顶栏标签。
+
+#### 本轮设计判断
+- 多 Tab 方向是对的，但不适合一次性把所有功能都塞进一个顶栏；
+- 当前更适合：
+  - 底部主 Tab：`首页 / 老人 / 家属`；
+  - 角色内二级 Tab：
+    - 老人：`建档 / 今日 / 指标 / 用药`；
+    - 家属：`看板 / 周报 / 绑定`。
+- 这样既保留首页作为 demo router，也让手机上能像 App 一样快速切换主要区域。
+
+#### 本轮实际修改
+1. 新增移动端导航组件
+   - 文件：`apps/web/app/ui/app-navigation.tsx`
+   - 内容：
+     - 底部主导航：`首页`、`老人`、`家属`；
+     - 老人端二级导航：`建档`、`今日`、`指标`、`用药`；
+     - 家属端二级导航：`看板`、`周报`、`绑定`；
+     - 使用 `usePathname()` 判断当前激活态；
+     - 使用 `aria-current="page"` 保留可访问性语义。
+2. 接入全局布局
+   - 文件：`apps/web/app/layout.tsx`
+   - 调整：在 `body` 内引入 `<AppNavigation />`，让所有路由共享同一套移动端导航壳。
+3. 增加移动端 Tab 样式
+   - 文件：`apps/web/app/globals.css`
+   - 内容：
+     - `.mobile-bottom-tabs` 固定在底部；
+     - `.mobile-context-tabs` 在老人 / 家属路由顶部 sticky；
+     - Tab 最小触控高度满足 44px+；
+     - 激活态有颜色和背景反馈；
+     - body 增加底部安全区 padding，避免内容被底部 Tab 遮挡。
+
+#### 本轮验证
+1. 已执行：`pnpm --filter @silver-health/web typecheck`
+   - 结果：通过。
+2. 已执行：`pnpm --filter @silver-health/web build`
+   - 结果：通过。
+3. 本地页面可访问性检查
+   - 当前已有 `next-server` 监听 `3000`；
+   - 已通过 `curl -I http://127.0.0.1:3000` 确认页面返回 `200 OK`；
+   - 已读取首页 HTML，确认底部主 Tab 已渲染：`首页 / 老人 / 家属`。
+4. Codex Browser 复查
+   - 用户确认 in-app browser 打开且当前 URL 为 `about:blank`；
+   - 本轮多次尝试重新获取 in-app Browser、设置可见、设置 390px 视口、新建 tab；
+   - 工具仍返回 `No active Codex browser pane available`；
+   - 因此本轮仍未能通过 Codex Browser 生成截图。
+
+#### 本轮结果判断
+- 当前移动端体验已经从“靠首页卡片跳路由”推进到“底部主 Tab + 角色内二级 Tab”的 App 壳形态；
+- 这还不是完整客户端体验，但已经是后续继续补 PWA、角色首页、任务流闭环的基础；
+- 用户现在可以在 in-app browser 手动打开 `http://127.0.0.1:3000` 直接试底部 Tab 交互。
+
+#### 下一步建议
+1. 手动在 in-app browser 打开 `http://127.0.0.1:3000`，先试底部 `首页 / 老人 / 家属`；
+2. 如果这个方向认可，下一步应把老人端做成更完整的“今日工作台”，而不是只靠各页面分散展示；
+3. 继续补家属端“看板 / 周报 / 绑定”的移动端摘要层，让家属 Tab 也像一个完整应用区域。
+
+---
+
+### 76. 修复 Next dev 缓存缺失 chunk 导致的页面报错
+
+#### 本轮问题
+- 用户在本地验证多 Tab 页面时遇到：
+  - `Error: Cannot find module './156.js'`
+  - 后续还出现 `.next/server/app/page.js` 缺失；
+- 这类错误来自 Next.js dev 生成目录 `.next` 的运行时缓存不一致，不是业务源码路由丢失。
+
+#### 本轮处理
+1. 确认当前 3000 端口进程
+   - 已确认监听 3000 的进程是 `next-server (v15.3.2)`。
+2. 停止异常 Next dev server
+   - 先停止旧的 `next-server`，避免服务仍持有旧 `.next` 文件引用。
+3. 清理 Next 生成缓存
+   - 删除自动生成目录：`apps/web/.next`。
+4. 重新启动 Web dev server
+   - 执行：`pnpm dev:web`；
+   - 服务恢复到：`http://localhost:3000`。
+
+#### 本轮验证
+1. 已确认首页恢复
+   - `curl -I http://127.0.0.1:3000`
+   - 结果：`HTTP/1.1 200 OK`
+2. 已确认老人首页恢复
+   - `curl -I http://127.0.0.1:3000/elder/home`
+   - 结果：`HTTP/1.1 200 OK`
+3. 已确认家属看板恢复
+   - `curl -I http://127.0.0.1:3000/family/dashboard`
+   - 结果：`HTTP/1.1 200 OK`
+
+#### 复用处理方式
+如果后续再遇到类似 `.next/server/...`、`Cannot find module './xxx.js'`、hot-update 残留错误，优先按这个顺序处理：
+
+```bash
+# 1. 停掉正在运行的 pnpm dev:web / next-server
+# 2. 清理 Web 构建缓存
+rm -rf apps/web/.next
+
+# 3. 重新启动
+pnpm dev:web
+```
+
+#### 本轮结果判断
+- 多 Tab 改动本身没有导致路由缺失；
+- 问题来自开发缓存和旧 dev server 状态；
+- 当前首页、老人首页、家属看板均已恢复可访问。
+
+---
+
+### 77. Railway API / PostgreSQL 上线与 PWA 发布准备
+
+#### 本轮处理
+1. 通过 Chrome 完成 Railway Terms of Service / Fair Use Policy 确认。
+2. 创建 Railway 项目 `heartfelt-transformation`，并添加 PostgreSQL。
+3. 使用 Railway CLI 将 `silver-health-api` 部署到 Railway。
+4. 新增 `Dockerfile.api`，将 API 构建稳定到 Dockerfile builder。
+5. 调整 `railway.json`：
+   - 使用 Dockerfile builder；
+   - 将 `prisma:migrate:deploy` 放到 `preDeployCommand`；
+   - `startCommand` 只启动 API；
+   - 保留 `/api/health` 健康检查。
+6. 将 API 监听地址调整为 `0.0.0.0`，适配 Railway 容器外部访问。
+7. 将 Web 的 Next.js 从 `15.3.2` 升级到 `15.3.8`，通过 Railway 安全扫描。
+8. 修复今日任务默认查询的业务时区问题，避免 Railway UTC 环境下首页任务为空。
+9. 使用远程 PostgreSQL 执行演示数据 seed，记录默认老人账号 ID。
+
+#### 当前线上信息
+- Railway API：`https://silver-health-api-production.up.railway.app`
+- 默认老人账号：`cmre5b56p0000ij0niccn6i4n`
+- 当前 API Deployment ID：`5ee96701-2f27-4cf6-8b13-f91e6e7a4119`
+
+#### 本轮验证
+1. 已执行：`corepack pnpm --filter @silver-health/api build`
+   - 结果：通过。
+2. 已执行：`corepack pnpm --filter @silver-health/web typecheck`
+   - 结果：通过。
+3. 已执行：`corepack pnpm --filter @silver-health/web build`
+   - 结果：通过。
+4. 已执行：`corepack pnpm demo:ready`
+   - 结果：本地首次检查发现当天任务为空，自动 seed 后复查通过。
+5. 已验证 Railway `/api/health`
+   - 结果：`code=0`，`status=running`。
+6. 已验证远程演示数据接口：
+   - 老人档案返回 `李阿姨`；
+   - 今日任务返回 4 条；
+   - 健康指标返回 3 条；
+   - 用药提醒返回 2 条；
+   - 家属周报返回 2 条。
+
+#### 下一步
+1. 完成 Vercel CLI 设备登录授权；
+2. 发布 Vercel Web 生产部署；
+3. 将 Vercel 域名回填 Railway `CORS_ORIGIN`；
+4. 用线上 Web 做移动端四 Tab 验收；
+5. commit 并 push `feature/pwa-launch-ready`。
+
+---
+
+### 78. Vercel Web 生产部署与线上验收完成
+
+#### 本轮处理
+1. 通过 Vercel 设备授权页允许 `Vercel CLI 55.0.0` 登录。
+2. 创建 Vercel 项目 `monkeylzls-projects/web`。
+3. 首次远端构建失败，原因是 CLI 只上传 `apps/web` 子目录，导致远端执行 `cd ../..` 后找不到 monorepo 根目录 `package.json`。
+4. 改用本地 prebuilt 流程：
+   - 在本机执行 `vercel build --cwd apps/web --prod`；
+   - 将 `.vercel/output` 放到仓库根目录上传；
+   - 执行 `vercel deploy --prod --prebuilt`。
+5. Vercel production 环境变量已持久化：
+   - `NEXT_PUBLIC_API_BASE_URL`
+   - `NEXT_PUBLIC_DEFAULT_ELDER_USER_ID`
+6. Railway `CORS_ORIGIN` 已回填 Vercel 生产域名。
+
+#### 当前线上信息
+- Web Production Alias：`https://web-nu-blond-89.vercel.app`
+- Web Deployment URL：`https://web-m4057w5k7-monkeylzls-projects.vercel.app`
+- Web Deployment ID：`dpl_GiFkdXjPQEUXyvPjxN5ZTSQQrjSX`
+- Railway API Deployment ID：`e78cd36c-000b-4b74-9c21-326f11304a20`
+
+#### 本轮验证
+1. Web 首页 `https://web-nu-blond-89.vercel.app` 返回 `200 text/html`。
+2. `/health`、`/family/dashboard`、`/family/report`、`/me` 均返回 `200 text/html`。
+3. `manifest.webmanifest`、`offline.html`、`sw.js` 均返回 `200`。
+4. 首页 HTML 已渲染四个底部 Tab：`今日 / 健康 / 家属 / 我的`。
+5. 首页 HTML 已显示 `当前接入：真实 API`。
+6. 首页 HTML 已显示远程任务：`晨间散步 20 分钟`、`记录今日血压`。
+7. API CORS 验证通过：
+   - `access-control-allow-origin` 等于 Vercel 生产域名；
+   - PATCH 预检返回 `204`；
+   - `access-control-allow-methods` 包含 `GET,HEAD,PUT,PATCH,POST,DELETE`。
+8. 手机视口验证：
+   - 390x844：无横向滚动，底部 Tab 固定，最小主按钮高度 48px；
+   - 360x800：无横向滚动，底部 Tab 固定，最小主按钮高度 48px。
+
+#### 后续建议
+1. 将 Vercel 项目名从 `web` 改为 `silver-health-app-web`；
+2. 增加端到端测试，覆盖真实点击完成任务和录入指标；
+3. 把 prebuilt 部署流程固化成脚本或 CI；
+4. 增加演示数据重置命令，方便上线试用前恢复初始状态。
+
+---
+
+### 79. 生产环境自动冒烟门禁
+
+#### 本轮处理
+1. 从 `feature/pwa-launch-ready` 新建优化分支 `feature/production-smoke-gates`。
+2. 新增生产 smoke 工具测试：`scripts/production-smoke-utils.test.ts`。
+3. 新增 smoke 工具函数：`scripts/production-smoke-utils.ts`。
+4. 新增生产环境冒烟脚本：`scripts/production-smoke.ts`。
+5. 根 `package.json` 新增：
+   - `test:smoke-utils`
+   - `smoke:production`
+6. 更新上线检查清单和测试验证方案，将线上手工验收沉淀成固定命令。
+
+#### 覆盖范围
+- Web 首页、健康、家属看板、家属周报、我的页面 HTTP 状态与 content-type；
+- PWA `manifest.webmanifest`、`offline.html`、`sw.js`；
+- 首页四个底部 Tab；
+- 首页真实 API 状态；
+- seed 任务文本；
+- API health；
+- 任务、指标、用药、周报集合数量；
+- API health CORS；
+- PATCH preflight CORS。
+
+#### 本轮验证
+1. 已按 TDD 先运行失败测试：
+   - `node --test scripts/production-smoke-utils.test.ts`
+   - 失败原因：`production-smoke-utils.ts` 不存在。
+2. 已执行：`corepack pnpm test:smoke-utils`
+   - 结果：4 个测试通过。
+3. 已执行：`corepack pnpm smoke:production`
+   - 结果：17 项线上冒烟检查通过。
+
+#### 下一轮建议
+1. 增加 Playwright 端到端测试，覆盖“完成任务 / 录入指标 / 家属看板同步”；
+2. 增加线上演示数据重置脚本，避免试用多人点击后数据漂移；
+3. 将 prebuilt Vercel 部署流程固化成脚本或 GitHub Actions。
+
+---
+
+### 80. 受控演示数据重置命令
+
+#### 本轮处理
+1. 从 `feature/production-smoke-gates` 新建分支 `feature/demo-reset-command`。
+2. 新增重置工具测试：`scripts/demo-reset-utils.test.ts`。
+3. 新增重置工具函数：`scripts/demo-reset-utils.ts`。
+4. 新增受控重置脚本：`scripts/demo-reset.ts`。
+5. 根 `package.json` 新增：
+   - `demo:reset`
+   - `test:demo-reset-utils`
+6. 更新上线检查清单和测试验证方案。
+
+#### 安全策略
+- 必须显式设置 `DEMO_RESET_CONFIRM=RESET_DEMO_DATA`；
+- 未确认时命令拒绝执行；
+- 执行前打印脱敏后的 `DATABASE_URL`；
+- 默认重置后继续执行 `smoke:production`；
+- 本地恢复可使用 `--skip-smoke`。
+
+#### 本轮验证
+1. 已按 TDD 先运行失败测试：
+   - `node --test scripts/demo-reset-utils.test.ts`
+   - 失败原因：`demo-reset-utils.ts` 不存在。
+2. 已新增 `.env` 解析测试并先确认失败：
+   - 失败原因：`parseDotEnv` 未导出。
+3. 已执行：`corepack pnpm test:demo-reset-utils`
+   - 结果：5 个测试通过。
+4. 已执行未确认路径：
+   - `corepack pnpm demo:reset -- --skip-smoke`
+   - 结果：拒绝执行，并显示脱敏数据库目标。
+5. 已执行确认路径：
+   - `DEMO_RESET_CONFIRM=RESET_DEMO_DATA corepack pnpm demo:reset -- --skip-smoke`
+   - 结果：`seed:demo`、`check:demo` 通过。
+
+#### 下一轮建议
+1. 增加 Playwright E2E，覆盖真实点击完成任务；
+2. 把 Vercel prebuilt 部署流程脚本化；
+3. 将生产 smoke 与 demo reset 接入 GitHub Actions 手动工作流。
+
+---
+
+### 81. Vercel prebuilt 部署流程脚本化
+
+#### 本轮处理
+1. 从 `feature/demo-reset-command` 新建分支 `feature/vercel-prebuilt-deploy-script`。
+2. 新增部署工具测试：`scripts/vercel-deploy-utils.test.ts`。
+3. 新增部署工具函数：`scripts/vercel-deploy-utils.ts`。
+4. 新增部署脚本：`scripts/vercel-prebuilt-deploy.ts`。
+5. 根 `package.json` 新增：
+   - `deploy:vercel`
+   - `test:vercel-deploy-utils`
+6. 更新上线检查清单、测试验证方案、部署记录。
+
+#### 部署策略
+- `corepack pnpm deploy:vercel` 默认 dry-run；
+- `corepack pnpm deploy:vercel -- --execute` 才执行生产部署；
+- 先在 `apps/web` 执行 `vercel build --prod`；
+- 再将 `apps/web/.vercel/project.json` 和 `apps/web/.vercel/output` 同步到仓库根 `.vercel`；
+- 最后从仓库根执行 `vercel deploy --prod --prebuilt`。
+
+#### 本轮验证
+1. 已按 TDD 先运行失败测试：
+   - `node --test scripts/vercel-deploy-utils.test.ts`
+   - 失败原因：`vercel-deploy-utils.ts` 不存在。
+2. 已执行：`corepack pnpm test:vercel-deploy-utils`
+   - 结果：3 个测试通过。
+3. 已执行：`corepack pnpm deploy:vercel`
+   - 结果：dry-run 只打印命令，不发版。
+4. 已执行：`corepack pnpm deploy:vercel -- --execute`
+   - 结果：Vercel 生产部署成功。
+   - 新 deployment：`dpl_8AkzX95njUQTcCHh9qUzrDjx6D4V`。
+   - Production alias：`https://web-nu-blond-89.vercel.app`。
+5. 已执行：`corepack pnpm smoke:production`
+   - 结果：17 项线上冒烟检查通过。
+
+#### 下一轮建议
+1. 增加 Playwright E2E，覆盖“完成任务 / 录入指标 / 家属看板同步”；
+2. 将 smoke、demo reset、Vercel deploy 串成 GitHub Actions 手动工作流；
+3. 整理 Node ESM warning，统一 scripts 的运行方式。
+
+---
+
+### 82. Playwright 手机视口 E2E 回归
+
+#### 本轮处理
+1. 从 `feature/vercel-prebuilt-deploy-script` 新建分支 `feature/mobile-e2e-interactions`。
+2. 根 `package.json` 新增：
+   - `test:e2e:mobile`
+3. 新增 Playwright 配置：
+   - `playwright.config.ts`
+4. 新增移动端 E2E：
+   - `tests/e2e/mobile-navigation.spec.ts`
+5. 新增忽略规则：
+   - `test-results`
+   - `playwright-report`
+6. 更新上线检查清单、测试验证方案和优化路线图。
+
+#### 覆盖范围
+- 默认线上 PWA：`https://web-nu-blond-89.vercel.app`；
+- 390x844 和 360x800 两个手机视口；
+- `/` 今日工作台线上 demo 数据可见；
+- `今日 / 健康 / 家属 / 我的` 四个底部 Tab 可点击切换；
+- 当前 Tab `aria-current="page"` 激活态正确；
+- 页面无横向滚动；
+- 底部 Tab、主操作按钮、操作卡片和按钮高度不低于 44px；
+- 失败时保留 Playwright screenshot 和 trace。
+
+#### 本轮验证
+1. 已按 TDD 先运行失败测试：
+   - `corepack pnpm test:e2e:mobile`
+   - 失败原因：`playwright` 命令不存在。
+2. 补充 `@playwright/test` 后再次运行：
+   - 失败原因：设备预设与 Chrome channel 不兼容，且失败视频需要 ffmpeg。
+3. 调整为 Chromium 手机视口并关闭失败视频后再次运行：
+   - 失败原因：heading 与文本断言过宽，引发 Playwright strict mode。
+4. 收紧断言后已执行：
+   - `corepack pnpm test:e2e:mobile`
+   - 结果：4 个 E2E 测试通过。
+5. 已执行：
+   - `corepack pnpm test:smoke-utils`
+   - 结果：4 个测试通过。
+6. 已执行：
+   - `corepack pnpm test:demo-reset-utils`
+   - 结果：5 个测试通过。
+7. 已执行：
+   - `corepack pnpm test:vercel-deploy-utils`
+   - 结果：3 个测试通过。
+8. 已执行：
+   - `corepack pnpm --filter @silver-health/web typecheck`
+   - 结果：通过。
+9. 已执行：
+   - `corepack pnpm --filter @silver-health/api build`
+   - 结果：通过。
+10. 已执行：
+    - `corepack pnpm --filter @silver-health/web build`
+    - 结果：通过。
+11. 已执行：
+    - `corepack pnpm smoke:production`
+    - 结果：17 项线上冒烟检查通过。
+12. 文档更新后已再次执行：
+    - `corepack pnpm test:e2e:mobile`
+    - 结果：4 个 E2E 测试通过。
+
+#### 下一轮建议
+1. 增加本地可重置数据环境下的写入型 E2E，覆盖“完成任务 / 录入指标 / 家属看板同步”；
+2. 将 `smoke:production`、`demo:reset`、`deploy:vercel`、`test:e2e:mobile` 串成 GitHub Actions 手动工作流；
+3. 整理 Node ESM warning，统一 scripts 的模块运行方式。
+
+---
+
+### 83. GitHub Actions 手动上线门禁
+
+#### 本轮处理
+1. 从 `feature/mobile-e2e-interactions` 新建分支 `feature/manual-release-workflow`。
+2. 新增 workflow：
+   - `.github/workflows/release-gates.yml`
+3. 新增 workflow 内容测试：
+   - `scripts/github-workflow.test.ts`
+4. 根 `package.json` 新增：
+   - `test:github-workflow`
+5. 调整 Playwright 配置：
+   - 本地默认使用 Chrome channel；
+   - CI 环境不指定 channel，配合 workflow 安装 Playwright Chromium。
+6. 更新上线检查清单、测试验证方案和优化路线图。
+
+#### Workflow 覆盖范围
+- `workflow_dispatch` 手动触发；
+- 可输入 Web URL、API URL、默认老人账号；
+- 可开关生产 smoke、移动 E2E、Vercel dry-run；
+- 生成 Prisma Client；
+- Web typecheck；
+- Web production build；
+- API production build；
+- `test:demo-reset-utils`；
+- `test:smoke-utils`；
+- `test:vercel-deploy-utils`；
+- `test:github-workflow`；
+- 可选 `smoke:production`；
+- 可选安装 Playwright Chromium 并执行 `test:e2e:mobile`；
+- 可选 `deploy:vercel` dry-run。
+
+#### 安全策略
+- workflow 不执行生产部署；
+- `deploy:vercel` 在 workflow 中只做 dry-run；
+- 真正生产发布仍需受控执行 `corepack pnpm deploy:vercel -- --execute`；
+- 远程 seed/reset 不放进本轮 workflow，避免误改线上演示数据。
+
+#### 本轮验证
+1. 已按 TDD 先运行失败测试：
+   - `corepack pnpm test:github-workflow`
+   - 失败原因：`.github/workflows/release-gates.yml` 不存在。
+2. 新增 workflow 后已执行：
+   - `corepack pnpm test:github-workflow`
+   - 结果：1 个测试通过。
+3. 已执行：
+   - `corepack pnpm test:e2e:mobile`
+   - 结果：4 个 E2E 测试通过。
+4. 已执行：
+   - `corepack pnpm test:vercel-deploy-utils`
+   - 结果：3 个测试通过。
+5. 尝试执行：
+   - `corepack pnpm dlx actionlint .github/workflows/release-gates.yml`
+   - 结果：失败，npm 包没有可执行 bin，未纳入必跑门禁。
+6. 已执行：
+   - `ruby -e "require 'yaml'; YAML.load_file('.github/workflows/release-gates.yml'); puts :ok"`
+   - 结果：YAML 可解析，输出 `ok`。
+7. 已执行：
+   - `corepack pnpm test:smoke-utils`
+   - 结果：4 个测试通过。
+8. 已执行：
+   - `corepack pnpm test:demo-reset-utils`
+   - 结果：5 个测试通过。
+9. 已执行：
+   - `corepack pnpm smoke:production`
+   - 结果：17 项线上冒烟检查通过。
+10. 已执行：
+    - `corepack pnpm deploy:vercel`
+    - 结果：dry-run 成功，不创建生产发布。
+11. 已执行：
+    - `corepack pnpm --filter @silver-health/web typecheck`
+    - 结果：通过。
+12. 已执行：
+    - `corepack pnpm --filter @silver-health/api build`
+    - 结果：通过。
+13. 已执行：
+    - `corepack pnpm --filter @silver-health/web build`
+    - 结果：通过。
+
+#### 下一轮建议
+1. 在 GitHub Actions 页面实际触发一次 `Silver Health release gates`，确认 GitHub Runner 侧通过；
+2. 增加本地可重置数据环境下的写入型 E2E；
+3. 整理 Node ESM warning，统一 scripts 的模块运行方式。
+
+---
+
+### 84. 本地写入型 E2E 与指标时间修复
+
+#### 本轮处理
+1. 从 `feature/manual-release-workflow` 新建分支 `feature/local-write-e2e`。
+2. 根 `package.json` 新增：
+   - `test:e2e:local-write`
+   - `test:local-e2e-utils`
+3. 新增本地写入型 E2E 编排：
+   - `scripts/local-write-e2e.ts`
+   - `scripts/local-e2e-utils.ts`
+   - `scripts/local-e2e-utils.test.ts`
+4. 新增 Playwright 写入型测试：
+   - `tests/e2e/local-write-flow.spec.ts`
+5. 调整 Playwright 配置：
+   - 默认 `test:e2e:mobile` 忽略本地写入测试；
+   - `E2E_INCLUDE_LOCAL_WRITE=1` 时启用本地写入测试。
+6. 修复健康指标表单默认测量时间：
+   - 原先使用服务端 UTC 字符串作为 `datetime-local` 默认值；
+   - 浏览器按本地时间解释后，刚录入指标可能早于 seed 指标；
+   - 改为客户端 hydrate 后设置本地 `datetime-local` 默认值。
+7. 更新上线检查清单、测试验证方案和优化路线图。
+
+#### 写入型 E2E 覆盖范围
+- 自动执行本地 `demo:reset -- --skip-smoke`；
+- 从 seed 输出解析默认 elder id；
+- 启动本地 API：默认 `http://127.0.0.1:3201`；
+- 启动本地 Web：默认 `http://127.0.0.1:3200`；
+- 老人首页点击“标记完成”；
+- API 确认任务 `done` 数量增加；
+- 指标录入页保存一条血压 `132 / 82`；
+- API 确认指标数量增加；
+- 家属看板显示更新后的任务完成数；
+- 家属看板显示最新血压 `132 / 82 mmHg`。
+
+#### 本轮验证
+1. 已按 TDD 先运行失败测试：
+   - `corepack pnpm test:local-e2e-utils`
+   - 失败原因：`local-e2e-utils.ts` 不存在。
+2. 已执行：
+   - `corepack pnpm test:local-e2e-utils`
+   - 结果：3 个测试通过。
+3. 已执行：
+   - `corepack pnpm test:e2e:mobile`
+   - 结果：4 个线上只读手机 E2E 通过，确认本地写入测试未混入默认套件。
+4. 首次执行：
+   - `corepack pnpm test:e2e:local-write`
+   - 失败原因：Web dev server 启动参数被 pnpm 传错，Next 将 `--hostname` 当作项目目录。
+5. 修复 Web 启动方式后再次执行：
+   - 失败原因：测试里把 Node `fetch` 的 `response.ok` 当函数调用。
+6. 修正测试后再次执行：
+   - 失败原因：页面真实标题为“老人首页”，测试写成“今日任务”。
+7. 修正标题后再次执行：
+   - 失败原因：`真实 API` 文案出现多处，触发 Playwright strict mode。
+8. 收紧断言后再次执行：
+   - 失败原因：家属看板仍显示 seed 指标 `128 / 78`，没有显示刚录入的 `132 / 82`。
+9. 排查数据库后确认根因：
+   - 新增指标写入成功；
+   - 但 `measuredAt` 被保存为 `2026-07-09T21:44:00.000Z`；
+   - 早于 seed 指标 `2026-07-10T00:30:00.000Z`；
+   - 根因是 `datetime-local` 默认值来自服务端 UTC。
+10. 修复客户端本地时间初始化后再次执行：
+    - 失败原因：`最近血压：132 / 82 mmHg` 同时出现在一句话近况和指标摘要中，触发 strict mode。
+11. 收紧为 exact text 后已执行：
+    - `corepack pnpm test:e2e:local-write`
+    - 结果：1 个本地写入型 E2E 通过。
+12. 已执行：
+    - `corepack pnpm test:local-e2e-utils`
+    - 结果：3 个测试通过。
+13. 已执行：
+    - `corepack pnpm test:e2e:mobile`
+    - 结果：4 个线上只读手机 E2E 通过。
+14. 已执行：
+    - `corepack pnpm --filter @silver-health/web typecheck`
+    - 结果：通过。
+15. 已执行：
+    - `corepack pnpm --filter @silver-health/api build`
+    - 结果：通过。
+16. 已执行：
+    - `corepack pnpm --filter @silver-health/web build`
+    - 结果：通过。
+17. 已执行：
+    - `corepack pnpm smoke:production`
+    - 结果：17 项线上冒烟检查通过。
+18. 已执行：
+    - `corepack pnpm test:github-workflow`
+    - 结果：1 个测试通过。
+
+#### 下一轮建议
+1. 将 `test:e2e:local-write` 评估接入 GitHub Actions 手动门禁；
+2. 继续补家属绑定等写入型 E2E；
+3. 整理 Node ESM warning，减少脚本运行噪音。
+
+---
+
+### 85. 本地写入型 E2E 扩展到用药提醒
+
+#### 本轮处理
+1. 从 `feature/local-write-e2e` 新建分支 `feature/local-write-medication-e2e`。
+2. 扩展 `tests/e2e/local-write-flow.spec.ts`：
+   - 在原有“完成任务 / 录入血压 / 家属看板同步”基础上，新增用药提醒写入验证；
+   - 新增“阿司匹林 / 晚饭后 1 片 / 21:15”提醒；
+   - 验证 API 用药提醒数量增加；
+   - 验证家属看板显示新增提醒和启用提醒数量。
+3. 更新上线检查清单、测试验证方案和优化路线图。
+
+#### 覆盖范围
+- 本地重置 demo 数据；
+- 老人首页完成一项任务；
+- 指标页保存血压 `132 / 82`；
+- 用药页保存启用提醒 `阿司匹林 · 21:15`；
+- 家属看板同步展示：
+  - 任务完成数；
+  - 最新血压；
+  - 启用提醒数量；
+  - 新增用药提醒。
+
+#### 本轮验证
+1. 已执行：
+   - `corepack pnpm test:e2e:local-write`
+   - 结果：1 个本地写入型 E2E 通过。
+2. 已执行：
+   - `corepack pnpm test:e2e:mobile`
+   - 结果：4 个线上只读手机 E2E 通过。
+3. 已执行：
+   - `corepack pnpm test:local-e2e-utils`
+   - 结果：3 个测试通过。
+4. 已执行：
+   - `corepack pnpm --filter @silver-health/web typecheck`
+   - 结果：通过。
+5. 已执行：
+   - `corepack pnpm --filter @silver-health/api build`
+   - 结果：通过。
+6. 已执行：
+   - `corepack pnpm --filter @silver-health/web build`
+   - 结果：通过。
+7. 已执行：
+   - `corepack pnpm smoke:production`
+   - 结果：17 项线上冒烟检查通过。
+
+#### 下一轮建议
+1. 继续补家属绑定写入型 E2E；
+2. 将本地写入型 E2E 接入 GitHub Actions 手动门禁前，先确认 GitHub Runner 是否能访问测试数据库；
+3. 整理 Node ESM warning，减少脚本运行噪音。
+
+---
+
+### 86. 本地写入型 E2E 扩展到家属绑定
+
+#### 本轮处理
+1. 从 `feature/local-write-medication-e2e` 新建分支 `feature/local-write-binding-e2e`。
+2. 扩展本地 E2E 环境变量：
+   - `NEXT_PUBLIC_DEFAULT_FAMILY_USER_ID`
+   - `E2E_FAMILY_USER_ID`
+3. Web 配置新增：
+   - `defaultFamilyUserId`
+4. 家属绑定表单默认使用 seed 输出的真实 family user id。
+5. 扩展 `tests/e2e/local-write-flow.spec.ts`：
+   - 原有任务、指标、用药、家属看板同步继续覆盖；
+   - 新增家属绑定页提交绑定申请；
+   - 验证 API 中老人 / 家属绑定关系存在且状态为 `pending`。
+6. 修复后端重复绑定提交：
+   - `FamilyBindingService.create()` 从 `create` 改为 `upsert`；
+   - 重复提交同一老人 / 家属绑定时不再触发 Prisma 唯一约束 500；
+   - 统一恢复为 `pending` 状态，适合演示和真实试用中的重复提交。
+7. 更新上线检查清单、测试验证方案和优化路线图。
+
+#### 本轮验证
+1. 已先扩展 `test:local-e2e-utils` 断言 family id 注入，并确认失败：
+   - 失败原因：`NEXT_PUBLIC_DEFAULT_FAMILY_USER_ID` 尚未写入本地 E2E env。
+2. 补齐 family id 注入后已执行：
+   - `corepack pnpm test:local-e2e-utils`
+   - 结果：3 个测试通过。
+3. 已执行：
+   - `corepack pnpm --filter @silver-health/web typecheck`
+   - 结果：通过。
+4. 首次执行扩展后的：
+   - `corepack pnpm test:e2e:local-write`
+   - 失败原因：重复提交同一老人 / 家属绑定触发 Prisma `P2002` 唯一约束错误。
+5. 将绑定创建改为 upsert，并调整 E2E 断言为“关系存在且状态为 pending”后，已执行：
+   - `corepack pnpm test:e2e:local-write`
+   - 结果：1 个本地写入型 E2E 通过。
+6. 已执行：
+   - `corepack pnpm test:e2e:mobile`
+   - 结果：4 个线上只读手机 E2E 通过。
+7. 已执行：
+   - `corepack pnpm --filter @silver-health/api build`
+   - 结果：通过。
+8. 已执行：
+   - `corepack pnpm --filter @silver-health/web build`
+   - 结果：通过。
+9. 已执行：
+   - `corepack pnpm smoke:production`
+   - 结果：17 项线上冒烟检查通过。
+
+#### 下一轮建议
+1. 将 `test:e2e:local-write` 接入 GitHub Actions 前，准备可访问的测试数据库或服务容器；
+2. 继续补档案编辑、周报生成等写入型链路；
+3. 整理 Node ESM warning，减少脚本运行噪音。
+
+---
+
+### 87. 分支整理与发布候选分支
+
+#### 本轮处理
+1. 检查当前分支拓扑，确认 `feature/local-write-binding-e2e` 是线性集成头。
+2. 使用 GitHub compare 确认：
+   - base：`main`
+   - head：`feature/local-write-binding-e2e`
+   - ahead：13
+   - behind：0
+3. 新建集成分支：
+   - `feature/pwa-launch-release-candidate`
+4. 新增分支整理文档：
+   - `docs/pwa-launch-branch-integration.md`
+5. 在发布候选分支上完成完整 Pre-PR 验证，并把验证矩阵补入分支整理文档。
+6. 通过 GitHub 连接器创建 Draft PR：
+   - [#1 Prepare Silver Health PWA launch candidate](https://github.com/monkeylzl/silver-health-app/pull/1)
+
+#### 分支策略
+- 后续 PR 建议只从 `feature/pwa-launch-release-candidate` 合入 `main`；
+- 旧的细分 feature 分支暂时保留，便于追踪每轮迭代；
+- release candidate 合并后，再删除旧远端分支。
+
+#### 本轮验证
+1. 已执行：
+   - `corepack pnpm test:e2e:local-write`
+   - 结果：1 个移动端写入型 E2E 通过，覆盖任务完成、指标录入、用药提醒、家属绑定和家属看板同步。
+2. 已执行：
+   - `corepack pnpm test:e2e:mobile`
+   - 结果：4 个移动端只读 E2E 通过，覆盖 390x844 与 360x800 视口、四个底部 Tab 和移动布局。
+3. 已执行：
+   - `corepack pnpm test:local-e2e-utils`
+   - 结果：3 个测试通过。
+4. 已执行：
+   - `corepack pnpm test:github-workflow`
+   - 结果：1 个测试通过。
+5. 已执行：
+   - `corepack pnpm test:demo-reset-utils`
+   - 结果：5 个测试通过。
+6. 已执行：
+   - `corepack pnpm test:smoke-utils`
+   - 结果：4 个测试通过。
+7. 已执行：
+   - `corepack pnpm test:vercel-deploy-utils`
+   - 结果：3 个测试通过。
+8. 已执行：
+   - `corepack pnpm --filter @silver-health/web typecheck`
+   - 结果：通过。
+9. 已执行：
+   - `corepack pnpm --filter @silver-health/web build`
+   - 结果：通过，缺失 chunk 类问题未复现。
+10. 已执行：
+    - `corepack pnpm --filter @silver-health/api build`
+    - 结果：通过。
+11. 已执行：
+    - `corepack pnpm smoke:production`
+    - 结果：17 项线上冒烟检查通过，覆盖 Vercel Web、Railway API、PWA 资源、真实 API 内容、健康检查、任务/指标/用药/周报数据和 CORS。
+
+#### 下一轮建议
+1. 在 PR #1 中确认 GitHub mergeability 和 Actions 状态；
+2. 将手动 release gate 在 GitHub Actions 中跑一遍，确认远端 CI 环境变量和数据库访问；
+3. 若继续开发，优先补档案编辑或周报生成的写入型 E2E。
+
+---
+
+### 88. 档案编辑写入闭环与 PR 状态复查
+
+#### 本轮处理
+1. 复查 PR #1：
+   - PR 状态：open draft；
+   - mergeable：true；
+   - 当前 head：`8b6df17`；
+   - commit status：暂无；
+   - pull-request workflow runs：暂无。
+2. 当前 GitHub 连接器可查询 Actions run、job、日志和重跑失败任务，但没有手动触发 `workflow_dispatch` 的工具入口；手动 release gate 仍需要在 GitHub UI 中触发。
+3. 扩展 `tests/e2e/local-write-flow.spec.ts`，在现有写入闭环后继续覆盖：
+   - 进入老人档案页；
+   - 载入已有档案；
+   - 更新页面称呼、联系手机号和老人姓名；
+   - 保存档案；
+   - 通过 API 验证 profile name、user nickname、user mobile 均已更新；
+   - 进入“我的”页验证新称呼和手机号已经反映到移动端账号摘要。
+4. 使用 TDD 验证缺口：
+   - 首次运行扩展后的本地写入 E2E 失败；
+   - 失败原因：`POST /api/profile/elder` 的 upsert 更新了 `elderProfile.name`，但没有同步更新关联 `user.nickname` 和 `user.mobile`。
+5. 修复 `ElderProfileService.create()`：
+   - 对已有 `userId` 的保存请求，先规范化 `nickname` 和 `mobile`；
+   - 在 profile upsert 前同步更新关联 user；
+   - 新建档案路径继续保持原有自动创建 user 行为。
+6. 更新分支整理文档，补充档案编辑覆盖范围和 E2E 发现的修复项。
+
+#### 本轮验证
+1. 已先执行：
+   - `corepack pnpm test:e2e:local-write`
+   - 结果：按预期失败，失败点为 `nickname` 和 `mobile` 未同步到关联 user。
+2. 修复服务层后再次执行：
+   - `corepack pnpm test:e2e:local-write`
+   - 结果：1 个移动端写入型 E2E 通过，覆盖任务、指标、用药、家属绑定、档案编辑和“我的”页同步。
+3. 已执行：
+   - `corepack pnpm --filter @silver-health/api build`
+   - 结果：通过。
+4. 已执行：
+   - `corepack pnpm --filter @silver-health/web typecheck`
+   - 结果：通过。
+5. 已执行：
+   - `corepack pnpm test:e2e:mobile`
+   - 结果：4 个移动端只读 E2E 通过。
+
+#### 下一轮建议
+1. 在 GitHub UI 中手动触发 release gate，确认远端 CI 与环境变量；
+2. 继续补周报生成或周报可视化的写入/展示闭环；
+3. 进入 Node TS 脚本 ESM warning 清理，降低演示和 CI 输出噪音。
+
+---
+
+### 89. 周报生成写入闭环
+
+#### 本轮处理
+1. 扩展 `tests/e2e/local-write-flow.spec.ts`，在已有任务、指标、用药、家属绑定、档案编辑之后继续覆盖：
+   - 进入家属周报页；
+   - 点击“生成本周周报”；
+   - 验证 API 周报数量增加；
+   - 验证页面出现由当前任务、指标、用药提醒汇总出的摘要。
+2. 首次执行扩展后的 E2E 时先暴露一个测试数据问题：
+   - 固定手机号 `13900001111` 在多次 demo reset 后可能和历史 user 记录冲突；
+   - 将 E2E 改为每次生成唯一手机号，避免本地反复验证时被旧用户数据影响。
+3. 再次执行 E2E 后按预期失败在周报页：
+   - 页面没有“生成本周周报”按钮；
+   - API 没有生成本周周报的写入入口。
+4. 新增后端接口：
+   - `POST /api/reports/elder/:elderUserId/generate`
+5. 新增 `ReportService.generateCurrentWeek()`：
+   - 按当前周统计老人任务完成数；
+   - 统计本周健康指标记录数；
+   - 读取启用中的用药提醒；
+   - 生成家属可读的 `summaryText` 和 `suggestionList`；
+   - 使用 `weeklyReport.upsert()`，重复点击同一周只刷新，不重复创建。
+6. 新增周报页客户端组件：
+   - `apps/web/app/family/report/generate-report-button.tsx`
+   - 成功后显示“本周周报已生成，页面已刷新。”并调用 `router.refresh()`。
+7. 更新分支整理文档，将本周周报生成纳入发布候选分支覆盖范围。
+
+#### 本轮验证
+1. 已先执行：
+   - `corepack pnpm test:e2e:local-write`
+   - 结果：失败，先暴露固定手机号重复运行冲突。
+2. 修复 E2E 手机号数据后再次执行：
+   - `corepack pnpm test:e2e:local-write`
+   - 结果：按预期失败在缺少“生成本周周报”按钮。
+3. 实现周报生成接口和页面按钮后执行：
+   - `corepack pnpm test:e2e:local-write`
+   - 结果：1 个移动端写入型 E2E 通过，覆盖任务、指标、用药、家属绑定、档案编辑、我的页同步、家属看板和周报生成。
+4. 已执行：
+   - `corepack pnpm --filter @silver-health/api build`
+   - 结果：通过。
+5. 已执行：
+   - `corepack pnpm --filter @silver-health/web build`
+   - 结果：通过。
+6. 首次并行执行 Web build 与 Web typecheck 时：
+   - `corepack pnpm --filter @silver-health/web typecheck`
+   - 结果：失败，原因为 build 正在重建 `.next/types`，typecheck 读取到缺失的生成文件。
+7. Web build 完成后单独重跑：
+   - `corepack pnpm --filter @silver-health/web typecheck`
+   - 结果：通过。
+8. 已执行：
+   - `corepack pnpm test:e2e:mobile`
+   - 结果：4 个移动端只读 E2E 通过。
+
+#### 下一轮建议
+1. 将 Web build 与 Web typecheck 在本地和 CI 中保持串行，避免 `.next/types` 竞态；
+2. 清理 Node TS 脚本 ESM warning；
+3. 继续补周报生成逻辑的单元测试，特别是日期范围、重复生成 upsert、空数据建议文案。
+
+---
+
+### 90. Release Gate 自动化、ESM Warning 清理与周报单测
+
+#### 本轮处理
+1. 按建议顺序先处理 release gate：
+   - 确认 GitHub 连接器仍只能查询 workflow runs/jobs/logs 和重跑失败任务，不能直接触发 `workflow_dispatch`；
+   - 当前 workflow 文件仍在 PR 分支，尚未进入 `main`，手动 dispatch 入口不稳定；
+   - 将 `.github/workflows/release-gates.yml` 扩展为同时支持 `pull_request` 和 `workflow_dispatch`；
+   - 后续 PR 分支 push 后，release gate 可自动跑；合入 `main` 后仍可手动 dispatch。
+2. 调整 release gate 执行顺序：
+   - Web production build 先跑；
+   - Web typecheck 在 build 后跑，避免 `.next/types` 生成文件竞态；
+   - PR 触发时使用默认线上 Web/API/elder 参数；
+   - 手动触发时继续支持自定义 Web/API/elder 参数和开关项。
+3. 清理 Node TS script ESM warning：
+   - 根 `package.json` 增加 `"type": "module"`；
+   - root scripts、demo ready、smoke、工具测试不再打印 `MODULE_TYPELESS_PACKAGE_JSON` warning；
+   - API 包保持 CommonJS，不改 `apps/api/package.json`，避免影响 Nest `dist/main.js` 运行；
+   - 为 `apps/api/src/modules/report` 增加局部 `package.json`，只让 Node 测试识别 report 纯函数模块为 ESM。
+4. 给周报生成逻辑补单元测试：
+   - 新增 `apps/api/src/modules/report/report-generation.ts`，抽出当前周范围和摘要生成逻辑；
+   - `ReportService.generateCurrentWeek()` 只负责数据库查询和 upsert；
+   - 新增 `scripts/report-generation-utils.test.ts`；
+   - 根脚本新增 `test:report-generation-utils`；
+   - GitHub release gate utility tests 中加入该脚本。
+5. 更新 workflow 自测：
+   - 检查 `pull_request` 触发；
+   - 检查新增周报单测；
+   - 检查 Web build 在 Web typecheck 之前执行。
+6. 执行 `corepack pnpm demo:ready`：
+   - 首次本地 `check:demo` 因本地库缺演示账号失败；
+   - `demo:ready` 自动 seed；
+   - 二次 `check:demo` 通过；
+   - `check:demo-copy` 通过；
+   - 输出不再包含 Node TS module warning。
+
+#### 本轮验证
+1. 已执行：
+   - `corepack pnpm test:report-generation-utils`
+   - 结果：3 个测试通过，覆盖 Asia/Shanghai 当前周、正常摘要、空数据摘要。
+2. 已执行：
+   - `corepack pnpm test:github-workflow`
+   - 结果：1 个测试通过，覆盖 PR 自动 gate、手动 gate、构建顺序和 utility tests。
+3. 已执行：
+   - `corepack pnpm test:local-e2e-utils`
+   - 结果：3 个测试通过。
+4. 已执行：
+   - `corepack pnpm test:demo-reset-utils`
+   - 结果：5 个测试通过。
+5. 已执行：
+   - `corepack pnpm test:smoke-utils`
+   - 结果：4 个测试通过。
+6. 已执行：
+   - `corepack pnpm test:vercel-deploy-utils`
+   - 结果：3 个测试通过。
+7. 已执行：
+   - `corepack pnpm --filter @silver-health/api build`
+   - 结果：通过。
+8. 已按顺序执行：
+   - `corepack pnpm --filter @silver-health/web build`
+   - `corepack pnpm --filter @silver-health/web typecheck`
+   - 结果：均通过。
+9. 已执行：
+   - `corepack pnpm test:e2e:mobile`
+   - 结果：4 个移动端 E2E 通过。
+10. 已执行：
+    - `corepack pnpm smoke:production`
+    - 结果：17 项线上 smoke 通过，且无 Node TS module warning。
+11. 已执行：
+    - `corepack pnpm test:e2e:local-write`
+    - 结果：1 个本地写入型 E2E 通过，覆盖任务、指标、用药、家属绑定、档案编辑、我的页同步、家属看板和周报生成。
+12. 已执行：
+    - `corepack pnpm demo:ready`
+    - 结果：自动 seed 后通过 demo 数据检查和文案一致性检查，且无 Node TS module warning。
+
+#### 下一轮建议
+1. 推送后观察 PR #1 的 GitHub Actions run；
+2. 若 release gate 通过，将 PR #1 从 draft 转为 ready for review；
+3. 如 Actions 失败，优先根据 GitHub logs 修 CI 环境差异。
+
+---
+
+### 91. Release Gate 远端通过与 PR Ready
+
+#### 本轮处理
+1. 推送 `2dabd98` 后，PR #1 自动触发 GitHub Actions：
+   - workflow：`Silver Health release gates`
+   - run id：`29096789384`
+2. 远端 release gate 完整通过：
+   - Checkout / Node / pnpm / install；
+   - Prisma client generate；
+   - Web production build；
+   - Web typecheck；
+   - API production build；
+   - utility tests；
+   - production smoke；
+   - Playwright Chromium install；
+   - mobile PWA E2E；
+   - Vercel prebuilt deploy dry-run。
+3. 使用 GitHub 连接器将 PR #1 从 draft 转为 ready for review。
+4. 更新分支整理文档，记录 PR ready 和远端 Actions 通过。
+
+#### 本轮验证
+1. 已通过 GitHub Actions jobs 查询确认：
+   - job：`Build, smoke, and mobile E2E`
+   - status：`completed`
+   - conclusion：`success`
+2. 已确认 PR #1：
+   - state：open；
+   - draft：false；
+   - mergeable：true；
+   - head：`2dabd98`。
+
+#### 下一轮建议
+1. 合并 PR #1 到 `main`；
+2. 合并后确认 `main` 上的生产部署状态；
+3. PR 合并且线上确认后，删除旧的细分 feature 分支。

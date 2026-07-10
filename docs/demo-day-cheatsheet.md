@@ -21,9 +21,9 @@ pnpm demo:ready
 pnpm check:demo-copy
 ```
 
-它不只是在查文案，还会一起校验 cheatsheet 自己是否已经补到 `check:demo-copy` / `demo:ready` 这套接手说明，以及 `demo:ready` 最终那句 **“现在可以开 API / Web，并优先从首页 / 开讲。”** 有没有漂移。
+它不只是在查文案，还会一起校验 cheatsheet 自己是否已经补到 `check:demo-copy` / `demo:ready` 这套接手说明，以及 `demo:ready` 最终那句 **“现在可以开 API / Web，并优先从今日工作台 / 开始体验；路演讲解再打开 /demo。”** 有没有漂移。
 
-**直接记结论：现在可以开 API / Web，并优先从首页 / 开讲。**
+**直接记结论：现在可以开 API / Web，并优先从今日工作台 / 开始体验；路演讲解再打开 /demo。**
 
 如果还想多确认一眼，只抽查两页：
 - `/elder/home`
