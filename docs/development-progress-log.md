@@ -1903,3 +1903,42 @@ pnpm dev:web
 2. 增加端到端测试，覆盖真实点击完成任务和录入指标；
 3. 把 prebuilt 部署流程固化成脚本或 CI；
 4. 增加演示数据重置命令，方便上线试用前恢复初始状态。
+
+---
+
+### 79. 生产环境自动冒烟门禁
+
+#### 本轮处理
+1. 从 `feature/pwa-launch-ready` 新建优化分支 `feature/production-smoke-gates`。
+2. 新增生产 smoke 工具测试：`scripts/production-smoke-utils.test.ts`。
+3. 新增 smoke 工具函数：`scripts/production-smoke-utils.ts`。
+4. 新增生产环境冒烟脚本：`scripts/production-smoke.ts`。
+5. 根 `package.json` 新增：
+   - `test:smoke-utils`
+   - `smoke:production`
+6. 更新上线检查清单和测试验证方案，将线上手工验收沉淀成固定命令。
+
+#### 覆盖范围
+- Web 首页、健康、家属看板、家属周报、我的页面 HTTP 状态与 content-type；
+- PWA `manifest.webmanifest`、`offline.html`、`sw.js`；
+- 首页四个底部 Tab；
+- 首页真实 API 状态；
+- seed 任务文本；
+- API health；
+- 任务、指标、用药、周报集合数量；
+- API health CORS；
+- PATCH preflight CORS。
+
+#### 本轮验证
+1. 已按 TDD 先运行失败测试：
+   - `node --test scripts/production-smoke-utils.test.ts`
+   - 失败原因：`production-smoke-utils.ts` 不存在。
+2. 已执行：`corepack pnpm test:smoke-utils`
+   - 结果：4 个测试通过。
+3. 已执行：`corepack pnpm smoke:production`
+   - 结果：17 项线上冒烟检查通过。
+
+#### 下一轮建议
+1. 增加 Playwright 端到端测试，覆盖“完成任务 / 录入指标 / 家属看板同步”；
+2. 增加线上演示数据重置脚本，避免试用多人点击后数据漂移；
+3. 将 prebuilt Vercel 部署流程固化成脚本或 GitHub Actions。

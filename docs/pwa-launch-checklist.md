@@ -148,13 +148,46 @@ NEXT_PUBLIC_DEFAULT_ELDER_USER_ID="cmre5b56p0000ij0niccn6i4n"
    - 能看到 API 状态；
    - 能看到安装提示或已安装状态。
 
-## 六、上线前本地校验
+## 六、上线后自动冒烟
+
+生产环境部署完成后执行：
+
+```bash
+corepack pnpm smoke:production
+```
+
+默认检查当前线上地址：
+
+- Web：`https://web-nu-blond-89.vercel.app`
+- API：`https://silver-health-api-production.up.railway.app`
+- 默认老人账号：`cmre5b56p0000ij0niccn6i4n`
+
+如需验证其他环境，可覆盖：
+
+```bash
+PRODUCTION_WEB_URL="https://your-web-domain" \
+PRODUCTION_API_BASE_URL="https://your-api-domain" \
+PRODUCTION_ELDER_USER_ID="your-elder-user-id" \
+corepack pnpm smoke:production
+```
+
+验收标准：
+
+- 输出 `Production smoke passed`；
+- Web 首页、健康、家属、我的页面均返回 200；
+- manifest、offline、service worker 均返回 200；
+- 首页能看到四个底部 Tab、真实 API 状态和 seed 任务；
+- API health、任务、指标、用药、周报接口均正常；
+- CORS health 与 PATCH preflight 均通过。
+
+## 七、上线前本地校验
 
 ```bash
 corepack pnpm --filter @silver-health/web typecheck
 corepack pnpm --filter @silver-health/web build
 corepack pnpm --filter @silver-health/api build
 corepack pnpm demo:ready
+corepack pnpm test:smoke-utils
 ```
 
 如果遇到 Next dev 缓存错误，例如 `.next/server/...` 或 `Cannot find module './xxx.js'`：

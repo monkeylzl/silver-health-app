@@ -16,6 +16,7 @@
 - PWA manifest、service worker、offline 页面；
 - API health；
 - 远程 Vercel + Railway 部署后冒烟测试。
+- 生产 Web/API/PWA/CORS 自动冒烟脚本。
 
 ### 1.2 不包含范围
 
@@ -94,7 +95,8 @@ flowchart TD
   LocalRun --> Mobile["移动端交互验收"]
   Mobile --> PWA["PWA 资源与离线验收"]
   PWA --> Deploy["Vercel + Railway 上线验收"]
-  Deploy --> Report["记录测试结论与问题"]
+  Deploy --> Smoke["production smoke 自动冒烟"]
+  Smoke --> Report["记录测试结论与问题"]
 ```
 
 ## 4. 本地基础校验
@@ -189,6 +191,17 @@ corepack pnpm demo:ready
 - enabled reminders 大于 0；
 - active bindings 大于 0；
 - latest weekly report 对齐最近完整周。
+
+### 4.7 生产冒烟工具单元测试
+
+```bash
+corepack pnpm test:smoke-utils
+```
+
+验收标准：
+
+- `production smoke utils` 测试套件通过；
+- URL 规范化、路径拼接、页面文本缺失检查、API list payload 汇总逻辑均有覆盖。
 
 ## 5. 本地运行验证
 
@@ -550,7 +563,52 @@ https://your-vercel-domain.vercel.app/
 - 页面文字不重叠；
 - 任务、指标、用药、家属看板、周报均有真实或可解释的演示数据。
 
-## 10. 回归测试清单
+## 10. 生产自动冒烟
+
+### 10.1 默认线上环境
+
+```bash
+corepack pnpm smoke:production
+```
+
+默认值：
+
+```text
+PRODUCTION_WEB_URL=https://web-nu-blond-89.vercel.app
+PRODUCTION_API_BASE_URL=https://silver-health-api-production.up.railway.app
+PRODUCTION_ELDER_USER_ID=cmre5b56p0000ij0niccn6i4n
+```
+
+验收标准：
+
+- 输出 `Production smoke passed: 17 checks`；
+- Web `/`、`/health`、`/family/dashboard`、`/family/report`、`/me` 均返回 200；
+- `manifest.webmanifest`、`offline.html`、`sw.js` 均返回 200；
+- 首页包含 `今日 / 健康 / 家属 / 我的`；
+- 首页包含 `当前接入：真实 API`；
+- 首页包含 seed 任务：`晨间散步 20 分钟`、`记录今日血压`；
+- API health 返回 `{ code: 0, message: "ok" }`；
+- 任务、指标、用药、周报均至少返回 1 条；
+- API health 的 CORS `access-control-allow-origin` 等于 Web URL；
+- PATCH preflight 返回 204，且允许方法包含 `PATCH`。
+
+### 10.2 覆盖其他环境
+
+```bash
+PRODUCTION_WEB_URL="https://your-web-domain" \
+PRODUCTION_API_BASE_URL="https://your-api-domain" \
+PRODUCTION_ELDER_USER_ID="your-elder-user-id" \
+corepack pnpm smoke:production
+```
+
+适用场景：
+
+- Vercel 重新绑定自定义域名；
+- Railway API 更换域名；
+- 远程数据库重新 seed 后默认老人 ID 变化；
+- 预发环境需要使用同一套检查脚本。
+
+## 11. 回归测试清单
 
 每次修改 PWA、导航、首页、API 配置后至少跑：
 
@@ -578,9 +636,9 @@ corepack pnpm check:demo
 - 表单单列检查；
 - 截图留档。
 
-## 11. 常见问题排查
+## 12. 常见问题排查
 
-### 11.1 Cannot find module './xxx.js'
+### 12.1 Cannot find module './xxx.js'
 
 通常是 Next `.next` 缓存或 chunk 产物不一致。
 
@@ -593,7 +651,7 @@ corepack pnpm --filter @silver-health/web build
 corepack pnpm --filter @silver-health/web dev
 ```
 
-### 11.2 Cannot find module '.prisma/client/default'
+### 12.2 Cannot find module '.prisma/client/default'
 
 通常是 Prisma Client 未生成或 node_modules 被重建。
 
@@ -603,7 +661,7 @@ corepack pnpm --filter @silver-health/web dev
 corepack pnpm prisma:generate
 ```
 
-### 11.3 pnpm ignored builds
+### 12.3 pnpm ignored builds
 
 如果环境里有多个 pnpm 版本，优先使用：
 
@@ -613,7 +671,7 @@ corepack pnpm <command>
 
 避免直接调用被运行时劫持的 `pnpm`。
 
-### 11.4 API 请求 fetch failed
+### 12.4 API 请求 fetch failed
 
 检查：
 
@@ -628,7 +686,7 @@ curl http://localhost:3001/api/health
 - CORS 是否允许当前 Web 域名；
 - `DATABASE_URL` 是否指向正确数据库。
 
-## 12. 测试结论模板
+## 13. 测试结论模板
 
 ```markdown
 ## Silver Health PWA 验收结论

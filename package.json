@@ -16,7 +16,9 @@
     "seed:demo": "node scripts/seed-demo-data.ts",
     "check:demo": "node scripts/check-demo-data.ts",
     "check:demo-copy": "node scripts/check-demo-copy.ts",
-    "demo:ready": "node scripts/demo-ready.ts"
+    "demo:ready": "node scripts/demo-ready.ts",
+    "smoke:production": "node scripts/production-smoke.ts",
+    "test:smoke-utils": "node --test scripts/production-smoke-utils.test.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.6.0"
