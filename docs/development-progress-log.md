@@ -2394,13 +2394,49 @@ pnpm dev:web
    - `feature/pwa-launch-release-candidate`
 4. 新增分支整理文档：
    - `docs/pwa-launch-branch-integration.md`
+5. 在发布候选分支上完成完整 Pre-PR 验证，并把验证矩阵补入分支整理文档。
 
 #### 分支策略
 - 后续 PR 建议只从 `feature/pwa-launch-release-candidate` 合入 `main`；
 - 旧的细分 feature 分支暂时保留，便于追踪每轮迭代；
 - release candidate 合并后，再删除旧远端分支。
 
+#### 本轮验证
+1. 已执行：
+   - `corepack pnpm test:e2e:local-write`
+   - 结果：1 个移动端写入型 E2E 通过，覆盖任务完成、指标录入、用药提醒、家属绑定和家属看板同步。
+2. 已执行：
+   - `corepack pnpm test:e2e:mobile`
+   - 结果：4 个移动端只读 E2E 通过，覆盖 390x844 与 360x800 视口、四个底部 Tab 和移动布局。
+3. 已执行：
+   - `corepack pnpm test:local-e2e-utils`
+   - 结果：3 个测试通过。
+4. 已执行：
+   - `corepack pnpm test:github-workflow`
+   - 结果：1 个测试通过。
+5. 已执行：
+   - `corepack pnpm test:demo-reset-utils`
+   - 结果：5 个测试通过。
+6. 已执行：
+   - `corepack pnpm test:smoke-utils`
+   - 结果：4 个测试通过。
+7. 已执行：
+   - `corepack pnpm test:vercel-deploy-utils`
+   - 结果：3 个测试通过。
+8. 已执行：
+   - `corepack pnpm --filter @silver-health/web typecheck`
+   - 结果：通过。
+9. 已执行：
+   - `corepack pnpm --filter @silver-health/web build`
+   - 结果：通过，缺失 chunk 类问题未复现。
+10. 已执行：
+    - `corepack pnpm --filter @silver-health/api build`
+    - 结果：通过。
+11. 已执行：
+    - `corepack pnpm smoke:production`
+    - 结果：17 项线上冒烟检查通过，覆盖 Vercel Web、Railway API、PWA 资源、真实 API 内容、健康检查、任务/指标/用药/周报数据和 CORS。
+
 #### 下一轮建议
-1. 在 `feature/pwa-launch-release-candidate` 上跑完整 Pre-PR 验证；
-2. 创建 PR 到 `main`；
+1. 创建 `feature/pwa-launch-release-candidate` 到 `main` 的 PR；
+2. 将手动 release gate 在 GitHub Actions 中跑一遍，确认远端 CI 环境变量和数据库访问；
 3. 若继续开发，优先补档案编辑或周报生成的写入型 E2E。

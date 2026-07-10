@@ -6,7 +6,8 @@
 
 - 集成分支：`feature/pwa-launch-release-candidate`
 - 基准分支：`main`
-- 当前集成头：`5e2362b`
+- 当前集成头：`feature/pwa-launch-release-candidate`
+- 整理起点：`5e2362b`（`feature/local-write-binding-e2e`）
 - GitHub compare：`main...feature/local-write-binding-e2e`
 - 状态：相对 `main` ahead 13、behind 0。
 
@@ -53,17 +54,34 @@ Keep the older feature branches for traceability until the release-candidate PR 
 
 ## Pre-PR Verification
 
-Run:
+已在 `feature/pwa-launch-release-candidate` 上完成本地与线上冒烟验证：
 
 ```bash
 corepack pnpm test:e2e:local-write
 corepack pnpm test:e2e:mobile
 corepack pnpm test:local-e2e-utils
 corepack pnpm test:github-workflow
+corepack pnpm test:demo-reset-utils
+corepack pnpm test:smoke-utils
+corepack pnpm test:vercel-deploy-utils
 corepack pnpm --filter @silver-health/web typecheck
 corepack pnpm --filter @silver-health/web build
 corepack pnpm --filter @silver-health/api build
 corepack pnpm smoke:production
 ```
+
+Verification result:
+
+- `test:e2e:local-write`：1 个移动端写入型 E2E 通过，覆盖任务完成、指标录入、用药提醒、家属绑定和家属看板同步。
+- `test:e2e:mobile`：4 个移动端只读 E2E 通过，覆盖 390x844 与 360x800 视口、四个底部 Tab 和移动布局。
+- `test:local-e2e-utils`：3 个测试通过。
+- `test:github-workflow`：1 个测试通过。
+- `test:demo-reset-utils`：5 个测试通过。
+- `test:smoke-utils`：4 个测试通过。
+- `test:vercel-deploy-utils`：3 个测试通过。
+- Web typecheck：通过。
+- Web production build：通过。
+- API build：通过。
+- `smoke:production`：17 项线上检查通过，覆盖 Vercel Web、Railway API、PWA 资源、真实 API 内容、健康检查、任务/指标/用药/周报数据和 CORS。
 
 Known note: Node currently prints `MODULE_TYPELESS_PACKAGE_JSON` warnings for TS scripts. They are noisy but non-blocking; a later cleanup should standardize script module execution.
