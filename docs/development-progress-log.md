@@ -3097,3 +3097,30 @@ Android Chrome 独立 PWA 安装验收通过。当前真机桌面可直接以应
 3. `E2E_PWA_ONLY=1 corepack pnpm test:e2e:app`：2 项通过。
 4. 本地生产构建新增 `/api/connectivity`，共生成 27 个路由。
 5. 待生产发布后使用 iPhone 验证“离线浏览”、网络帮助、恢复联网和四 Tab 切换速度。
+
+---
+
+### 102. 主 Tab RSC 白屏回归修复
+
+#### 真机现象
+
+1. 发布按 pathname 复用 RSC 缓存后，iPhone 在有网状态切换 Tab 会出现白屏。
+2. Web Inspector 抓到白屏页面已进入 `/family`，`readyState=complete` 且存在 body，但标题、链接和业务内容均为空。
+
+#### 根因
+
+Next.js App Router 的 RSC 响应不仅由 pathname 决定，还与 `_rsc`、Router State Tree 和预取状态相关。按 pathname 返回另一请求的缓存会把不兼容的路由树交给 React，导致客户端页面被清空。
+
+#### 修复
+
+1. 撤销跨 `_rsc` 参数的 pathname 缓存复用，只允许完整请求匹配时读取 RSC 缓存。
+2. 页面缓存升级为 `silver-health-pages-v5`，Service Worker 激活时删除含错误复用数据的旧 `pages-v4`。
+3. 保留 `GET /api/connectivity` 和全局真实连通性检测，不回退网络状态修复。
+4. 新增回归测试，证明存在同路径旧 RSC 缓存时仍返回当前请求的新响应。
+
+#### 验证
+
+1. `corepack pnpm test:unit`：20 项全部通过。
+2. `corepack pnpm --filter @silver-health/web typecheck`：通过。
+3. `corepack pnpm --filter @silver-health/web build`：通过，27 个路由生成成功。
+4. 发布后转入 Android 全面自动验证，并再次确认 iPhone 切 Tab 不白屏。

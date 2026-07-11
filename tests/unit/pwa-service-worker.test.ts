@@ -128,9 +128,12 @@ test('Next.js build assets return from cache without waiting for the network', a
   assert.equal(await response.text(), 'body { color: rgb(1, 2, 3); }');
 });
 
-test('cached tab data does not wait for the network when switching offline', async () => {
+test('tab navigation does not reuse data from an incompatible RSC request', async () => {
   const listeners = new Map<string, (event: unknown) => void>();
   const cachedData = new Response('1:["cached health tab"]', {
+    headers: { 'content-type': 'text/x-component' },
+  });
+  const freshData = new Response('1:["fresh health tab"]', {
     headers: { 'content-type': 'text/x-component' },
   });
 
@@ -139,9 +142,9 @@ test('cached tab data does not wait for the network when switching offline', asy
     Request,
     Response,
     Promise,
-    setTimeout: () => 1,
+    setTimeout,
     clearTimeout,
-    fetch: () => new Promise<Response>(() => undefined),
+    fetch: async () => freshData.clone(),
     caches: {
       keys: async () => [],
       delete: async () => true,
@@ -181,12 +184,7 @@ test('cached tab data does not wait for the network when switching offline', asy
     waitUntil: () => undefined,
   });
 
-  assert.ok(responsePromise, 'cached tab data should be handled by the service worker');
-  const response = await Promise.race([
-    responsePromise,
-    new Promise<undefined>((resolve) => setTimeout(resolve, 50)),
-  ]);
-
-  assert.ok(response, 'cached tab data should not wait forever for the network');
-  assert.equal(await response.text(), '1:["cached health tab"]');
+  assert.ok(responsePromise, 'tab data should be handled by the service worker');
+  const response = await responsePromise;
+  assert.equal(await response.text(), '1:["fresh health tab"]');
 });

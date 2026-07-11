@@ -1,5 +1,5 @@
 const STATIC_CACHE = 'silver-health-static-v4';
-const PAGE_CACHE = 'silver-health-pages-v4';
+const PAGE_CACHE = 'silver-health-pages-v5';
 const STATIC_ASSETS = [
   '/access',
   '/offline.html',
@@ -35,27 +35,9 @@ async function fetchAndCacheTabData(request) {
   const response = await fetchWithTimeout(request);
   if (response.ok) {
     const cache = await caches.open(PAGE_CACHE);
-    const requestUrl = new URL(request.url);
-    const previousRequests = await cache.keys();
-    await Promise.all(previousRequests
-      .filter((cachedRequest) => {
-        const cachedUrl = new URL(cachedRequest.url);
-        return cachedUrl.pathname === requestUrl.pathname && cachedUrl.searchParams.has('_rsc');
-      })
-      .map((cachedRequest) => cache.delete(cachedRequest)));
     await cache.put(request, response.clone());
   }
   return response;
-}
-
-async function matchCachedTabData(pathname) {
-  const cache = await caches.open(PAGE_CACHE);
-  const requests = await cache.keys();
-  const matchingRequest = requests.reverse().find((request) => {
-    const cachedUrl = new URL(request.url);
-    return cachedUrl.pathname === pathname && cachedUrl.searchParams.has('_rsc');
-  });
-  return matchingRequest ? cache.match(matchingRequest) : undefined;
 }
 
 self.addEventListener('install', (event) => {
@@ -144,7 +126,7 @@ self.addEventListener('fetch', (event) => {
 
   if (url.searchParams.has('_rsc') && CACHEABLE_PAGES.has(url.pathname)) {
     event.respondWith((async () => {
-      const cached = await matchCachedTabData(url.pathname);
+      const cached = await caches.match(request);
       if (cached) {
         event.waitUntil?.(fetchAndCacheTabData(request).catch(() => undefined));
         return cached;
