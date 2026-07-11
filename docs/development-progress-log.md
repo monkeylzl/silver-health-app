@@ -2953,3 +2953,41 @@ pnpm dev:web
 
 1. 在 GitHub 仓库补充 `PRODUCTION_TRIAL_ACCESS_CODE` 与 `PRODUCTION_INTERNAL_API_KEY` Secrets，启用手动生产 smoke workflow；当前生产应用和部署不受影响。
 2. 使用 iPhone Safari、Android Chrome 和 iPad Safari 完成最终真机安装与桌面图标验收。
+
+---
+
+### 98. Android 真机功能与安装验证
+
+#### 测试设备
+
+- 设备：Xiaomi 2211133C；
+- 系统：Android 15；
+- 浏览器：小米浏览器 Chromium 135；
+- 物理分辨率：1080x2400；
+- 页面 CSS 视口：392x718；
+- 调试方式：USB ADB + 浏览器 CDP。
+
+#### 验证结果
+
+1. 体验口令登录成功，今日、健康、家人、我的四个 Tab 均可切换，激活态正确。
+2. 主页面和任务、指标录入、用药管理、周报、档案二级页面均无横向溢出。
+3. 底部 Tab 高度 58px，表单控件 48px，未发现低于 44px 的可见触控目标。
+4. 真机触控完成任务时，BFF `PATCH /api/app/tasks/:id` 返回 200；测试结束后已按任务名称撤销，首页恢复 `今日已完成 1/4`。
+5. Manifest 可读取且无错误，Service Worker 已激活，当前生产路由无 4xx/5xx、无控制台错误。
+6. 小米浏览器可通过“添加到桌面”创建 `Silver Health` 图标，桌面启动成功。
+
+#### 发现与结论
+
+1. 初次访问时当前网络 DNS 曾将 Vercel 域名错误解析至 `31.13.73.9`；删除临时 Private DNS 并恢复自动 DNS 后页面正常打开。
+2. 第一次自动任务点击发生在 React 完成接管前，没有产生请求；改用真机触控后接口和 UI 均正常，不属于产品缺陷。
+3. 小米浏览器的“添加到桌面”只创建普通网页快捷方式：
+   - 启动后仍显示浏览器地址栏；
+   - `display-mode` 不是 standalone；
+   - 从“我的”页添加时入口固定为 `/me`。
+4. Android 独立 PWA 安装仍需使用 Chrome 进行最终确认；小米浏览器结果不能替代 Chrome WebAPK 验收。
+
+#### 下一步
+
+1. 使用 Android Chrome 从生产首页执行“安装应用”，验证 standalone、Manifest start_url 和桌面图标；
+2. 完成 iPhone Safari 与 iPad Safari 添加主屏幕验证；
+3. 根据浏览器能力调整“我的”页安装提示，明确区分独立安装与桌面快捷方式。
