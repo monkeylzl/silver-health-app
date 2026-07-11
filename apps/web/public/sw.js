@@ -56,7 +56,7 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return;
   const url = new URL(request.url);
 
-  if (request.mode === 'navigate') {
+  if (request.mode === 'navigate' || request.destination === 'document') {
     event.respondWith((async () => {
       const cached = CACHEABLE_PAGES.has(url.pathname)
         ? await caches.match(request, { ignoreSearch: true })

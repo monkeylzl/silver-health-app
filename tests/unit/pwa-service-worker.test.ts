@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import test from 'node:test';
 import vm from 'node:vm';
 
-test('navigation falls back to the cached page when network fetch stays pending', async () => {
+test('iOS document requests return the cached page without waiting for network', async () => {
   const listeners = new Map<string, (event: unknown) => void>();
   const cachedPage = new Response('<main>cached today</main>', {
     headers: { 'content-type': 'text/html' },
@@ -47,7 +47,8 @@ test('navigation falls back to the cached page when network fetch stays pending'
   listeners.get('fetch')?.({
     request: {
       method: 'GET',
-      mode: 'navigate',
+      mode: 'cors',
+      destination: 'document',
       url: 'https://web.example.test/',
     },
     respondWith: (promise: Promise<Response>) => {
