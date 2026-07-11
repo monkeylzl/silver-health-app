@@ -10,6 +10,16 @@ const STATIC_ASSETS = [
 ];
 const CACHEABLE_PAGES = new Set(['/', '/health', '/family', '/me', '/tasks', '/family/reports']);
 const STATIC_PATHS = new Set(STATIC_ASSETS);
+const NETWORK_TIMEOUT_MS = 3000;
+
+function fetchWithTimeout(request) {
+  let timeoutId;
+  const timeout = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error('Network timeout')), NETWORK_TIMEOUT_MS);
+  });
+
+  return Promise.race([fetch(request), timeout]).finally(() => clearTimeout(timeoutId));
+}
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(STATIC_CACHE).then((cache) => cache.addAll(STATIC_ASSETS)));
@@ -39,7 +49,7 @@ self.addEventListener('fetch', (event) => {
   if (request.mode === 'navigate') {
     event.respondWith((async () => {
       try {
-        const response = await fetch(request);
+        const response = await fetchWithTimeout(request);
         const responsePath = new URL(response.url).pathname;
         if (response.ok && CACHEABLE_PAGES.has(url.pathname) && responsePath === url.pathname) {
           const cache = await caches.open(PAGE_CACHE);
@@ -61,7 +71,7 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(caches.match(request).then(async (cached) => {
       if (cached) return cached;
       try {
-        const response = await fetch(request);
+        const response = await fetchWithTimeout(request);
         if (response.ok) {
           const cache = await caches.open(STATIC_CACHE);
           await cache.put(request, response.clone());
@@ -77,7 +87,7 @@ self.addEventListener('fetch', (event) => {
   if (url.searchParams.has('_rsc') && CACHEABLE_PAGES.has(url.pathname)) {
     event.respondWith((async () => {
       try {
-        const response = await fetch(request);
+        const response = await fetchWithTimeout(request);
         if (response.ok) {
           const cache = await caches.open(PAGE_CACHE);
           await cache.put(request, response.clone());
