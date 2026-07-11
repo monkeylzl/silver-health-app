@@ -11,17 +11,19 @@
 
 ### P0-1 生产安全变量
 
-- Vercel 配置口令哈希、会话密钥、内部 API 密钥和服务端档案 ID。
-- Railway 配置相同内部 API 密钥。
-- 验证业务 API 无密钥返回 401，health 返回 200。
-- GitHub 配置生产 smoke 所需 Secrets。
+- [x] Vercel 配置口令哈希、会话密钥、内部 API 密钥和服务端档案 ID。
+- [x] Railway 配置相同内部 API 密钥。
+- [x] 验证业务 API 无密钥返回 401，health 返回 200。
+- [x] GitHub 配置生产 smoke 所需 Secrets。
 
 ### P0-2 部署顺序与回滚演练
 
-- 先 API、后 Web。
-- 执行受保护 production smoke。
-- 记录 Vercel/Railway deployment id。
-- 验证可以回滚到上一部署。
+- [x] 先 API、后 Web。
+- [x] 执行受保护 production smoke。
+- [x] 记录 Vercel/Railway deployment id。
+- [x] 验证可以回滚到上一部署并恢复当前版本。
+
+2026-07-11 GitHub 门禁 `29155708921` 全绿；Vercel 和 Railway 均已完成真实回滚、17 项 smoke、恢复与再次 smoke。
 
 ### P0-3 真机安装
 

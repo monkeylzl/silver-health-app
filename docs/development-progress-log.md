@@ -3213,3 +3213,36 @@ Android 物理飞行模式、运行中离线、离线冷启动和恢复联网验
 
 1. 完成 iPad Safari 竖屏、横屏、侧边导航和添加主屏幕验收。
 2. Android 与 iPhone 手机端 P0 真机安装和离线验收均已完成。
+
+---
+
+### 106. 生产门禁、写入缓存回归修复与回滚演练
+
+#### GitHub 生产门禁
+
+1. 配置 `PRODUCTION_TRIAL_ACCESS_CODE` 与 `PRODUCTION_INTERNAL_API_KEY` 两个 GitHub Secrets，未在日志或仓库写入值。
+2. 门禁运行 `29155708921` 在提交 `a6479f1` 上通过：构建、类型检查、工具测试、17 项生产 smoke、20 项响应式/无障碍 E2E、完整写入闭环、2 项离线 E2E 与 Vercel dry-run 全绿。
+3. 早期失败暴露出完整写入 E2E 在返回任务页时一直等待“撤销完成”，扩大超时后仍可复现，因此排除单纯 CI 性能问题。
+
+#### 写入后旧页面缓存修复
+
+1. 根因是 `pages-v5` 为提升 Tab 速度采用缓存优先，但 BFF 写入成功后未失效页面缓存。
+2. 数据库任务已变为完成，再进入 `/tasks` 却先显示旧的“标记完成”，造成 UI 与服务端状态不一致。
+3. Service Worker 现拦截同源非 GET `/api/app/*` 请求，响应成功后删除动态页面缓存；缓存升级为 `silver-health-pages-v6`。
+4. 完整写入 E2E 修复前稳定等待到 120 秒超时，修复后 3.2 秒通过；20 项布局/无障碍和 2 项离线测试同时通过。
+
+#### Vercel 回滚演练
+
+1. 最新部署：`dpl_5qZGfBzJFcq9HvnxmdVS3V9uwoFK`。
+2. 回滚目标：`dpl_AWSzr16MqsaMt8DpDXYxTVP93cbV`，回滚后 17 项 smoke 全过。
+3. 使用 promote 恢复最新部署，线上确认 `pages-v6`，恢复后 17 项 smoke 再次全过。
+
+#### Railway 回滚演练
+
+1. 从历史成功部署回滚，生成 `209a0942-1e07-444e-9bf9-5a96ecc55d69`，状态 `SUCCESS`，17 项 smoke 全过。
+2. 恢复产品化构建与变量快照，生成 `bb4ad807-475c-4d51-aefe-2e66b9f00773`，状态 `SUCCESS`，17 项 smoke 再次全过。
+3. Railway 回滚会同时恢复构建和变量；验收覆盖 Web BFF、内部密钥、四类业务数据和 CORS，不只检查 health。
+
+#### 发布状态
+
+生产门禁和双平台回滚演练已完成，当前生产已恢复最新目标部署。下一步执行敏感信息扫描、最终发布验证并创建 `v0.1.0` 标签与 GitHub Release；iPad 真机竖横屏验收继续作为剩余设备待办。

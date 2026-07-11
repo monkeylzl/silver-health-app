@@ -112,7 +112,7 @@ corepack pnpm test:e2e:app
 4. 以 `next build + next start` 启动带体验会话和服务端档案 ID 的生产模式 Web；
 5. 执行 5 个设备项目共 20 条布局/无障碍用例；
 6. 在 mobile-390 执行一条完整写入链路；
-7. 执行 1 条生产 Service Worker 离线与缓存清理用例；
+7. 执行 2 条生产 Service Worker 离线、网络恢复与缓存清理用例；
 8. 无论成功或失败都停止子进程。
 
 写入链路顺序：
@@ -150,6 +150,7 @@ sequenceDiagram
 - 不同 `_rsc` 查询参数不得复用不兼容缓存，必须返回当前请求的服务端响应；
 - `GET /api/connectivity` 返回 204 且禁止缓存，实际请求失败或超时时判定离线；
 - 恢复联网并退出后动态页面缓存被清除。
+- 任一 `/api/app/*` 写入成功后动态页面缓存立即失效，再次进入页面必须展示最新业务状态。
 
 补充静态资源检查：
 
@@ -250,7 +251,7 @@ Chrome DevTools 手工步骤：
 5. Service Worker 增加 Next.js 构建资源运行时缓存后，`silver-health-static-v4` 已包含首页 CSS、核心 JS 和页面专属 chunk；
 6. 飞行模式下完全关闭再从桌面打开，页面可以正常显示完整样式，离线冷启动通过；
 7. 离线切 Tab 的后续优化改为已缓存 RSC 数据缓存优先，避免等待网络超时；
-8. 网络状态帮助和恢复联网自动刷新已由本地生产模式 E2E 验证，发布后需再执行一次真机交互确认。
+8. 网络状态帮助和恢复联网自动刷新已完成本地生产模式 E2E 与 iPhone 真机交互确认。
 9. iOS 飞行模式下 `navigator.onLine` 仍可能为 true，网络状态必须以同源连通性探测结果为准。
 10. RSC 缓存修复升级到 `pages-v5` 后，用户在 iPhone 独立 PWA 完成复验，确认联网四 Tab 不再白屏，离线展示和恢复联网正常。
 
@@ -287,7 +288,31 @@ corepack pnpm test:release
 
 该命令串联 Prisma Client、单元测试、工具测试、Web/API 类型检查与构建、完整本地产品 E2E。任何一步失败都停止发布。
 
-## 12. 问题记录模板
+GitHub 手动生产门禁：
+
+```bash
+gh workflow run release-gates.yml \
+  -f web_url=https://web-nu-blond-89.vercel.app \
+  -f api_url=https://silver-health-api-production.up.railway.app \
+  -f elder_user_id=cmre5b56p0000ij0niccn6i4n \
+  -f run_production_smoke=true \
+  -f run_mobile_e2e=true \
+  -f run_vercel_dry_run=true
+```
+
+2026-07-11 运行 `29155708921` 已通过全部门禁。生产 smoke 使用 GitHub Secrets 注入口令和内部密钥，不在 workflow 输入或日志中传值。
+
+## 12. 生产回滚验证
+
+Vercel：记录当前 deployment ID，回滚到上一稳定版本，执行 17 项 smoke，再 promote 当前 deployment 并重复 smoke。
+
+Railway：从历史成功部署执行 Rollback，等待新 deployment 为 `SUCCESS`，执行 17 项 smoke；随后回滚到当前产品化构建与变量快照，再次等待 `SUCCESS` 并重复 smoke。
+
+每次回滚后必须验证：受保护 Web 页面、BFF 到 API、四类业务数据、health、内部密钥与 CORS。Railway 回滚会恢复变量快照，禁止只凭 health 200 判定成功。
+
+2026-07-11 已完成：Vercel 回滚/恢复各 17 项通过；Railway 回滚部署 `209a0942-1e07-444e-9bf9-5a96ecc55d69` 与恢复部署 `bb4ad807-475c-4d51-aefe-2e66b9f00773` 均为 `SUCCESS`，各自 17 项通过。
+
+## 13. 问题记录模板
 
 ```text
 环境：local / preview / production

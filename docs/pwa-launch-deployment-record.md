@@ -22,7 +22,7 @@
 - PostgreSQL Service：`Postgres`
 - PostgreSQL Service ID：`f2d5b80c-2cad-4b0d-971d-0bbaf0e520c9`
 - API URL：`https://silver-health-api-production.up.railway.app`
-- 当前 API Deployment ID：`e78cd36c-000b-4b74-9c21-326f11304a20`
+- 当前 API Deployment ID：`bb4ad807-475c-4d51-aefe-2e66b9f00773`
 - CORS Origin：`https://web-nu-blond-89.vercel.app`
 
 Railway API 采用仓库根目录的 `Dockerfile.api` 构建，`railway.json` 使用 Dockerfile builder。迁移放在 `preDeployCommand` 中执行，应用启动命令只负责启动 Nest API，避免迁移命令常驻导致健康检查卡住。
@@ -52,23 +52,26 @@ Railway API 采用仓库根目录的 `Dockerfile.api` 构建，`railway.json` �
 - 用药提醒：2 条
 - 家属周报：2 条
 
-Web 生产环境应配置：
+Web 生产环境应配置以下服务端变量；敏感值不得使用 `NEXT_PUBLIC_*`：
 
 ```env
-NEXT_PUBLIC_API_BASE_URL="https://silver-health-api-production.up.railway.app"
-NEXT_PUBLIC_DEFAULT_ELDER_USER_ID="cmre5b56p0000ij0niccn6i4n"
+API_BASE_URL="https://silver-health-api-production.up.railway.app"
+DEFAULT_ELDER_USER_ID="cmre5b56p0000ij0niccn6i4n"
+TRIAL_ACCESS_CODE_HASH="<scrypt-hash>"
+TRIAL_SESSION_SECRET="<secret>"
+INTERNAL_API_KEY="<same-as-railway>"
 ```
 
-Vercel 项目已持久化以上两个 production 环境变量，类型为 non-sensitive。
+Vercel 项目已持久化以上 production 环境变量。口令哈希、会话密钥和内部密钥均按敏感变量管理。
 
 ## 4. Vercel 实际配置
 
 - Team / Scope：`monkeylzls-projects`
 - Project：`web`
 - Production Alias：`https://web-nu-blond-89.vercel.app`
-- Deployment URL：`https://web-fy1dh8fg5-monkeylzls-projects.vercel.app`
-- Deployment ID：`dpl_8AkzX95njUQTcCHh9qUzrDjx6D4V`
-- Inspect URL：`https://vercel.com/monkeylzls-projects/web/8AkzX95njUQTcCHh9qUzrDjx6D4V`
+- Deployment URL：`https://web-n4kc2w0q3-monkeylzls-projects.vercel.app`
+- Deployment ID：`dpl_5qZGfBzJFcq9HvnxmdVS3V9uwoFK`
+- Inspect URL：`https://vercel.com/monkeylzls-projects/web/5qZGfBzJFcq9HvnxmdVS3V9uwoFK`
 
 CLI 部署使用本地 prebuilt 流程，已固化为：
 
@@ -92,11 +95,11 @@ corepack pnpm dlx vercel deploy --prod --prebuilt --yes
 
 ```bash
 curl -sS https://silver-health-api-production.up.railway.app/api/health
-curl -sS https://silver-health-api-production.up.railway.app/api/profile/elder/cmre5b56p0000ij0niccn6i4n
-curl -sS https://silver-health-api-production.up.railway.app/api/tasks/elder/cmre5b56p0000ij0niccn6i4n
-curl -sS https://silver-health-api-production.up.railway.app/api/metrics/elder/cmre5b56p0000ij0niccn6i4n
-curl -sS https://silver-health-api-production.up.railway.app/api/medications/elder/cmre5b56p0000ij0niccn6i4n
-curl -sS https://silver-health-api-production.up.railway.app/api/reports/elder/cmre5b56p0000ij0niccn6i4n
+curl -sS -H "X-Silver-App-Key: $INTERNAL_API_KEY" https://silver-health-api-production.up.railway.app/api/profile/elder/cmre5b56p0000ij0niccn6i4n
+curl -sS -H "X-Silver-App-Key: $INTERNAL_API_KEY" https://silver-health-api-production.up.railway.app/api/tasks/elder/cmre5b56p0000ij0niccn6i4n
+curl -sS -H "X-Silver-App-Key: $INTERNAL_API_KEY" https://silver-health-api-production.up.railway.app/api/metrics/elder/cmre5b56p0000ij0niccn6i4n
+curl -sS -H "X-Silver-App-Key: $INTERNAL_API_KEY" https://silver-health-api-production.up.railway.app/api/medications/elder/cmre5b56p0000ij0niccn6i4n
+curl -sS -H "X-Silver-App-Key: $INTERNAL_API_KEY" https://silver-health-api-production.up.railway.app/api/reports/elder/cmre5b56p0000ij0niccn6i4n
 ```
 
 验证结果：
@@ -238,6 +241,7 @@ railway logs --deployment e78cd36c-000b-4b74-9c21-326f11304a20 --lines 80
 - 当前 API Deployment ID：`e78cd36c-000b-4b74-9c21-326f11304a20`。
 - 服务状态：`Online`。
 - 日志显示 `prisma migrate deploy` 已执行，结果为 `No pending migrations to apply`。
+
 - 日志显示 Nest API 已完成路由映射并输出 `Nest application successfully started`。
 
 Railway 环境变量已通过 CLI 复核，但文档只记录非敏感结论：
@@ -261,3 +265,33 @@ corepack pnpm smoke:production
 - API 覆盖健康检查、任务、指标、用药、周报。
 - CORS 覆盖健康检查 origin 和 PATCH preflight。
 - 首页能读取真实 API，并能看到 seeded 任务。
+
+## 10. 2026-07-11 发布门禁与回滚演练
+
+### GitHub 生产门禁
+
+- Workflow：`Silver Health release gates`；
+- 成功运行：`29155708921`；
+- 提交：`a6479f1`；
+- 结果：Web/API 构建、类型检查、工具测试、17 项生产 smoke、20 项手机/Pad/无障碍测试、完整写入闭环、2 项离线测试和 Vercel prebuilt dry-run 全部通过；
+- GitHub Secrets：仅配置 `PRODUCTION_TRIAL_ACCESS_CODE` 与 `PRODUCTION_INTERNAL_API_KEY`，日志不输出值。
+
+门禁期间发现写入成功后 Service Worker 仍可能返回旧页面缓存。修复后所有 `/api/app/*` 写请求成功时清除动态页面缓存，缓存版本升级为 `silver-health-pages-v6`；完整写入 E2E 从等待超时恢复为 3.2 秒通过。
+
+### Vercel 回滚与恢复
+
+1. 发布并验证最新部署 `dpl_5qZGfBzJFcq9HvnxmdVS3V9uwoFK`；
+2. 回滚到上一稳定部署 `dpl_AWSzr16MqsaMt8DpDXYxTVP93cbV`；
+3. 回滚后执行 17 项 production smoke，全部通过；
+4. 使用 `vercel promote` 恢复 `dpl_5qZGfBzJFcq9HvnxmdVS3V9uwoFK`；
+5. 确认线上 `/sw.js` 为 `silver-health-pages-v6`，恢复后 17 项 smoke 再次通过。
+
+### Railway 回滚与恢复
+
+1. 原稳定部署：`91b8ea9f-e1ee-4727-843f-7e83b59aec52`；
+2. 从 Railway 历史部署执行回滚，生成部署 `209a0942-1e07-444e-9bf9-5a96ecc55d69`；
+3. 回滚部署状态为 `SUCCESS`，17 项 production smoke 全部通过；
+4. 回滚到产品化版本 `91b8ea9f-e1ee-4727-843f-7e83b59aec52` 的构建与变量快照，生成恢复部署 `bb4ad807-475c-4d51-aefe-2e66b9f00773`；
+5. 恢复部署状态为 `SUCCESS`，最终 17 项 production smoke 全部通过。
+
+Railway 的历史回滚会同时恢复构建和变量快照，因此恢复后必须重新验证 Web BFF、内部密钥、数据读取与 CORS，不可只检查 `/api/health`。
