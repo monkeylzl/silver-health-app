@@ -26,7 +26,7 @@
 ### P0-3 真机安装
 
 - Android Chrome 安装已完成。
-- iPhone Safari 添加主屏幕及离线冷启动已完成。
+- iPhone Safari 添加主屏幕、`pages-v5` 四 Tab、离线冷启动和网络恢复复验已完成。
 - iPad 竖屏/横屏。
 - 检查图标、安全区、独立窗口和离线提示。
 
