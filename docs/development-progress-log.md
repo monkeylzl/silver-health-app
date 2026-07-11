@@ -2991,3 +2991,36 @@ pnpm dev:web
 1. 使用 Android Chrome 从生产首页执行“安装应用”，验证 standalone、Manifest start_url 和桌面图标；
 2. 完成 iPhone Safari 与 iPad Safari 添加主屏幕验证；
 3. 根据浏览器能力调整“我的”页安装提示，明确区分独立安装与桌面快捷方式。
+
+---
+
+### 99. Android Chrome 独立 PWA 安装验收
+
+#### 本轮处理
+
+1. 在 Xiaomi 2211133C 安装并启用 Chrome 150.0.7871.64。
+2. 使用 Chrome 打开生产首页、输入体验口令并完成 PWA 可安装性预检。
+3. 通过 Chrome“安装并创建快捷方式 -> 安装应用”安装 Silver Health。
+4. MIUI 首次启动时选择“始终允许银发健康打开 Chrome”。
+5. 清理测试期间创建的普通网页快捷方式与旧小米浏览器 PWA，最终桌面只保留一个 Chrome WebAPK 图标。
+
+#### 验证结果
+
+1. Chrome installability errors 为空，Manifest 无错误，Service Worker 已激活。
+2. 安装生成包 `org.chromium.webapk.a3fbc4f1350dfafad_v2`，安装时间为 2026-07-11 15:55:52。
+3. 桌面图标名称采用 Manifest short_name：`银发健康`。
+4. 从桌面启动进入 Chrome `SameTaskWebApkActivity`：
+   - 无浏览器地址栏；
+   - `display-mode: standalone` 为 true；
+   - start_url 正确打开 `/`；
+   - 可视高度从浏览器模式 763px 增加至独立模式 819px。
+5. 独立应用内今日、健康、家人、我的四个 Tab 均正常：
+   - 激活态正确；
+   - 无横向溢出；
+   - 未发现低于 44px 的可见触控目标。
+6. CDP 网络离线时，不缓存网络探针返回 TypeError，证明网络已被阻断；缓存的今日页和任务仍正常显示。
+7. 恢复网络后页面继续打开，任务进度保持测试前的 `1/4`。
+
+#### 结论
+
+Android Chrome 独立 PWA 安装验收通过。当前真机桌面可直接以应用方式打开 Silver Health，Android 侧 P0 真机安装项完成；后续仍需补充 iPhone Safari 与 iPad Safari 验收。

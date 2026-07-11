@@ -178,6 +178,18 @@ Chrome DevTools 手工步骤：
 6. 完成一项任务并撤销；
 7. 录入一条指标并在家人页确认联动。
 
+2026-07-11 已在同一台 Xiaomi 2211133C 上使用 Chrome 150.0.7871.64 完成实际安装：
+
+1. Chrome `Page.getInstallabilityErrors` 返回空数组，Manifest 无错误，Service Worker active；
+2. Chrome 菜单显示“安装并创建快捷方式”，随后进入明确的“安装应用”确认框；
+3. 安装生成 WebAPK `org.chromium.webapk.a3fbc4f1350dfafad_v2`；
+4. 从桌面启动进入 `SameTaskWebApkActivity`，无浏览器地址栏；
+5. `display-mode: standalone` 为 true，Manifest start_url 正确打开 `/`；
+6. 独立应用内四个 Tab、激活态、无横向溢出和 44px 触控门槛均通过；
+7. CDP 离线网络探针失败时，缓存的今日页和任务仍可读取，恢复网络后刷新正常；
+8. MIUI 首次从桌面启动 WebAPK 时要求允许“银发健康打开 Chrome”，需选择“始终允许”；
+9. 已删除测试期间创建的小米浏览器快捷方式和旧小米浏览器 PWA，桌面只保留 Chrome WebAPK 图标。
+
 ### 小米浏览器兼容性
 
 2026-07-11 使用 Xiaomi 2211133C、Android 15、小米浏览器 Chromium 135 完成生产真机验证：
@@ -191,6 +203,8 @@ Chrome DevTools 手工步骤：
 7. 该入口属于浏览器快捷方式，启动后仍显示小米浏览器地址栏，`display-mode` 不是 standalone；
 8. 从“我的”页创建快捷方式时会保存当前 `/me` URL，不会强制采用 Manifest 的 `/` start_url；
 9. 完整独立 PWA 安装仍需使用支持 Web App 安装的 Android Chrome 验证。
+
+上述第 9 项已由 Chrome 150 真机安装结果完成；小米浏览器部分继续作为兼容性与降级行为记录。
 
 真机网络排障记录：初次访问时本地 DNS 曾将 Vercel 域名错误解析到 Meta 地址 `31.13.73.9`。临时 `dns.google` 在当前网络不可达，设置已删除并恢复自动 DNS；恢复后生产页面可以正常访问。
 
