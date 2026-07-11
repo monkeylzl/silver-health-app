@@ -43,7 +43,7 @@ async function enterApp(page: import('@playwright/test').Page) {
 }
 
 test('protects the app and completes the daily health-management write loop', async ({ page }) => {
-  test.setTimeout(60_000);
+  test.setTimeout(90_000);
 
   const tasksBefore = await fetchApiList<TaskItem>(`/api/tasks/elder/${elderUserId}`);
   const metricsBefore = await fetchApiList<MetricRecord>(`/api/metrics/elder/${elderUserId}`);

@@ -1,5 +1,5 @@
 const STATIC_CACHE = 'silver-health-static-v4';
-const PAGE_CACHE = 'silver-health-pages-v5';
+const PAGE_CACHE = 'silver-health-pages-v6';
 const STATIC_ASSETS = [
   '/access',
   '/offline.html',
@@ -62,8 +62,20 @@ self.addEventListener('message', (event) => {
 
 self.addEventListener('fetch', (event) => {
   const request = event.request;
-  if (request.method !== 'GET') return;
   const url = new URL(request.url);
+
+  if (request.method !== 'GET') {
+    if (url.origin === self.location.origin && url.pathname.startsWith('/api/app/')) {
+      event.respondWith((async () => {
+        const response = await fetch(request);
+        if (response.ok) {
+          await caches.delete(PAGE_CACHE);
+        }
+        return response;
+      })());
+    }
+    return;
+  }
 
   if (request.mode === 'navigate' || request.destination === 'document') {
     event.respondWith((async () => {
