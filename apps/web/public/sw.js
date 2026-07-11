@@ -1,5 +1,5 @@
-const STATIC_CACHE = 'silver-health-static-v3';
-const PAGE_CACHE = 'silver-health-pages-v3';
+const STATIC_CACHE = 'silver-health-static-v4';
+const PAGE_CACHE = 'silver-health-pages-v4';
 const STATIC_ASSETS = [
   '/access',
   '/offline.html',
@@ -78,6 +78,25 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (url.origin !== self.location.origin || url.pathname.startsWith('/api/')) return;
+
+  if (url.pathname.startsWith('/_next/static/')) {
+    event.respondWith((async () => {
+      const cached = await caches.match(request);
+      if (cached) return cached;
+
+      try {
+        const response = await fetchWithTimeout(request);
+        if (response.ok) {
+          const cache = await caches.open(STATIC_CACHE);
+          await cache.put(request, response.clone());
+        }
+        return response;
+      } catch {
+        return new Response('', { status: 504 });
+      }
+    })());
+    return;
+  }
 
   if (STATIC_PATHS.has(url.pathname) && !url.searchParams.has('_rsc')) {
     event.respondWith(caches.match(request).then(async (cached) => {

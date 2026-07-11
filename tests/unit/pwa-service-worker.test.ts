@@ -65,3 +65,65 @@ test('iOS document requests return the cached page without waiting for network',
   assert.ok(response, 'cached navigation should not wait forever for the network');
   assert.equal(await response.text(), '<main>cached today</main>');
 });
+
+test('Next.js build assets return from cache without waiting for the network', async () => {
+  const listeners = new Map<string, (event: unknown) => void>();
+  const cachedStyles = new Response('body { color: rgb(1, 2, 3); }', {
+    headers: { 'content-type': 'text/css' },
+  });
+
+  const context = vm.createContext({
+    URL,
+    Request,
+    Response,
+    Promise,
+    setTimeout: () => 1,
+    clearTimeout,
+    fetch: () => new Promise<Response>(() => undefined),
+    caches: {
+      keys: async () => [],
+      delete: async () => true,
+      open: async () => ({
+        addAll: async () => undefined,
+        put: async () => undefined,
+      }),
+      match: async (request: { url?: string } | string) => {
+        const url = typeof request === 'string' ? request : request.url;
+        return url?.includes('/_next/static/') ? cachedStyles.clone() : undefined;
+      },
+    },
+    self: {
+      location: { origin: 'https://web.example.test' },
+      clients: { claim: () => undefined },
+      skipWaiting: () => undefined,
+      addEventListener: (type: string, listener: (event: unknown) => void) => {
+        listeners.set(type, listener);
+      },
+    },
+  });
+
+  const source = readFileSync(join(process.cwd(), 'apps/web/public/sw.js'), 'utf8');
+  vm.runInContext(source, context);
+
+  let responsePromise: Promise<Response> | undefined;
+  listeners.get('fetch')?.({
+    request: {
+      method: 'GET',
+      mode: 'cors',
+      destination: 'style',
+      url: 'https://web.example.test/_next/static/css/app-build.css',
+    },
+    respondWith: (promise: Promise<Response>) => {
+      responsePromise = promise;
+    },
+  });
+
+  assert.ok(responsePromise, 'Next.js build assets should be handled by the service worker');
+  const response = await Promise.race([
+    responsePromise,
+    new Promise<undefined>((resolve) => setTimeout(resolve, 50)),
+  ]);
+
+  assert.ok(response, 'cached build assets should not wait forever for the network');
+  assert.equal(await response.text(), 'body { color: rgb(1, 2, 3); }');
+});
