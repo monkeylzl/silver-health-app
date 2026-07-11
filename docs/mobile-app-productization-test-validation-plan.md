@@ -206,6 +206,15 @@ Chrome DevTools 手工步骤：
 7. Manifest 错误与 installability 错误均为空；
 8. 全流程控制台错误、页面异常和 HTTP 4xx/5xx 为 0。
 
+同日补充 Android 系统物理飞行模式验收：
+
+1. 通过系统命令真实开启飞行模式，`airplane_mode_on=1`，Wi-Fi disabled，设备网络探针返回 `Network is unreachable`；
+2. Android 在物理断网时仍可能报告 `navigator.onLine=true`，应用实际连通性探针仍正确显示“离线浏览”；
+3. 飞行模式下今日、健康、家人、我的四 Tab 均从缓存打开，耗时 64–128ms，正文非空且无控制台错误；
+4. 完全停止 Chrome 后从桌面重新启动 WebAPK，首页 `readyState=complete`、标题“今日”、正文完整、样式加载、无横向溢出；
+5. 冷启动后仍为 standalone，Service Worker controlled，缓存保持 `static-v4/pages-v5`；
+6. 测试结束后关闭飞行模式，Wi-Fi 自动恢复原网络，设备 ping 成功，应用 106ms 显示“已连接”。
+
 ### 小米浏览器兼容性
 
 2026-07-11 使用 Xiaomi 2211133C、Android 15、小米浏览器 Chromium 135 完成生产真机验证：

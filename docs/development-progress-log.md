@@ -3155,3 +3155,44 @@ Next.js App Router 的 RSC 响应不仅由 pathname 决定，还与 `_rsc`、Rou
 #### 结论
 
 Android 生产 WebAPK 全面自动验收通过，RSC 白屏回归已消除，联网 Tab 切换达到 123ms 以内。下一步在 iPhone 更新到 `pages-v5` 后复查四 Tab 与真实飞行模式网络状态，再完成 iPad 验收。
+
+---
+
+### 104. Android 物理飞行模式与冷启动验收
+
+#### 断网建立
+
+1. 测试前确认系统飞行模式关闭：`airplane_mode_on=0`。
+2. 通过 Android 系统命令开启物理飞行模式：`airplane_mode_on=1`。
+3. Wi-Fi 确认 disabled，设备对 `1.1.1.1` 的 ping 返回 `Network is unreachable`。
+4. 设备上的 VPN 虽仍有系统记录，但无底层网络，不具备实际外网连接。
+
+#### 运行中离线验收
+
+1. Android 仍报告 `navigator.onLine=true`，证明引入 `/api/connectivity` 真实探针是必要的。
+2. 应用正确显示“离线浏览”，网络帮助与重新检测均正常。
+3. 飞行模式下四 Tab 均能打开：
+   - 今日 128ms；
+   - 健康 78ms；
+   - 家人 84ms；
+   - 我的 64ms。
+4. 四页正文均非空，独立模式、Service Worker 控制、`static-v4/pages-v5` 缓存、392x819 视口和无横向溢出均正常。
+5. 控制台错误和页面异常为 0。
+
+#### 物理冷启动
+
+1. 在飞行模式下完全停止 Chrome，随后从 WebAPK 桌面入口重新启动。
+2. 新 Activity 正常进入 `SameTaskWebApkActivity`，首页 URL 为 `/`。
+3. 页面 `readyState=complete`，主标题为“今日”，正文长度 242，系统字体样式已加载，未出现白屏或无样式 HTML。
+4. standalone、Service Worker controlled、缓存名称和无横向溢出均通过。
+
+#### 环境恢复
+
+1. 关闭系统飞行模式，确认 `airplane_mode_on=0`。
+2. Wi-Fi 自动恢复并重新连接测试前网络 `CU_h9bA_5G`。
+3. 设备 ping 外网成功，应用进入“我的”后 106ms 显示“已连接”。
+4. ADB 端口转发在验收结束后移除。
+
+#### 结论
+
+Android 物理飞行模式、运行中离线、离线冷启动和恢复联网验收全部通过；此前自动验收不再只是 CDP 网络模拟。
