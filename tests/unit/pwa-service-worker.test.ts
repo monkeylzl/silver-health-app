@@ -15,7 +15,7 @@ test('navigation falls back to the cached page when network fetch stays pending'
     Request,
     Response,
     Promise,
-    setTimeout: (callback: () => void) => setTimeout(callback, 0),
+    setTimeout: () => 1,
     clearTimeout,
     fetch: () => new Promise<Response>(() => undefined),
     caches: {

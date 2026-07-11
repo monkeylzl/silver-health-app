@@ -21,6 +21,16 @@ function fetchWithTimeout(request) {
   return Promise.race([fetch(request), timeout]).finally(() => clearTimeout(timeoutId));
 }
 
+async function fetchAndCachePage(request, pathname) {
+  const response = await fetchWithTimeout(request);
+  const responsePath = new URL(response.url).pathname;
+  if (response.ok && CACHEABLE_PAGES.has(pathname) && responsePath === pathname) {
+    const cache = await caches.open(PAGE_CACHE);
+    await cache.put(request, response.clone());
+  }
+  return response;
+}
+
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(STATIC_CACHE).then((cache) => cache.addAll(STATIC_ASSETS)));
   self.skipWaiting();
@@ -48,14 +58,16 @@ self.addEventListener('fetch', (event) => {
 
   if (request.mode === 'navigate') {
     event.respondWith((async () => {
+      const cached = CACHEABLE_PAGES.has(url.pathname)
+        ? await caches.match(request, { ignoreSearch: true })
+        : undefined;
+      if (cached) {
+        event.waitUntil?.(fetchAndCachePage(request, url.pathname).catch(() => undefined));
+        return cached;
+      }
+
       try {
-        const response = await fetchWithTimeout(request);
-        const responsePath = new URL(response.url).pathname;
-        if (response.ok && CACHEABLE_PAGES.has(url.pathname) && responsePath === url.pathname) {
-          const cache = await caches.open(PAGE_CACHE);
-          await cache.put(request, response.clone());
-        }
-        return response;
+        return await fetchAndCachePage(request, url.pathname);
       } catch {
         return await caches.match(request, { ignoreSearch: true })
           || await caches.match('/offline.html')
