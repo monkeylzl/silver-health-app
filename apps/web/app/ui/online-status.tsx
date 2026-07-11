@@ -2,8 +2,15 @@
 
 import { ChevronRight, Cloud, CloudOff, RefreshCw, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
-import { getNetworkSettingsInstruction, shouldRefreshOnReconnect } from '../../lib/connection-state';
+import { useEffect, useState } from 'react';
+import {
+  connectivityChangeEvent,
+  connectivityCheckEvent,
+  connectivityStorageKey,
+  getNetworkSettingsInstruction,
+  probeNetworkConnection,
+} from '../../lib/connection-state';
+import type { ConnectivityDetail } from './connectivity-monitor';
 
 export function OnlineStatus() {
   const router = useRouter();
@@ -11,35 +18,28 @@ export function OnlineStatus() {
   const [lastSync, setLastSync] = useState('');
   const [helpOpen, setHelpOpen] = useState(false);
   const [checkMessage, setCheckMessage] = useState('');
-  const previousOnline = useRef<boolean | null>(null);
+  const [checking, setChecking] = useState(false);
 
   useEffect(() => {
-    const update = () => {
-      const currentOnline = navigator.onLine;
+    const storedStatus = localStorage.getItem(connectivityStorageKey);
+    if (storedStatus) setOnline(storedStatus === 'online');
+    setLastSync(localStorage.getItem('silver-health-last-sync') || '');
+
+    const update = (event: Event) => {
+      const { online: currentOnline, lastSync: currentLastSync } = (event as CustomEvent<ConnectivityDetail>).detail;
       setOnline(currentOnline);
+      setLastSync(currentLastSync);
       if (currentOnline) {
-        const timestamp = new Date().toISOString();
-        localStorage.setItem('silver-health-last-sync', timestamp);
-        setLastSync(timestamp);
         setHelpOpen(false);
         setCheckMessage('');
-      } else {
-        setLastSync(localStorage.getItem('silver-health-last-sync') || '');
       }
-
-      if (previousOnline.current !== null && shouldRefreshOnReconnect(previousOnline.current, currentOnline)) {
-        router.refresh();
-      }
-      previousOnline.current = currentOnline;
     };
-    update();
-    window.addEventListener('online', update);
-    window.addEventListener('offline', update);
+    window.addEventListener(connectivityChangeEvent, update);
+    window.dispatchEvent(new Event(connectivityCheckEvent));
     return () => {
-      window.removeEventListener('online', update);
-      window.removeEventListener('offline', update);
+      window.removeEventListener(connectivityChangeEvent, update);
     };
-  }, [router]);
+  }, []);
 
   useEffect(() => {
     if (!helpOpen) return;
@@ -60,13 +60,23 @@ export function OnlineStatus() {
     </>
   );
 
-  const retryConnection = () => {
-    if (navigator.onLine) {
+  const retryConnection = async () => {
+    setChecking(true);
+    const connected = navigator.onLine && await probeNetworkConnection();
+    setChecking(false);
+    if (connected) {
+      const timestamp = new Date().toISOString();
+      localStorage.setItem(connectivityStorageKey, 'online');
+      localStorage.setItem('silver-health-last-sync', timestamp);
+      setOnline(true);
+      setLastSync(timestamp);
       setHelpOpen(false);
       setCheckMessage('');
       router.refresh();
       return;
     }
+    setOnline(false);
+    localStorage.setItem(connectivityStorageKey, 'offline');
     setCheckMessage('仍未连接，请检查系统网络设置。');
   };
 
@@ -109,8 +119,8 @@ export function OnlineStatus() {
             <p>{getNetworkSettingsInstruction(navigator.userAgent)}</p>
             <p className="network-help-dialog__note">受系统限制，网页应用不能直接打开网络设置。</p>
             {checkMessage ? <p className="form-message form-message--error" aria-live="polite">{checkMessage}</p> : null}
-            <button type="button" className="button button--primary network-help-dialog__retry" onClick={retryConnection} data-touch-target>
-              <RefreshCw aria-hidden="true" />重新检测
+            <button type="button" className="button button--primary network-help-dialog__retry" onClick={retryConnection} disabled={checking} data-touch-target>
+              <RefreshCw aria-hidden="true" />{checking ? '正在检测' : '重新检测'}
             </button>
           </section>
         </div>

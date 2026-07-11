@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import { AppNavigation } from './ui/app-navigation';
+import { ConnectivityMonitor } from './ui/connectivity-monitor';
 import { PwaRegister } from './ui/pwa-register';
 import './globals.css';
 
@@ -24,6 +25,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="zh-CN">
       <body>
         <PwaRegister />
+        <ConnectivityMonitor />
         <AppNavigation />
         <div className="app-content">{children}</div>
       </body>

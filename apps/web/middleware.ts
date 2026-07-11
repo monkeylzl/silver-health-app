@@ -5,6 +5,7 @@ const cookieName = 'silver_trial_session';
 const publicPrefixes = [
   '/access',
   '/api/session',
+  '/api/connectivity',
   '/_next',
   '/icons',
   '/manifest.webmanifest',

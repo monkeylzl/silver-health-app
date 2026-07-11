@@ -148,11 +148,11 @@ test('cached tab data does not wait for the network when switching offline', asy
       open: async () => ({
         addAll: async () => undefined,
         put: async () => undefined,
+        delete: async () => true,
+        keys: async () => [{ url: 'https://web.example.test/health?_rsc=previous-build' }],
+        match: async () => cachedData.clone(),
       }),
-      match: async (request: { url?: string } | string) => {
-        const url = typeof request === 'string' ? request : request.url;
-        return url?.includes('/health?_rsc=') ? cachedData.clone() : undefined;
-      },
+      match: async () => undefined,
     },
     self: {
       location: { origin: 'https://web.example.test' },

@@ -3067,3 +3067,33 @@ Android Chrome 独立 PWA 安装验收通过。当前真机桌面可直接以应
 1. 发布网络恢复与离线 Tab 优化；
 2. iPhone 真机验证离线状态入口、重新检测、恢复联网自动刷新和 Tab 切换速度；
 3. 完成 iPad Safari 竖屏、横屏和安装验收。
+
+---
+
+### 101. iOS 真实连通性检测与主 Tab 切换提速
+
+#### 真机反馈
+
+1. 飞行模式下页面可正常离线显示，但“我的”仍显示“已连接”，看不到“离线浏览”。
+2. 有网和离线情况下切换底部 Tab 均存在可感知等待。
+
+#### 根因
+
+1. iOS 独立 PWA 在飞行模式下仍可能返回 `navigator.onLine=true`，仅监听 `online/offline` 事件会误判。
+2. Next.js 客户端导航的 `_rsc` 查询参数可能变化，Service Worker 按完整 URL 匹配会漏掉同一路径的已有 RSC 缓存。
+
+#### 修复
+
+1. 新增公开且不缓存的 `GET /api/connectivity`，只返回 204，用于验证 Web 到同源服务的真实连通性。
+2. 新增全局 `ConnectivityMonitor`，在启动、前后台切换、网络事件、主动检查和每 15 秒定时检查时执行真实探测。
+3. 实际状态从离线恢复到在线时全局调用 `router.refresh()`；“我的”页订阅统一状态并正确显示离线入口。
+4. “重新检测”改为实际请求连通性端点，包含 3 秒超时，不再直接读取 `navigator.onLine` 后判定成功。
+5. RSC 缓存改为按 pathname 查找最新缓存，忽略变化的 `_rsc` 值；更新成功后清理同路径旧版本，避免缓存无限增长。
+
+#### 验证
+
+1. `corepack pnpm test:unit`：20 项通过，包含连通成功、503、断网、超时及跨 `_rsc` 参数缓存命中。
+2. `corepack pnpm --filter @silver-health/web typecheck`：通过。
+3. `E2E_PWA_ONLY=1 corepack pnpm test:e2e:app`：2 项通过。
+4. 本地生产构建新增 `/api/connectivity`，共生成 27 个路由。
+5. 待生产发布后使用 iPhone 验证“离线浏览”、网络帮助、恢复联网和四 Tab 切换速度。

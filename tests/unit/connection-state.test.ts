@@ -21,4 +21,20 @@ test('refreshes data only when the device reconnects', async () => {
     connectionState.getNetworkSettingsInstruction('Mozilla/5.0 (Linux; Android 16)'),
     '打开系统设置 > 网络和互联网，连接后返回 Silver Health。',
   );
+  assert.equal(
+    await connectionState.probeNetworkConnection(async () => new Response(null, { status: 204 })),
+    true,
+  );
+  assert.equal(
+    await connectionState.probeNetworkConnection(async () => new Response(null, { status: 503 })),
+    false,
+  );
+  assert.equal(
+    await connectionState.probeNetworkConnection(async () => { throw new TypeError('offline'); }),
+    false,
+  );
+  assert.equal(
+    await connectionState.probeNetworkConnection(() => new Promise<Response>(() => undefined), 1),
+    false,
+  );
 });
