@@ -31,6 +31,15 @@ async function fetchAndCachePage(request, pathname) {
   return response;
 }
 
+async function fetchAndCacheTabData(request) {
+  const response = await fetchWithTimeout(request);
+  if (response.ok) {
+    const cache = await caches.open(PAGE_CACHE);
+    await cache.put(request, response.clone());
+  }
+  return response;
+}
+
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(STATIC_CACHE).then((cache) => cache.addAll(STATIC_ASSETS)));
   self.skipWaiting();
@@ -117,15 +126,16 @@ self.addEventListener('fetch', (event) => {
 
   if (url.searchParams.has('_rsc') && CACHEABLE_PAGES.has(url.pathname)) {
     event.respondWith((async () => {
+      const cached = await caches.match(request);
+      if (cached) {
+        event.waitUntil?.(fetchAndCacheTabData(request).catch(() => undefined));
+        return cached;
+      }
+
       try {
-        const response = await fetchWithTimeout(request);
-        if (response.ok) {
-          const cache = await caches.open(PAGE_CACHE);
-          await cache.put(request, response.clone());
-        }
-        return response;
+        return await fetchAndCacheTabData(request);
       } catch {
-        return await caches.match(request) || new Response('', { status: 504 });
+        return new Response('', { status: 504 });
       }
     })());
   }

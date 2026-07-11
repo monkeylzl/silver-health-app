@@ -25,8 +25,8 @@
 
 ### P0-3 真机安装
 
-- Android Chrome 安装。
-- iPhone Safari 添加主屏幕。
+- Android Chrome 安装已完成。
+- iPhone Safari 添加主屏幕及离线冷启动已完成。
 - iPad 竖屏/横屏。
 - 检查图标、安全区、独立窗口和离线提示。
 
@@ -106,6 +106,12 @@
 - 普通话语音播报可行性验证。
 
 ## P3 中长期
+
+### P3-0 原生网络设置入口
+
+- H5/PWA 保留网络重试和系统设置路径说明。
+- 如需点击后直接打开 iOS/Android 网络设置，使用原生 App 或 Capacitor 壳提供平台级能力。
+- 不在 PWA 中使用未公开、可能失效的 iOS 私有 URL Scheme。
 
 ### P3-1 通知与后台任务
 

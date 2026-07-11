@@ -42,3 +42,23 @@ test('keeps protected pages read-only offline and clears dynamic caches on logou
   await expect(page).toHaveURL(/\/access/);
   await expect.poll(() => page.evaluate(async () => !(await caches.keys()).some((key) => key.includes('pages')))).toBe(true);
 });
+
+test('offers connection help while offline and recovers when the network returns', async ({ page, context }) => {
+  await enterControlledApp(page);
+  await page.goto('/me');
+  await expect(page.getByRole('heading', { name: '我的', exact: true })).toBeVisible();
+
+  await context.setOffline(true);
+  await page.reload();
+  await page.getByRole('button', { name: /离线浏览/ }).click();
+
+  const dialog = page.getByRole('dialog', { name: '连接网络' });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByText(/设置 > (无线局域网或蜂窝网络|网络和互联网)/)).toBeVisible();
+  await dialog.getByRole('button', { name: '重新检测' }).click();
+  await expect(dialog.getByText('仍未连接，请检查系统网络设置。')).toBeVisible();
+
+  await context.setOffline(false);
+  await expect(page.getByText('已连接', { exact: true })).toBeVisible();
+  await expect(dialog).toBeHidden();
+});

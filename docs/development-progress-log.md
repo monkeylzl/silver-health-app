@@ -3024,3 +3024,46 @@ pnpm dev:web
 #### 结论
 
 Android Chrome 独立 PWA 安装验收通过。当前真机桌面可直接以应用方式打开 Silver Health，Android 侧 P0 真机安装项完成；后续仍需补充 iPhone Safari 与 iPad Safari 验收。
+
+---
+
+### 100. iPhone 独立 PWA 离线冷启动修复与网络恢复体验
+
+#### 真机环境
+
+- 设备：iPhone16,1；
+- 系统：iOS 26.3.1；
+- Safari：26.3；
+- 独立 PWA CSS 视口：393x793；
+- 调试：Safari Web Inspector + `ios-webkit-debug-proxy`。
+
+#### 问题定位
+
+1. Safari 浏览器与独立 PWA 的四个主 Tab、任务写入、触控尺寸和 standalone 均正常。
+2. 飞行模式下冷启动最初持续白屏，较长时间后出现无样式 HTML，并伴随重复导航。
+3. 真机缓存审计确认：页面 HTML 和 RSC 已进入页面缓存，但 `/_next/static/` 下的 CSS/JS 没有进入 Service Worker 缓存。
+4. 因此 WebKit 离线时先等待样式和脚本请求超时，最终只能显示未完成 React 接管的服务端 HTML。
+
+#### 修复内容
+
+1. Service Worker 对 Next.js 带哈希构建资源增加缓存优先运行时缓存，缓存升级为 `static-v4/pages-v4`。
+2. iOS 文档请求按 `mode=navigate` 或 `destination=document` 处理，缓存页面立即返回。
+3. 已缓存主 Tab 的 RSC 数据改为缓存优先、后台更新，避免离线切 Tab 等待网络超时。
+4. 网络状态从离线恢复到在线时自动调用 `router.refresh()`，首次在线加载不重复刷新。
+5. 离线状态卡改为可操作入口，打开网络帮助层，提供 iPhone/Android 设置路径和“重新检测”。
+6. PWA 不使用 iOS 私有设置 URL；直接跳系统网络设置留给原生 App 或 Capacitor 壳。
+
+#### 真机与自动化结果
+
+1. `static-v4` 已缓存首页 CSS、8 个核心 JS chunk 和页面专属 chunk；`pages-v4` 已缓存首页及四个主 Tab 数据。
+2. 飞行模式、完全关闭、桌面冷启动后页面立即显示完整样式，白屏问题修复。
+3. 独立模式、393x793、四 Tab、无横向溢出和任务进度 `1/4` 均正常。
+4. `corepack pnpm test:unit`：20 项通过，覆盖 iOS 文档、Next 静态资源、离线 RSC 和联网恢复判断。
+5. `E2E_PWA_ONLY=1 corepack pnpm test:e2e:app`：2 项通过，覆盖离线读取/写入阻止、网络帮助、重新检测、联网恢复和退出清缓存。
+6. `corepack pnpm --filter @silver-health/web typecheck` 与 build 通过，26 个路由生成成功。
+
+#### 后续验收
+
+1. 发布网络恢复与离线 Tab 优化；
+2. iPhone 真机验证离线状态入口、重新检测、恢复联网自动刷新和 Tab 切换速度；
+3. 完成 iPad Safari 竖屏、横屏和安装验收。
