@@ -3124,3 +3124,34 @@ Next.js App Router 的 RSC 响应不仅由 pathname 决定，还与 `_rsc`、Rou
 2. `corepack pnpm --filter @silver-health/web typecheck`：通过。
 3. `corepack pnpm --filter @silver-health/web build`：通过，27 个路由生成成功。
 4. 发布后转入 Android 全面自动验证，并再次确认 iPhone 切 Tab 不白屏。
+
+---
+
+### 103. Android Chrome WebAPK 全面自动验收
+
+#### 环境
+
+- 设备：Xiaomi 2211133C，Android 15；
+- Chrome：150.0.7871.64；
+- WebAPK：`org.chromium.webapk.a3fbc4f1350dfafad_v2`；
+- 生产部署：`dpl_2dLha9HjXQHcqgz72HKrvCnVV65Y`；
+- 回归修复提交：`1488097`；
+- 调试方式：USB ADB + Chrome DevTools Protocol + Playwright connectOverCDP。
+
+#### 自动验收结果
+
+1. 当前 Activity 为 `SameTaskWebApkActivity`，`display-mode: standalone` 为 true。
+2. Service Worker activated 且控制页面，缓存已升级到 `silver-health-static-v4` 与 `silver-health-pages-v5`。
+3. 连续 3 轮切换今日、健康、家人、我的，共 12 次：
+   - 所有目标 URL、页面标题和业务正文均正常；
+   - 平均耗时 74ms，最大耗时 123ms；
+   - 未出现白屏或空路由树。
+4. 每个主页面均为 392x819，无横向溢出，无低于 44px 的可见业务触控目标。
+5. 自动执行任务完成和撤销，按钮从“标记完成”变为“撤销完成”后恢复“标记完成”，未遗留测试写入状态。
+6. 模拟离线后显示“离线浏览”，网络帮助与重新检测正常；恢复网络后 833ms 显示“已连接”。
+7. Manifest 解析错误为 0，可安装性错误为 0，独立 WebAPK 状态正常。
+8. 全流程控制台错误、页面异常和 HTTP 4xx/5xx 均为 0。
+
+#### 结论
+
+Android 生产 WebAPK 全面自动验收通过，RSC 白屏回归已消除，联网 Tab 切换达到 123ms 以内。下一步在 iPhone 更新到 `pages-v5` 后复查四 Tab 与真实飞行模式网络状态，再完成 iPad 验收。

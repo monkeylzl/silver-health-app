@@ -195,6 +195,17 @@ Chrome DevTools 手工步骤：
 8. MIUI 首次从桌面启动 WebAPK 时要求允许“银发健康打开 Chrome”，需选择“始终允许”；
 9. 已删除测试期间创建的小米浏览器快捷方式和旧小米浏览器 PWA，桌面只保留 Chrome WebAPK 图标。
 
+2026-07-11 在 RSC 白屏回归修复发布后，对同一 Chrome WebAPK 执行 USB/CDP 全自动生产验收：
+
+1. 连续 3 轮切换四个主 Tab，共 12 次，全部出现正确标题且业务正文非空；
+2. 平均切换耗时 74ms，最慢 123ms，未再出现空 body 或白屏；
+3. 每个页面 CSS 视口均为 `392x819`，横向溢出为 0，可见业务触控目标均不小于 44px；
+4. 自动完成一项任务后按钮变为“撤销完成”，随后撤销并恢复为“标记完成”；
+5. 模拟断网后出现“离线浏览”和网络帮助，“重新检测”显示未连接，恢复网络后 833ms 变为“已连接”；
+6. Service Worker 已 activated 并控制页面，缓存为 `silver-health-static-v4` 与 `silver-health-pages-v5`；
+7. Manifest 错误与 installability 错误均为空；
+8. 全流程控制台错误、页面异常和 HTTP 4xx/5xx 为 0。
+
 ### 小米浏览器兼容性
 
 2026-07-11 使用 Xiaomi 2211133C、Android 15、小米浏览器 Chromium 135 完成生产真机验证：
